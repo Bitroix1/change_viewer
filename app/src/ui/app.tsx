@@ -70,7 +70,6 @@ import {
   uninstallWindowsCLI,
 } from './main-process-proxy'
 import { DiscardChanges } from './discard-changes'
-import { Welcome } from './welcome'
 import { AppMenuBar } from './app-menu'
 import { UpdateAvailable, renderBanner } from './banners'
 import { Preferences } from './preferences'
@@ -100,7 +99,6 @@ import { ReleaseNotes } from './release-notes'
 import { DeletePullRequest } from './delete-branch/delete-pull-request-dialog'
 import { CommitConflictsWarning } from './merge-conflicts'
 import { AppTheme } from './app-theme'
-import { ApplicationTheme } from './lib/application-theme'
 import { RepositoryStateCache } from '../lib/stores/repository-state-cache'
 import { PopupType, Popup } from '../models/popup'
 import { OversizedFiles } from './changes/oversized-files-warning'
@@ -3452,16 +3450,6 @@ export class App extends React.Component<IAppProps, IAppState> {
     }
   }
 
-  private renderWelcomeFlow() {
-    return (
-      <Welcome
-        dispatcher={this.props.dispatcher}
-        accounts={this.state.accounts}
-        signInState={this.state.signInState}
-      />
-    )
-  }
-
   public render() {
     if (this.loading) {
       return null
@@ -3474,9 +3462,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       }
     )
 
-    const currentTheme = this.state.showWelcomeFlow
-      ? ApplicationTheme.Light
-      : this.state.currentTheme
+    const currentTheme = this.state.currentTheme
 
     const currentTabSize = this.state.selectedTabSize
 
@@ -3488,9 +3474,7 @@ export class App extends React.Component<IAppProps, IAppState> {
       >
         <AppTheme theme={currentTheme} />
         {this.renderTitlebar()}
-        {this.state.showWelcomeFlow
-          ? this.renderWelcomeFlow()
-          : this.renderApp()}
+        {this.renderApp()}
         {this.renderZoomInfo()}
         {this.renderFullScreenInfo()}
       </div>

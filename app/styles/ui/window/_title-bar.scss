@@ -27,6 +27,18 @@
     }
   }
 
+  .title-bar-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--toolbar-text-color);
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
   .resize-handle {
     position: absolute;
     top: 0px;

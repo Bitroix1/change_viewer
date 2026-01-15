@@ -21,9 +21,9 @@ interface IFolderCompareViewState {
   readonly beforeFolder: string
   readonly afterFolder: string
   readonly fileChanges: ReadonlyArray<WorkingDirectoryFileChange>
-  readonly selectedFile: WorkingDirectoryFileChange | null
-  readonly currentDiff: ITextDiff | null
+  readonly fileDiffs: Map<string, ITextDiff | null>
   readonly isLoading: boolean
+  readonly isLoadingDiffs: boolean
 }
 
 export class FolderCompareView extends React.Component<
@@ -37,9 +37,9 @@ export class FolderCompareView extends React.Component<
       beforeFolder: '',
       afterFolder: '',
       fileChanges: [],
-      selectedFile: null,
-      currentDiff: null,
+      fileDiffs: new Map(),
       isLoading: false,
+      isLoadingDiffs: false,
     }
   }
 
@@ -66,7 +66,9 @@ export class FolderCompareView extends React.Component<
           <Button onClick={this.onChangeFolders}>Change Folders</Button>
         </div>
         
-        {this.state.isLoading && <div style={{ padding: '20px' }}>Loading...</div>}
+        {this.state.isLoading && <div style={{ padding: '20px' }}>Loading files...</div>}
+        
+        {this.state.isLoadingDiffs && <div style={{ padding: '20px' }}>Loading diffs...</div>}
         
         {!this.state.isLoading && this.state.fileChanges.length === 0 && (
           <div style={{ padding: '20px' }}>No differences found</div>
@@ -74,93 +76,58 @@ export class FolderCompareView extends React.Component<
         
         {!this.state.isLoading && this.state.fileChanges.length > 0 && (
           <div className="folder-compare-content" style={{ 
-            display: 'flex', 
             flex: 1, 
-            overflow: 'hidden',
-            minHeight: 0  // Important for flex children
+            overflow: 'auto',
+            minHeight: 0,
+            padding: '20px'
           }}>
-            <div className="file-list" style={{ 
-              width: '300px', 
-              borderRight: '1px solid var(--box-border-color)', 
-              overflowY: 'auto',
-              padding: '10px',
-              flexShrink: 0
-            }}>
-              <h3 style={{ margin: '0 0 10px 0' }}>Changed Files ({this.state.fileChanges.length})</h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {this.state.fileChanges.map(file => (
-                  <li
-                    key={file.id}
-                    onClick={() => this.onFileSelected(file)}
-                    style={{
-                      padding: '8px',
-                      cursor: 'pointer',
-                      backgroundColor: this.state.selectedFile?.id === file.id ? 'var(--background-color)' : 'transparent',
-                      borderRadius: '4px',
-                      marginBottom: '4px'
-                    }}
-                  >
-                    <div style={{ fontWeight: this.state.selectedFile?.id === file.id ? 'bold' : 'normal' }}>
+            <div>
+              <div className="file-list-header" style={{ 
+                padding: '10px 20px',
+                backgroundColor: 'var(--box-alt-background-color)',
+                borderBottom: '1px solid var(--box-border-color)',
+                borderTopLeftRadius: '6px',
+                borderTopRightRadius: '6px',
+                position: 'sticky',
+                top: '0',
+                zIndex: 10,
+                marginBottom: '20px'
+              }}>
+                {this.state.fileChanges.length} changed {this.state.fileChanges.length === 1 ? 'file' : 'files'}
+              </div>
+              
+              {this.state.fileChanges.map((file, index) => (
+                <div key={file.id} style={{ 
+                  border: '1px solid var(--box-border-color)',
+                  borderRadius: '6px',
+                  marginTop: index === 0 ? 0 : '20px',
+                  marginBottom: index === this.state.fileChanges.length - 1 ? '0' : '0',
+                  overflow: 'hidden',
+                  backgroundColor: 'var(--box-background-color)'
+                }}>
+                  <div style={{ 
+                    padding: '15px 20px', 
+                    backgroundColor: 'var(--box-alt-background-color)',
+                    borderBottom: '1px solid var(--box-border-color)'
+                  }}>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '14px', fontWeight: 600 }}>
                       {file.path}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-secondary-color)' }}>
+                    </h3>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
                       {this.getStatusLabel(file.status.kind)}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            {this.state.selectedFile && (
-              <div className="diff-view" style={{ 
-                flex: 1, 
-                display: 'flex', 
-                flexDirection: 'column',
-                minHeight: 0,
-                minWidth: 0,
-                overflow: 'hidden'
-              }}>
-                {!this.state.currentDiff ? (
-                  <div style={{ padding: '20px', textAlign: 'center' }}>
-                    Loading diff for {this.state.selectedFile.path}...
                   </div>
-                ) : (
-                  <>
-                    <div style={{ 
-                      padding: '10px', 
-                      borderBottom: '1px solid var(--box-border-color)',
-                      flexShrink: 0
-                    }}>
-                      <h3 style={{ margin: 0 }}>{this.state.selectedFile.path}</h3>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
-                        {this.getStatusLabel(this.state.selectedFile.status.kind)}
-                      </div>
-                    </div>
-                    <div className="diff-container" style={{ 
-                      flex: 1, 
-                      overflow: 'auto',
-                      minHeight: 0,
-                      position: 'relative'
-                    }}>
-                      <Diff
-                        repository={this.getDummyRepository()}
-                        readOnly={true}
-                        file={this.state.selectedFile}
-                        diff={this.state.currentDiff}
-                        fileContents={null}
-                        imageDiffType={ImageDiffType.TwoUp}
-                        hideWhitespaceInDiff={false}
-                        showSideBySideDiff={true}
-                        showDiffCheckMarks={false}
-                        onOpenBinaryFile={() => {}}
-                        onChangeImageDiffType={() => {}}
-                        onHideWhitespaceInDiffChanged={() => {}}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+                  
+                  <div className="diff-container" style={{ 
+                    backgroundColor: 'var(--background-color)',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}>
+                    {this.renderDiffForFile(file)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -177,6 +144,52 @@ export class FolderCompareView extends React.Component<
       missing: false,
       hash: 'folder-compare-temp',
     } as Repository
+  }
+
+  private renderDiffForFile(file: WorkingDirectoryFileChange): JSX.Element {
+    const diff = this.state.fileDiffs.get(file.id)
+    
+    if (diff === undefined) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
+          Loading diff...
+        </div>
+      )
+    }
+    
+    if (diff === null) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
+          Unable to load diff
+        </div>
+      )
+    }
+    
+    // Calculate height to exactly fit content:
+    // 75px for diff header + (rows × 20px) for grid content
+    //const lineCount = diff.hunks.reduce((total, hunk) => total + hunk.lines.length, 0)
+    //const hunkCount = diff.hunks.length
+    //const totalRows = lineCount + hunkCount  // Each hunk header is also a row
+    const calculatedHeight = 75 + (7 * 20)
+    
+    return (
+      <div style={{ height: `${calculatedHeight}px`, display: 'flex', flexDirection: 'column' }}>
+        <Diff
+          repository={this.getDummyRepository()}
+          readOnly={true}
+          file={file}
+          diff={diff}
+          fileContents={null}
+          imageDiffType={ImageDiffType.TwoUp}
+          hideWhitespaceInDiff={false}
+          showSideBySideDiff={true}
+          showDiffCheckMarks={false}
+          onOpenBinaryFile={() => {}}
+          onChangeImageDiffType={() => {}}
+          onHideWhitespaceInDiffChanged={() => {}}
+        />
+      </div>
+    )
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {
@@ -218,10 +231,21 @@ export class FolderCompareView extends React.Component<
       this.setState({
         fileChanges,
         isLoading: false,
+        isLoadingDiffs: true,
+      })
+      
+      // Load all diffs
+      await this.loadAllDiffs(beforeFolder, afterFolder, fileChanges)
+      
+      this.setState({
+        isLoadingDiffs: false,
       })
     } catch (error) {
       console.error('Error comparing folders:', error)
-      this.setState({ isLoading: false })
+      this.setState({ 
+        isLoading: false,
+        isLoadingDiffs: false,
+      })
     }
   }
 
@@ -229,30 +253,31 @@ export class FolderCompareView extends React.Component<
     this.setState({
       showFolderSelector: true,
       fileChanges: [],
-      selectedFile: null,
-      currentDiff: null,
+      fileDiffs: new Map(),
     })
   }
 
-  private onFileSelected = async (file: WorkingDirectoryFileChange) => {
-    console.log('File selected:', file.path)
-    this.setState({ selectedFile: file, currentDiff: null })
+  private async loadAllDiffs(
+    beforeFolder: string,
+    afterFolder: string,
+    files: ReadonlyArray<WorkingDirectoryFileChange>
+  ): Promise<void> {
+    const newDiffs = new Map<string, ITextDiff | null>()
     
-    // Generate diff for the selected file
-    try {
-      const diff = await computeDiff(
-        this.state.beforeFolder,
-        this.state.afterFolder,
-        file
-      )
-      console.log('Diff generated:', diff)
-      if (diff) {
-        this.setState({ currentDiff: diff })
-      } else {
-        console.error('Diff is null for file:', file.path)
+    // Load diffs for all files
+    for (const file of files) {
+      try {
+        const diff = await computeDiff(beforeFolder, afterFolder, file)
+        newDiffs.set(file.id, diff)
+      } catch (error) {
+        console.error(`Error loading diff for ${file.path}:`, error)
+        newDiffs.set(file.id, null)
       }
-    } catch (error) {
-      console.error('Error generating diff:', error)
+      
+      // Update state progressively so user sees diffs loading
+      this.setState({
+        fileDiffs: new Map(newDiffs)
+      })
     }
   }
 

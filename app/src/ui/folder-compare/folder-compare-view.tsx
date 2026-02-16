@@ -120,7 +120,7 @@ export class FolderCompareView extends React.Component<
 
           {/* Main Content Area */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <div className="folder-compare-header" style={{ padding: '10px', borderBottom: '1px solid var(--box-border-color)' }}>
+            <div className="folder-compare-header" style={{ padding: '10px', borderBottom: '1px solid var(--box-border-color)', backgroundColor: 'var(--box-background-color)' }}>
               <h2 style={{ margin: '0 0 10px 0' }}>Folder Comparison</h2>
               <div className="folder-paths" style={{ fontSize: '12px', marginBottom: '10px' }}>
                 <div><strong>Before:</strong> {this.state.beforeFolder}</div>
@@ -160,7 +160,7 @@ export class FolderCompareView extends React.Component<
               </div>
               
               {this.state.fileChanges.map((file, index) => (
-                <div key={file.id} style={{ 
+                <div key={file.id} data-file-path={file.path} style={{ 
                   border: '1px solid var(--box-border-color)',
                   borderRadius: '6px',
                   marginTop: index === 0 ? 0 : '20px',
@@ -254,6 +254,7 @@ export class FolderCompareView extends React.Component<
           onHideWhitespaceInDiffChanged={() => {}}
         />
         <style>{`
+          /* === Fully filtered rows/sides (not in component at all) === */
           .folder-compare-view .component-filtered,
           .folder-compare-view .component-filtered.modified,
           .folder-compare-view .component-filtered.added,
@@ -273,13 +274,12 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered-side .line-number,
           .folder-compare-view .component-filtered-side .line-number label,
           .folder-compare-view .component-filtered-side .line-number span {
-            color: var(--text-secondary-color) !important;
-            background-color: var(--background-color) !important;
+            background-color: var(--diff-gutter-background-color) !important;
           }
           
           .folder-compare-view .component-filtered .line-number.line-selected,
           .folder-compare-view .component-filtered-side .line-number.line-selected {
-            background-color: var(--background-color) !important;
+            background-color: var(--diff-gutter-background-color) !important;
           }
           
           .folder-compare-view .component-filtered .content,
@@ -287,7 +287,6 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered-side .content,
           .folder-compare-view .component-filtered-side .content-wrapper {
             background-color: var(--background-color) !important;
-            color: var(--text-secondary-color) !important;
           }
           
           .folder-compare-view .component-filtered .cm-diff-delete,
@@ -301,7 +300,6 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered-side .cm-diff-add-bg,
           .folder-compare-view .component-filtered-side span[class*="cm-diff"] {
             background-color: transparent !important;
-            color: var(--text-secondary-color) !important;
           }
           
           .folder-compare-view .component-filtered .diff-line-gutter,
@@ -309,14 +307,62 @@ export class FolderCompareView extends React.Component<
             background-color: transparent !important;
           }
           
-          .folder-compare-view .component-filtered *,
-          .folder-compare-view .component-filtered-side * {
-            color: var(--text-secondary-color) !important;
+
+
+          /* Make dividers gray by default, then blue only for changed rows */
+          .folder-compare-view .hunk-handle-place-holder,
+          .folder-compare-view .hunk-handle-place-holder.selected {
+            background-color: var(--diff-empty-hunk-handle) !important;
+          }
+          .folder-compare-view .row.added .hunk-handle-place-holder,
+          .folder-compare-view .row.deleted .hunk-handle-place-holder,
+          .folder-compare-view .row.modified .hunk-handle-place-holder {
+            background-color: var(--diff-selected-border-color) !important;
+          }
+          .folder-compare-view .component-filtered .hunk-handle-place-holder {
+            background-color: var(--diff-empty-hunk-handle) !important;
+          }
+
+          /* === Character-level filtered sides (line is in component but only specific chars highlighted) === */
+          /* Only clear the inner cm-diff character highlights so our overlays show through.
+             Keep the line-level background (on side / .content / .content-wrapper) intact.
+             Line numbers keep their original diff coloring (blue/green/red). */
+          .folder-compare-view .component-char-filtered .cm-diff-delete,
+          .folder-compare-view .component-char-filtered .cm-diff-add,
+          .folder-compare-view .component-char-filtered .cm-diff-delete-bg,
+          .folder-compare-view .component-char-filtered .cm-diff-add-bg,
+          .folder-compare-view .component-char-filtered span[class*="cm-diff"] {
+            background-color: transparent !important;
+          }
+
+          /* Character-level highlight overlays */
+          .folder-compare-view .component-char-highlight {
+            position: absolute;
+            top: 20%;
+            bottom: 20%;
+            pointer-events: none;
+            z-index: 0;
+          }
+          .folder-compare-view .component-highlight-add {
+            background-color: var(--diff-add-inner-background-color);
+          }
+          .folder-compare-view .component-highlight-delete {
+            background-color: var(--diff-delete-inner-background-color);
+          }
+
+          /* Ensure text content renders on top of highlight overlays (exclude the overlays themselves) */
+          .folder-compare-view .component-char-filtered .content-wrapper > *:not(.component-char-highlight) {
+            position: relative;
+            z-index: 1;
           }
         `}</style>
       </div>
     )
   }
+
+  private mutationObserver: MutationObserver | null = null
+  private isApplyingHighlighting = false
+  private highlightingRAF: number | null = null
 
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
@@ -324,250 +370,306 @@ export class FolderCompareView extends React.Component<
       // Use setTimeout to ensure DOM has been updated
       setTimeout(() => this.applyComponentHighlightingToAll(), 0)
     }
-  }
 
-  private applyComponentHighlightingToAll(): void {
-    // Apply highlighting to all displayed files
-    for (const file of this.state.fileChanges) {
-      this.applyComponentHighlightingForFile(file.path)
+    // Set up MutationObserver when diff content first appears
+    if (!this.mutationObserver && !this.state.showFolderSelector && this.state.fileChanges.length > 0 && !this.state.isLoadingDiffs) {
+      this.setupMutationObserver()
     }
   }
 
-  private applyComponentHighlightingForFile(filePath: string): void {
-    console.log('[DOM Highlighter] Starting for file:', filePath)
-    console.log('[DOM Highlighter] Selected component:', this.state.selectedComponent)
-    
-    // If "Show All" is selected, remove all filtering
+  public componentWillUnmount(): void {
+    this.cleanupMutationObserver()
+  }
+
+  private setupMutationObserver(): void {
+    this.cleanupMutationObserver()
+
+    this.mutationObserver = new MutationObserver(() => {
+      if (this.isApplyingHighlighting) return
+      if (this.state.selectedComponent === 'all') return
+
+      // Debounce via requestAnimationFrame to batch scroll-triggered DOM changes
+      if (this.highlightingRAF) {
+        cancelAnimationFrame(this.highlightingRAF)
+      }
+      this.highlightingRAF = requestAnimationFrame(() => {
+        this.applyComponentHighlightingToAll()
+      })
+    })
+
+    const container = document.querySelector('.folder-compare-view')
+    if (container) {
+      this.mutationObserver.observe(container, {
+        childList: true,
+        subtree: true,
+      })
+    }
+  }
+
+  private cleanupMutationObserver(): void {
+    if (this.highlightingRAF) {
+      cancelAnimationFrame(this.highlightingRAF)
+      this.highlightingRAF = null
+    }
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect()
+      this.mutationObserver = null
+    }
+  }
+
+  private applyComponentHighlightingToAll(): void {
+    this.isApplyingHighlighting = true
+
     if (this.state.selectedComponent === 'all') {
-      console.log('[DOM Highlighter] Show All - removing all filters')
+      // Remove all filtering across all files
       document.querySelectorAll('.folder-compare-view .row').forEach(row => {
         row.classList.remove('component-filtered')
       })
       document.querySelectorAll('.folder-compare-view .before, .folder-compare-view .after').forEach(side => {
         side.classList.remove('component-filtered-side')
+        side.classList.remove('component-char-filtered')
       })
+      document.querySelectorAll('.folder-compare-view .component-char-highlight').forEach(el => el.remove())
+      this.isApplyingHighlighting = false
       return
     }
-    
-    const highlightedLines = this.getHighlightedLinesForComponent(filePath)
-    console.log('[DOM Highlighter] File:', filePath)
-    console.log('[DOM Highlighter] Highlighted lines:', highlightedLines)
-    
-    // Debug: Let's inspect what's actually in the DOM
-    console.log('[DOM Highlighter] Checking DOM structure...')
-    const folderCompareView = document.querySelector('.folder-compare-view')
-    console.log('[DOM Highlighter] .folder-compare-view found:', !!folderCompareView)
-    
-    const allDivs = document.querySelectorAll('.folder-compare-view div')
-    console.log('[DOM Highlighter] Total divs in folder-compare-view:', allDivs.length)
-    
-    const rowsWithClass = document.querySelectorAll('.folder-compare-view .row')
-    console.log('[DOM Highlighter] Rows with .row class:', rowsWithClass.length)
-    
-    // Try different selectors
-    const addedRows = document.querySelectorAll('.folder-compare-view .added')
-    const deletedRows = document.querySelectorAll('.folder-compare-view .deleted')
-    console.log('[DOM Highlighter] Rows with .added class:', addedRows.length)
-    console.log('[DOM Highlighter] Rows with .deleted class:', deletedRows.length)
-    
-    // Try without the folder-compare-view prefix
-    const allRowsInDoc = document.querySelectorAll('.row')
-    console.log('[DOM Highlighter] All .row elements in document:', allRowsInDoc.length)
-    
-    // Inspect the first few rows to see their actual structure
-    if (allRowsInDoc.length > 0) {
-      console.log('[DOM Highlighter] Inspecting all row classes:')
-      allRowsInDoc.forEach((row, index) => {
-        const htmlRow = row as HTMLElement
-        console.log(`[DOM Highlighter]   Row ${index}: classes="${htmlRow.className}"`)
-      })
-      
-      // Find the first modified row and inspect its structure
-      const firstModified = Array.from(allRowsInDoc).find(r => (r as HTMLElement).classList.contains('modified')) as HTMLElement
-      if (firstModified) {
-        console.log('[DOM Highlighter] First modified row HTML:', firstModified.outerHTML.substring(0, 500))
-        
-        // Try to find line number elements
-        const beforeSide = firstModified.querySelector('.before')
-        const afterSide = firstModified.querySelector('.after')
-        console.log('[DOM Highlighter] Has .before element:', !!beforeSide)
-        console.log('[DOM Highlighter] Has .after element:', !!afterSide)
-        
-        if (beforeSide) {
-          console.log('[DOM Highlighter] .before HTML:', beforeSide.outerHTML.substring(0, 300))
-        }
+
+    // Apply highlighting scoped to each file's container
+    for (const file of this.state.fileChanges) {
+      this.applyComponentHighlightingForFile(file.path)
+    }
+
+    this.isApplyingHighlighting = false
+  }
+
+  /**
+   * Extract the actual source file line number from a .line-number element.
+   * The label's `for` attribute has format "{lineNumber}-before" or "{lineNumber}-after".
+   */
+  private extractLineNumber(lineNumberDiv: Element): number | null {
+    const label = lineNumberDiv.querySelector('label')
+    if (!label) return null
+
+    const htmlFor = label.getAttribute('for')
+    if (!htmlFor) return null
+
+    const match = htmlFor.match(/^(\d+)-(before|after)$/)
+    return match ? parseInt(match[1], 10) : null
+  }
+
+  private applyComponentHighlightingForFile(filePath: string): void {
+    // Scope to this specific file's container using data-file-path
+    const fileContainer = document.querySelector(`.folder-compare-view [data-file-path="${filePath}"]`)
+    if (!fileContainer) return
+
+    // Clean up previous character highlights for this file
+    fileContainer.querySelectorAll('.component-char-highlight').forEach(el => el.remove())
+    fileContainer.querySelectorAll('.component-char-filtered').forEach(el => {
+      el.classList.remove('component-char-filtered')
+    })
+
+    const highlights = this.getHighlightedLinesForComponent(filePath)
+
+    // Find all diff rows within this file's container
+    const diffRows = fileContainer.querySelectorAll('.row')
+
+    // Build lookup maps: line number → column ranges for before/after sides
+    const beforeHighlights = new Map<number, Array<{startCol: number, endCol: number}>>()
+    const afterHighlights = new Map<number, Array<{startCol: number, endCol: number}>>()
+
+    for (const h of highlights) {
+      const map = h.side === 'before' ? beforeHighlights : afterHighlights
+      const existing = map.get(h.line)
+      if (existing) {
+        existing.push(...h.ranges)
+      } else {
+        map.set(h.line, [...h.ranges])
       }
     }
-    
-    if (highlightedLines.length === 0) {
-      console.log('[DOM Highlighter] No lines to highlight - filtering all changes')
-      // If no lines to highlight for this file, mark all changed lines as filtered
-      document.querySelectorAll('.folder-compare-view .row').forEach(row => {
+
+    if (highlights.length === 0) {
+      // No highlights for this file - filter all changed rows
+      diffRows.forEach(row => {
         const htmlRow = row as HTMLElement
-        if (htmlRow.classList.contains('added') || 
-            htmlRow.classList.contains('deleted') || 
+        if (htmlRow.classList.contains('added') ||
+            htmlRow.classList.contains('deleted') ||
             htmlRow.classList.contains('modified')) {
           htmlRow.classList.add('component-filtered')
+          const beforeSide = htmlRow.querySelector('.before') as HTMLElement
+          const afterSide = htmlRow.querySelector('.after') as HTMLElement
+          if (beforeSide) beforeSide.classList.add('component-filtered-side')
+          if (afterSide) afterSide.classList.add('component-filtered-side')
         }
       })
       return
     }
-    
-    const beforeLines = new Set(highlightedLines.filter(l => l.side === 'before').map(l => l.line))
-    const afterLines = new Set(highlightedLines.filter(l => l.side === 'after').map(l => l.line))
-    
-    console.log('[DOM Highlighter] Before lines to keep:', Array.from(beforeLines))
-    console.log('[DOM Highlighter] After lines to keep:', Array.from(afterLines))
-    
-    // Find all diff rows and check their line numbers
-    const diffRows = document.querySelectorAll('.folder-compare-view .row')
-    console.log('[DOM Highlighter] Total rows found:', diffRows.length)
-    
-    let processedCount = 0
-    let filteredCount = 0
-    let keptCount = 0
-    
+
     diffRows.forEach(row => {
       const htmlRow = row as HTMLElement
-      
-      // Skip if not a modified/added/deleted row (skip context and hunk-info rows)
-      if (!htmlRow.classList.contains('modified') && 
-          !htmlRow.classList.contains('added') && 
+
+      // Skip context and hunk-info rows
+      if (!htmlRow.classList.contains('modified') &&
+          !htmlRow.classList.contains('added') &&
           !htmlRow.classList.contains('deleted')) {
         return
       }
-      
-      processedCount++
-      let shouldKeepBeforeSide = false
-      let shouldKeepAfterSide = false
-      
-      // Check before (left) side - extract line number from id attribute
+
+      let beforeRanges: Array<{startCol: number, endCol: number}> | undefined
+      let afterRanges: Array<{startCol: number, endCol: number}> | undefined
+
+      // Check before (left) side
       const beforeLineNumDiv = htmlRow.querySelector('.before .line-number')
       if (beforeLineNumDiv) {
-        const id = beforeLineNumDiv.getAttribute('id') // e.g., "line-numbers-3-before"
-        if (id) {
-          const match = id.match(/line-numbers-(\d+)-before/)
-          const lineNumber = match ? parseInt(match[1], 10) : null
-          console.log('[DOM Highlighter] Row has before line number:', lineNumber)
-          if (lineNumber && beforeLines.has(lineNumber)) {
-            shouldKeepBeforeSide = true
-            console.log('[DOM Highlighter]   -> KEEPING before side (line', lineNumber, 'is in set)')
-          }
+        const lineNumber = this.extractLineNumber(beforeLineNumDiv)
+        if (lineNumber !== null) {
+          beforeRanges = beforeHighlights.get(lineNumber)
         }
       }
-      
-      // Check after (right) side - extract line number from id attribute
+
+      // Check after (right) side
       const afterLineNumDiv = htmlRow.querySelector('.after .line-number')
       if (afterLineNumDiv) {
-        const id = afterLineNumDiv.getAttribute('id') // e.g., "line-numbers-3-after"
-        if (id) {
-          const match = id.match(/line-numbers-(\d+)-after/)
-          const lineNumber = match ? parseInt(match[1], 10) : null
-          console.log('[DOM Highlighter] Row has after line number:', lineNumber)
-          if (lineNumber && afterLines.has(lineNumber)) {
-            shouldKeepAfterSide = true
-            console.log('[DOM Highlighter]   -> KEEPING after side (line', lineNumber, 'is in set)')
-          }
+        const lineNumber = this.extractLineNumber(afterLineNumDiv)
+        if (lineNumber !== null) {
+          afterRanges = afterHighlights.get(lineNumber)
         }
       }
-      
-      // Apply filtering to individual sides
+
       const beforeSide = htmlRow.querySelector('.before') as HTMLElement
       const afterSide = htmlRow.querySelector('.after') as HTMLElement
-      
+
+      // Apply before side
       if (beforeSide) {
-        if (shouldKeepBeforeSide) {
+        if (beforeRanges && beforeRanges.length > 0) {
           beforeSide.classList.remove('component-filtered-side')
-          console.log('[DOM Highlighter]   -> Before side KEPT')
+          beforeSide.classList.add('component-char-filtered')
+          const contentWrapper = beforeSide.querySelector('.content-wrapper') as HTMLElement
+          if (contentWrapper) {
+            this.addCharHighlights(contentWrapper, beforeRanges, 'before')
+          }
         } else {
           beforeSide.classList.add('component-filtered-side')
-          filteredCount++
-          console.log('[DOM Highlighter]   -> Before side FILTERED')
+          beforeSide.classList.remove('component-char-filtered')
         }
       }
-      
+
+      // Apply after side
       if (afterSide) {
-        if (shouldKeepAfterSide) {
+        if (afterRanges && afterRanges.length > 0) {
           afterSide.classList.remove('component-filtered-side')
-          console.log('[DOM Highlighter]   -> After side KEPT')
+          afterSide.classList.add('component-char-filtered')
+          const contentWrapper = afterSide.querySelector('.content-wrapper') as HTMLElement
+          if (contentWrapper) {
+            this.addCharHighlights(contentWrapper, afterRanges, 'after')
+          }
         } else {
           afterSide.classList.add('component-filtered-side')
-          filteredCount++
-          console.log('[DOM Highlighter]   -> After side FILTERED')
+          afterSide.classList.remove('component-char-filtered')
         }
       }
-      
-      // If both sides are filtered, mark the entire row as filtered too
-      if (!shouldKeepBeforeSide && !shouldKeepAfterSide) {
+
+      // If both sides have no component ranges, mark the entire row as filtered
+      if (!beforeRanges && !afterRanges) {
         htmlRow.classList.add('component-filtered')
-        console.log('[DOM Highlighter]   -> Entire row FILTERED')
       } else {
         htmlRow.classList.remove('component-filtered')
-        keptCount++
       }
     })
-    
-    console.log('[DOM Highlighter] Summary: processed', processedCount, 'rows, kept', keptCount, 'filtered', filteredCount)
   }
 
-  private getHighlightedLinesForComponent(filePath: string): Array<{line: number, side: 'before' | 'after'}> {
+  /**
+   * Add absolute-positioned overlay spans on the content-wrapper to highlight
+   * specific character ranges. Uses monospace `ch` units for positioning.
+   */
+  private addCharHighlights(
+    contentWrapper: HTMLElement,
+    ranges: Array<{startCol: number, endCol: number}>,
+    side: 'before' | 'after'
+  ): void {
+    contentWrapper.style.position = 'relative'
+
+    const highlightClass = side === 'before'
+      ? 'component-char-highlight component-highlight-delete'
+      : 'component-char-highlight component-highlight-add'
+
+    for (const range of ranges) {
+      // Positions are 0-based with exclusive end (e.g., "12-13" = 1 char at index 12)
+      if (range.endCol <= range.startCol) continue
+
+      const overlay = document.createElement('span')
+      overlay.className = highlightClass
+      overlay.style.left = `${range.startCol}ch`
+      overlay.style.width = `${range.endCol - range.startCol}ch`
+      contentWrapper.appendChild(overlay)
+    }
+  }
+
+  /**
+   * Get highlighted lines with character-level column ranges for the selected component.
+   * Returns entries with line number, side (before/after), and the specific column ranges.
+   */
+  private getHighlightedLinesForComponent(filePath: string): Array<{line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}> {
     if (this.state.selectedComponent === 'all') {
-      console.log('[Component Filter] Show All selected - no filtering')
       return []
     }
 
     const component = this.state.diffComponents[this.state.selectedComponent as number]
     if (!component || !component.changes) {
-      console.log('[Component Filter] No component or changes found')
       return []
     }
 
-    console.log('[Component Filter] Selected component:', this.state.selectedComponent)
-    console.log('[Component Filter] Component data:', component)
-    console.log('[Component Filter] File path:', filePath)
-    console.log('[Component Filter] Total changes in component:', component.changes.length)
+    // Collect ranges per line-side combination
+    const lineMap = new Map<string, {line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}>()
 
-    const lines: Array<{line: number, side: 'before' | 'after'}> = []
-    const lineSet = new Set<string>() // To avoid duplicates
-    
-    let changeIndex = 0
     for (const change of component.changes) {
-      changeIndex++
-      const kind = change.kind // "Removal" or "Addition"
-      
-      // Process "from" field (before side for Removal, after side for Addition)
+      // "Removal" = edge existed in before but not after -> positions are in the before file
+      // "Addition" = edge exists in after but not before -> positions are in the after file
+      const side: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
+
+      // Process "from" field
       if (change.from && change.from.file === filePath && change.from.position) {
-        const lineNum = parseInt(change.from.position.split(':')[0], 10)
-        const side = kind === 'Removal' ? 'before' : 'after'
-        const key = `${lineNum}-${side}`
-        console.log(`[Component Filter]   ${kind} - Processing from position:`, change.from.position, `-> ${side} line:`, lineNum)
-        if (!lineSet.has(key)) {
-          lines.push({ line: lineNum, side: side })
-          lineSet.add(key)
-          console.log(`[Component Filter]   ✓ Added ${side} line: ${lineNum}`)
-        } else {
-          console.log(`[Component Filter]   ⊗ Skipped ${side} line: ${lineNum} (already added)`)
-        }
+        this.addPositionToLineMap(lineMap, change.from.position, side)
       }
-      
-      // Process "to" field (after side for Addition, before side for Removal)
+
+      // Process "to" field
       if (change.to && change.to.file === filePath && change.to.position) {
-        const lineNum = parseInt(change.to.position.split(':')[0], 10)
-        const side = kind === 'Removal' ? 'before' : 'after'
-        const key = `${lineNum}-${side}`
-        console.log(`[Component Filter]   ${kind} - Processing to position:`, change.to.position, `-> ${side} line:`, lineNum)
-        if (!lineSet.has(key)) {
-          lines.push({ line: lineNum, side: side })
-          lineSet.add(key)
-          console.log(`[Component Filter]   ✓ Added ${side} line: ${lineNum}`)
-        } else {
-          console.log(`[Component Filter]   ⊗ Skipped ${side} line: ${lineNum} (already added)`)
-        }
+        this.addPositionToLineMap(lineMap, change.to.position, side)
       }
     }
 
-    console.log('[Component Filter] Total highlighted lines:', lines)
-    return lines
+    return Array.from(lineMap.values())
+  }
+
+  /**
+   * Parse a position string like "5:12-13" and add it to the line map.
+   * Format: "line:startCol-endCol" where columns are 0-based, endCol is exclusive.
+   */
+  private addPositionToLineMap(
+    lineMap: Map<string, {line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}>,
+    position: string,
+    side: 'before' | 'after'
+  ): void {
+    const parts = position.split(':')
+    if (parts.length < 2) return
+
+    const lineNum = parseInt(parts[0], 10)
+    const colParts = parts[1].split('-')
+    if (colParts.length < 2) return
+
+    const startCol = parseInt(colParts[0], 10)
+    const endCol = parseInt(colParts[1], 10)
+
+    // Skip empty ranges (e.g., "7:34-34")
+    if (endCol <= startCol) return
+
+    const key = `${lineNum}-${side}`
+    const existing = lineMap.get(key)
+    if (existing) {
+      // Add range to existing entry (may overlap, that's OK for overlays)
+      existing.ranges.push({ startCol, endCol })
+    } else {
+      lineMap.set(key, { line: lineNum, side, ranges: [{ startCol, endCol }] })
+    }
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {

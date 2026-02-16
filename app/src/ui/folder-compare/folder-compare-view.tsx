@@ -209,7 +209,7 @@ export class FolderCompareView extends React.Component<
                 flex: 1, 
                 overflow: 'auto',
                 minHeight: 0,
-                padding: '20px'
+                padding: '0 20px 20px 20px'
               }}>
             <div>
               {this.state.fileChanges.map((file, index) => (
@@ -218,13 +218,17 @@ export class FolderCompareView extends React.Component<
                   borderRadius: '6px',
                   marginTop: index === 0 ? 0 : '20px',
                   marginBottom: index === this.state.fileChanges.length - 1 ? '0' : '0',
-                  overflow: 'hidden',
                   backgroundColor: 'var(--box-background-color)'
                 }}>
                   <div style={{ 
                     padding: '15px 20px', 
                     backgroundColor: 'var(--box-alt-background-color)',
-                    borderBottom: '1px solid var(--box-border-color)'
+                    borderBottom: '1px solid var(--box-border-color)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
+                    borderTopLeftRadius: '6px',
+                    borderTopRightRadius: '6px'
                   }}>
                     <h3 style={{ margin: '0 0 5px 0', fontSize: '14px', fontWeight: 600 }}>
                       {file.path}
@@ -313,7 +317,8 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered .before,
           .folder-compare-view .component-filtered .after,
           .folder-compare-view .component-filtered-side {
-            background-color: var(--background-color) !important;
+            background: var(--background-color) !important;
+            color: var(--diff-text-color) !important;
           }
           
           .folder-compare-view .component-filtered .line-number,
@@ -334,7 +339,8 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered .content-wrapper,
           .folder-compare-view .component-filtered-side .content,
           .folder-compare-view .component-filtered-side .content-wrapper {
-            background-color: var(--background-color) !important;
+            background: var(--background-color) !important;
+            color: var(--diff-text-color) !important;
           }
           
           .folder-compare-view .component-filtered .cm-diff-delete,
@@ -372,9 +378,8 @@ export class FolderCompareView extends React.Component<
           }
 
           /* === Character-level filtered sides (line is in component but only specific chars highlighted) === */
-          /* Only clear the inner cm-diff character highlights so our overlays show through.
-             Keep the line-level background (on side / .content / .content-wrapper) intact.
-             Line numbers keep their original diff coloring (blue/green/red). */
+          /* Clear only the inner cm-diff character highlights so our overlays show.
+             Keep the line-level background (dark red/green) intact. */
           .folder-compare-view .component-char-filtered .cm-diff-delete,
           .folder-compare-view .component-char-filtered .cm-diff-add,
           .folder-compare-view .component-char-filtered .cm-diff-delete-bg,
@@ -383,13 +388,15 @@ export class FolderCompareView extends React.Component<
             background-color: transparent !important;
           }
 
-          /* Character-level highlight overlays */
+          /* Character-level highlight overlays — z-index:-1 so they sit
+             above the content-wrapper background but below normal-flow text
+             (including bare text nodes that can't receive z-index). */
           .folder-compare-view .component-char-highlight {
             position: absolute;
             top: 20%;
             bottom: 20%;
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
           }
           .folder-compare-view .component-highlight-add {
             background-color: var(--diff-add-inner-background-color);
@@ -398,11 +405,9 @@ export class FolderCompareView extends React.Component<
             background-color: var(--diff-delete-inner-background-color);
           }
 
-          /* Ensure text content renders on top of highlight overlays (exclude the overlays themselves) */
-          .folder-compare-view .component-char-filtered .content-wrapper > *:not(.component-char-highlight) {
-            position: relative;
-            z-index: 1;
-          }
+          /* content-wrapper stacking context is created in addCharHighlights
+             (position:relative + z-index:0).  With the overlay at z-index:-1
+             all normal-flow text—including bare text nodes—renders on top. */
         `}</style>
       </div>
     )
@@ -644,6 +649,7 @@ export class FolderCompareView extends React.Component<
     side: 'before' | 'after'
   ): void {
     contentWrapper.style.position = 'relative'
+    contentWrapper.style.zIndex = '0'  // create stacking context so z-index:-1 overlays sit below text
 
     const highlightClass = side === 'before'
       ? 'component-char-highlight component-highlight-delete'

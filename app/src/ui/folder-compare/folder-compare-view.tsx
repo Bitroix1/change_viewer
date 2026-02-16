@@ -172,7 +172,7 @@ export class FolderCompareView extends React.Component<
                                   fontSize: '9px',
                                   color: '#e8a63a',
                                   fontWeight: 600,
-                                  padding: '2px 6px 1px 6px',
+                                  padding: '2px 6px 0px 6px',
                                   whiteSpace: 'nowrap'
                                 }}>
                                   Likely source
@@ -378,6 +378,7 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered-side .line-number label,
           .folder-compare-view .component-filtered-side .line-number span {
             background-color: var(--diff-gutter-background-color) !important;
+            color: var(--text-secondary-color) !important;
           }
           
           .folder-compare-view .component-filtered .line-number.line-selected,
@@ -406,6 +407,13 @@ export class FolderCompareView extends React.Component<
             background-color: transparent !important;
           }
           
+          .folder-compare-view .component-filtered .cm-diff-delete-inner,
+          .folder-compare-view .component-filtered .cm-diff-add-inner,
+          .folder-compare-view .component-filtered-side .cm-diff-delete-inner,
+          .folder-compare-view .component-filtered-side .cm-diff-add-inner {
+            color: var(--diff-text-color) !important;
+          }
+          
           .folder-compare-view .component-filtered .diff-line-gutter,
           .folder-compare-view .component-filtered-side .diff-line-gutter {
             background-color: transparent !important;
@@ -417,14 +425,28 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .hunk-handle-place-holder,
           .folder-compare-view .hunk-handle-place-holder.selected {
             background-color: var(--diff-empty-hunk-handle) !important;
+            position: absolute !important;
+            left: calc(50% - var(--hunk-handle-width) / 2) !important;
+            width: var(--hunk-handle-width) !important;
+            height: 100% !important;
+            pointer-events: none !important;
+            z-index: 10 !important;
           }
           .folder-compare-view .row.added .hunk-handle-place-holder,
           .folder-compare-view .row.deleted .hunk-handle-place-holder,
           .folder-compare-view .row.modified .hunk-handle-place-holder {
             background-color: var(--diff-selected-border-color) !important;
           }
-          .folder-compare-view .component-filtered .hunk-handle-place-holder {
-            background-color: var(--diff-empty-hunk-handle) !important;
+          .folder-compare-view .component-filtered .hunk-handle-place-holder,
+          .folder-compare-view .component-filtered .hunk-handle-place-holder.selected {
+            background-color: var(--diff-gutter-color) !important;
+          }
+
+          /* Hide blue increased-hover-surface, focus-handle, and hunk-handle for filtered rows */
+          .folder-compare-view .component-filtered .increased-hover-surface,
+          .folder-compare-view .component-filtered .focus-handle,
+          .folder-compare-view .component-filtered .hunk-handle {
+            display: none !important;
           }
 
           /* === Character-level filtered sides (line is in component but only specific chars highlighted) === */

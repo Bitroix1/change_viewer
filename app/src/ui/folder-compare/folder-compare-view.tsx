@@ -27,6 +27,14 @@ interface IFolderCompareViewState {
   readonly diffComponents: any[]
   readonly diffNodes: any[]
   readonly selectedComponent: number | 'all'
+  readonly selectedNodeInfo: {
+    javaId: number
+    type: string
+    content: string
+    position: string
+    file: string
+    componentIndex: number
+  } | null
 }
 
 export class FolderCompareView extends React.Component<
@@ -46,6 +54,7 @@ export class FolderCompareView extends React.Component<
       diffComponents: [],
       diffNodes: [],
       selectedComponent: 'all',
+      selectedNodeInfo: null,
     }
   }
 
@@ -148,7 +157,7 @@ export class FolderCompareView extends React.Component<
                                 <span
                                   title={`${node.type}: ${node.content || '(no content)'}`}
                                   style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}
-                                  onClick={() => this.scrollToLine(node.file, parseInt(lineNum, 10), side)}
+                                  onClick={() => this.selectNode(node, index, side)}
                                 >
                                   {lineNum}
                                 </span>
@@ -156,13 +165,13 @@ export class FolderCompareView extends React.Component<
                                   className="node-line-content"
                                   title={lineContent}
                                   style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', overflowX: 'auto', cursor: 'pointer', flex: 1, minWidth: 0 }}
-                                  onClick={() => this.scrollToLine(node.file, parseInt(lineNum, 10), side)}
+                                  onClick={() => this.selectNode(node, index, side)}
                                 >
                                   {lineContent}
                                 </span>
                                 <span
                                   style={{ fontSize: '10px', color: 'var(--diff-selected-border-color)', flexShrink: 0, cursor: 'pointer' }}
-                                  onClick={() => this.scrollToFile(node.file)}
+                                  onClick={() => this.selectNode(node, index, side)}
                                 >
                                   {node.file || ''}
                                 </span>
@@ -222,6 +231,8 @@ export class FolderCompareView extends React.Component<
                 }}>
                   <div style={{ 
                     padding: '15px 20px', 
+                    paddingTop: '35px',
+                    marginTop: '-20px',
                     backgroundColor: 'var(--box-alt-background-color)',
                     borderBottom: '1px solid var(--box-border-color)',
                     position: 'sticky',
@@ -251,6 +262,9 @@ export class FolderCompareView extends React.Component<
               </div>
             )}
           </div>
+
+          {/* Right Panel for Node Details */}
+          {this.renderNodePanel()}
         </div>
       </div>
     )
@@ -408,6 +422,51 @@ export class FolderCompareView extends React.Component<
           /* content-wrapper stacking context is created in addCharHighlights
              (position:relative + z-index:0).  With the overlay at z-index:-1
              all normal-flow text—including bare text nodes—renders on top. */
+
+          /* Content doesn't wrap; overflow hidden prevents per-line scrolling.
+             Programmatic scrollLeft still works with overflow:hidden. */
+          .folder-compare-view .content {
+            white-space: pre !important;
+            word-break: normal !important;
+            overflow: hidden !important;
+          }
+          .folder-compare-view .content-wrapper {
+            white-space: pre !important;
+          }
+          /* Clip box-shadow from sticky scrollbar so it doesn't bleed
+             into the gap between files.  overflow:clip does NOT create
+             a scroll container, so sticky positioning still works. */
+          .folder-compare-view [data-file-path] {
+            overflow: clip;
+          }
+          /* Master scrollbar per side at bottom of each file diff */
+          .folder-compare-view .scroll-sync-bar {
+            display: flex;
+            border-top: 1px solid var(--box-border-color);
+            background: var(--box-background-color);
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            box-shadow: 0 50px 0 50px var(--box-background-color);
+          }
+          .folder-compare-view .scroll-sync-bar > div {
+            overflow-x: scroll;
+            overflow-y: hidden;
+          }
+          .folder-compare-view .scroll-sync-bar > div::-webkit-scrollbar {
+            height: 8px;
+          }
+          .folder-compare-view .scroll-sync-bar > div::-webkit-scrollbar-thumb {
+            background-color: rgba(127,127,127,0.5);
+            border-radius: 4px;
+          }
+          .folder-compare-view .scroll-sync-bar > div::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(127,127,127,0.7);
+          }
+          .folder-compare-view .scroll-sync-bar > div::-webkit-scrollbar-track {
+            background: rgba(127,127,127,0.1);
+            border-radius: 4px;
+          }
         `}</style>
       </div>
     )
@@ -434,7 +493,10 @@ export class FolderCompareView extends React.Component<
     if (!this.state.isLoadingDiffs && this.state.fileDiffs.size > 0 && !this.diffHeightsAdjusted) {
       this.diffHeightsAdjusted = true
       // Wait for react-virtualized to render all rows inside the large container
-      setTimeout(() => this.shrinkWrappersToFit(), 500)
+      setTimeout(() => {
+        this.shrinkWrappersToFit()
+        this.setupScrollSync()
+      }, 500)
     }
   }
 
@@ -492,6 +554,7 @@ export class FolderCompareView extends React.Component<
         side.classList.remove('component-char-filtered')
       })
       document.querySelectorAll('.folder-compare-view .component-char-highlight').forEach(el => el.remove())
+      document.querySelectorAll('.folder-compare-view .component-char-click-capture').forEach(el => el.remove())
       this.isApplyingHighlighting = false
       return
     }
@@ -526,6 +589,7 @@ export class FolderCompareView extends React.Component<
 
     // Clean up previous character highlights for this file
     fileContainer.querySelectorAll('.component-char-highlight').forEach(el => el.remove())
+    fileContainer.querySelectorAll('.component-char-click-capture').forEach(el => el.remove())
     fileContainer.querySelectorAll('.component-char-filtered').forEach(el => {
       el.classList.remove('component-char-filtered')
     })
@@ -664,6 +728,22 @@ export class FolderCompareView extends React.Component<
       overlay.style.left = `${range.startCol}ch`
       overlay.style.width = `${range.endCol - range.startCol}ch`
       contentWrapper.appendChild(overlay)
+
+      // Transparent click-capture overlay on top for node selection
+      const clickCapture = document.createElement('span')
+      clickCapture.className = 'component-char-click-capture'
+      clickCapture.style.position = 'absolute'
+      clickCapture.style.left = `${range.startCol}ch`
+      clickCapture.style.width = `${range.endCol - range.startCol}ch`
+      clickCapture.style.top = '0'
+      clickCapture.style.bottom = '0'
+      clickCapture.style.zIndex = '2'
+      clickCapture.style.cursor = 'pointer'
+      clickCapture.dataset.startCol = String(range.startCol)
+      clickCapture.dataset.endCol = String(range.endCol)
+      clickCapture.dataset.side = side
+      clickCapture.addEventListener('mousedown', this.handleCharHighlightClick)
+      contentWrapper.appendChild(clickCapture)
     }
   }
 
@@ -805,6 +885,106 @@ export class FolderCompareView extends React.Component<
     }
   }
 
+  /**
+   * For each file, add a master horizontal scrollbar per side (before/after)
+   * at the bottom of the diff. All content lines on the same side scroll
+   * together via synchronized scrollLeft.
+   */
+  private setupScrollSync(): void {
+    document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fileContainer => {
+      const diffContainer = fileContainer.querySelector('.diff-container') as HTMLElement
+      if (!diffContainer) return
+
+      // Skip if already set up
+      if (diffContainer.querySelector('.scroll-sync-bar')) return
+
+      const beforeContents = Array.from(fileContainer.querySelectorAll('.before .content')) as HTMLElement[]
+      const afterContents = Array.from(fileContainer.querySelectorAll('.after .content')) as HTMLElement[]
+
+      if (beforeContents.length === 0 && afterContents.length === 0) return
+
+      // Find max scroll width for each side
+      const maxBeforeSW = Math.max(0, ...beforeContents.map(el => el.scrollWidth))
+      const maxAfterSW = Math.max(0, ...afterContents.map(el => el.scrollWidth))
+
+      const firstBefore = beforeContents[0]
+      const firstAfter = afterContents[0]
+      const beforeOverflows = firstBefore && maxBeforeSW > firstBefore.clientWidth + 2
+      const afterOverflows = firstAfter && maxAfterSW > firstAfter.clientWidth + 2
+
+      if (!beforeOverflows && !afterOverflows) return
+
+      // Create sync bar container — always create both halves
+      const syncBar = document.createElement('div')
+      syncBar.className = 'scroll-sync-bar'
+
+      const beforeBar = document.createElement('div')
+      beforeBar.style.width = '50%'
+      const beforeInner = document.createElement('div')
+      beforeInner.style.height = '1px'
+      beforeBar.appendChild(beforeInner)
+
+      const afterBar = document.createElement('div')
+      afterBar.style.width = '50%'
+      const afterInner = document.createElement('div')
+      afterInner.style.height = '1px'
+      afterBar.appendChild(afterInner)
+
+      syncBar.appendChild(beforeBar)
+      syncBar.appendChild(afterBar)
+      diffContainer.appendChild(syncBar)
+
+      // Defer width calculation until the sync bar is laid out
+      requestAnimationFrame(() => {
+        // Use the max scrollWidth across both sides so both scrollbars
+        // have the same range and both sides are always scrollable.
+        const maxSW = Math.max(maxBeforeSW, maxAfterSW)
+        // Set inner width = maxScrollWidth.  The bar's visible portion
+        // (clientWidth) is roughly the same as the content's clientWidth,
+        // so scrollLeftMax ≈ maxSW - clientWidth, matching the overflow.
+        beforeInner.style.width = `${maxSW}px`
+        afterInner.style.width = `${maxSW}px`
+      })
+
+      // Scroll handler: translateX all .content-wrapper elements on that side.
+      // Unlike scrollLeft (which only affects lines whose content overflows),
+      // transform moves EVERY line by the same amount.
+      // Always attach handlers for both sides so both scrollbars work.
+      beforeBar.addEventListener('scroll', () => {
+        const sl = beforeBar.scrollLeft
+        beforeContents.forEach(el => {
+          const w = el.querySelector('.content-wrapper') as HTMLElement
+          if (w) w.style.transform = `translateX(-${sl}px)`
+        })
+      })
+
+      afterBar.addEventListener('scroll', () => {
+        const sl = afterBar.scrollLeft
+        afterContents.forEach(el => {
+          const w = el.querySelector('.content-wrapper') as HTMLElement
+          if (w) w.style.transform = `translateX(-${sl}px)`
+        })
+      })
+    })
+  }
+
+  private selectNode(node: any, componentIndex: number, side: 'before' | 'after'): void {
+    const lineNum = node.position ? parseInt(node.position.split(':')[0], 10) : NaN
+    this.setState({
+      selectedNodeInfo: {
+        javaId: node.java_id,
+        type: node.type,
+        content: node.content || '',
+        position: node.position,
+        file: node.file,
+        componentIndex
+      }
+    })
+    if (!isNaN(lineNum)) {
+      this.scrollToLine(node.file, lineNum, side)
+    }
+  }
+
   private scrollToFile(fileName: string): void {
     const container = document.querySelector(`.folder-compare-view [data-file-path="${fileName}"]`) as HTMLElement
     if (container) {
@@ -831,6 +1011,189 @@ export class FolderCompareView extends React.Component<
 
     // Fallback: scroll to file
     this.scrollToFile(fileName)
+  }
+
+  private handleCharHighlightClick = (event: Event) => {
+    event.stopPropagation()
+    const target = event.currentTarget as HTMLElement
+    if (!target) return
+
+    const startCol = parseInt(target.dataset.startCol || '0', 10)
+    const endCol = parseInt(target.dataset.endCol || '0', 10)
+    const side = target.dataset.side as 'before' | 'after'
+
+    // Walk up DOM to find line number and file path
+    const row = target.closest('.row') as HTMLElement
+    if (!row) return
+
+    const lineNumDiv = row.querySelector(`.${side} .line-number`)
+    if (!lineNumDiv) return
+    const lineNumber = this.extractLineNumber(lineNumDiv)
+    if (lineNumber === null) return
+
+    const fileContainer = target.closest('[data-file-path]') as HTMLElement
+    if (!fileContainer) return
+    const filePath = fileContainer.dataset.filePath || ''
+
+    if (this.state.selectedComponent === 'all') return
+    const componentIndex = this.state.selectedComponent as number
+    const component = this.state.diffComponents[componentIndex]
+    if (!component) return
+
+    const pos = `${lineNumber}:${startCol}-${endCol}`
+
+    // Search edges for a matching from/to node at this position
+    for (const change of component.changes) {
+      if (change.from && change.from.file === filePath && change.from.position === pos) {
+        this.setState({
+          selectedNodeInfo: {
+            javaId: change.from.java_id,
+            type: change.from.type,
+            content: change.from.content || '',
+            position: change.from.position,
+            file: change.from.file,
+            componentIndex
+          }
+        })
+        return
+      }
+      if (change.to && change.to.file === filePath && change.to.position === pos) {
+        this.setState({
+          selectedNodeInfo: {
+            javaId: change.to.java_id,
+            type: change.to.type,
+            content: change.to.content || '',
+            position: change.to.position,
+            file: change.to.file,
+            componentIndex
+          }
+        })
+        return
+      }
+    }
+  }
+
+  private closeNodePanel = () => {
+    this.setState({ selectedNodeInfo: null })
+  }
+
+  private renderNodePanel(): JSX.Element | null {
+    const info = this.state.selectedNodeInfo
+    if (!info) return null
+
+    const componentIndex = info.componentIndex
+    const component = this.state.diffComponents[componentIndex]
+    if (!component) return null
+
+    // Find all edges involving this node
+    const connectedEdges: Array<{edge: any, otherNode: any, direction: 'incoming' | 'outgoing'}> = []
+    for (const change of component.changes) {
+      if (change.from && change.from.java_id === info.javaId) {
+        connectedEdges.push({ edge: change, otherNode: change.to, direction: 'outgoing' })
+      }
+      if (change.to && change.to.java_id === info.javaId) {
+        connectedEdges.push({ edge: change, otherNode: change.from, direction: 'incoming' })
+      }
+    }
+
+    // Look up the node in diff_nodes.json for additional info
+    const nodeData = this.state.diffNodes.find((n: any) => n.component_id === component.component_id)
+    const diffNode = nodeData?.nodes?.find((n: any) => n.java_id === info.javaId)
+
+    return (
+      <div style={{
+        width: '350px',
+        borderLeft: '1px solid var(--box-border-color)',
+        backgroundColor: 'var(--box-alt-background-color)',
+        padding: '15px',
+        overflow: 'auto',
+        flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Node Details</h3>
+          <span
+            style={{ cursor: 'pointer', fontSize: '18px', padding: '2px 6px', lineHeight: 1 }}
+            onClick={this.closeNodePanel}
+            title="Close panel"
+          >&times;</span>
+        </div>
+
+        <div style={{ fontSize: '12px', marginBottom: '15px', padding: '10px', backgroundColor: 'var(--background-color)', borderRadius: '4px' }}>
+          <div style={{ marginBottom: '4px' }}><strong>Type:</strong> {info.type}</div>
+          {info.content && <div style={{ marginBottom: '4px' }}><strong>Content:</strong> <code style={{ fontFamily: 'var(--font-family-monospace)' }}>{info.content}</code></div>}
+          <div style={{ marginBottom: '4px' }}><strong>File:</strong> {info.file}</div>
+          <div style={{ marginBottom: '4px' }}><strong>Position:</strong> {info.position}</div>
+          <div style={{ marginBottom: '4px' }}><strong>Component:</strong> {componentIndex + 1} ({nodeData?.kind || ''})</div>
+          {diffNode && typeof diffNode.reachable_by === 'number' && (
+            <div><strong>Reachable by:</strong> {diffNode.reachable_by} node{diffNode.reachable_by !== 1 ? 's' : ''}</div>
+          )}
+        </div>
+
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 600 }}>
+          Connected Edges ({connectedEdges.length})
+        </h4>
+
+        {connectedEdges.length === 0 && (
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)', fontStyle: 'italic' }}>
+            No direct edges for this node
+          </div>
+        )}
+
+        {connectedEdges.map((conn, i) => {
+          const edgeLabelParts = (conn.edge.edge_label || '').split(':')
+          const edgeType = edgeLabelParts[0] || ''
+          return (
+            <div key={i} style={{
+              fontSize: '11px',
+              padding: '8px',
+              marginBottom: '6px',
+              backgroundColor: 'var(--background-color)',
+              borderRadius: '4px',
+              borderLeft: '3px solid var(--diff-selected-border-color)'
+            }}>
+              <div style={{ marginBottom: '4px', fontSize: '10px', color: 'var(--text-secondary-color)' }}>
+                {conn.direction === 'incoming' ? '\u2190 ' : '\u2192 '}<strong>{edgeType}</strong>
+              </div>
+              <div style={{ marginBottom: '2px' }}>
+                {conn.otherNode?.type || '?'}
+              </div>
+              {conn.otherNode?.content && (
+                <div style={{ marginBottom: '2px', fontFamily: 'var(--font-family-monospace)', color: 'var(--text-color)' }}>
+                  {conn.otherNode.content}
+                </div>
+              )}
+              <div style={{ color: 'var(--text-secondary-color)', marginBottom: '4px' }}>
+                {conn.otherNode?.file} : {conn.otherNode?.position}
+              </div>
+              <span
+                style={{ color: 'var(--diff-selected-border-color)', cursor: 'pointer', fontSize: '10px' }}
+                onClick={() => {
+                  if (conn.otherNode) {
+                    this.setState({
+                      selectedNodeInfo: {
+                        javaId: conn.otherNode.java_id,
+                        type: conn.otherNode.type,
+                        content: conn.otherNode.content || '',
+                        position: conn.otherNode.position,
+                        file: conn.otherNode.file,
+                        componentIndex
+                      }
+                    })
+                    const lineNum = parseInt((conn.otherNode.position || '').split(':')[0], 10)
+                    if (!isNaN(lineNum)) {
+                      const side: 'before' | 'after' = conn.edge.kind === 'Removal' ? 'before' : 'after'
+                      this.scrollToLine(conn.otherNode.file, lineNum, side)
+                    }
+                  }
+                }}
+              >
+                Go to node \u2192
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    )
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {
@@ -897,7 +1260,8 @@ export class FolderCompareView extends React.Component<
   private onComponentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
     this.setState({
-      selectedComponent: value === 'all' ? 'all' : parseInt(value, 10)
+      selectedComponent: value === 'all' ? 'all' : parseInt(value, 10),
+      selectedNodeInfo: null,
     })
   }
 

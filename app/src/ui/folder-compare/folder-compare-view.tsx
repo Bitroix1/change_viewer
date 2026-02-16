@@ -25,6 +25,7 @@ interface IFolderCompareViewState {
   readonly isLoading: boolean
   readonly isLoadingDiffs: boolean
   readonly diffComponents: any[]
+  readonly diffNodes: any[]
   readonly selectedComponent: number | 'all'
 }
 
@@ -43,6 +44,7 @@ export class FolderCompareView extends React.Component<
       isLoading: false,
       isLoadingDiffs: false,
       diffComponents: [],
+      diffNodes: [],
       selectedComponent: 'all',
     }
   }
@@ -65,12 +67,24 @@ export class FolderCompareView extends React.Component<
           {/* Left Sidebar for Component Selection */}
           {this.state.diffComponents.length > 0 && (
             <div className="component-selector-sidebar" style={{
-              width: '200px',
+              width: '300px',
               borderRight: '1px solid var(--box-border-color)',
               backgroundColor: 'var(--box-alt-background-color)',
               padding: '15px',
               overflow: 'auto'
             }}>
+              <style>{`
+                .node-line-content::-webkit-scrollbar {
+                  height: 2px !important;
+                }
+                .node-line-content::-webkit-scrollbar-thumb {
+                  background-color: var(--box-border-color) !important;
+                  border-radius: 1px;
+                }
+                .node-line-content::-webkit-scrollbar-track {
+                  background: transparent !important;
+                }
+              `}</style>
               <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>View Options</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <label style={{ 
@@ -91,29 +105,75 @@ export class FolderCompareView extends React.Component<
                   />
                   <span style={{ fontSize: '13px' }}>Show All</span>
                 </label>
-                {this.state.diffComponents.map((_, index) => (
-                  <label
-                    key={index}
-                    style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '8px',
-                      cursor: 'pointer',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      backgroundColor: this.state.selectedComponent === index ? 'var(--background-color)' : 'transparent'
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="component-view"
-                      value={index}
-                      checked={this.state.selectedComponent === index}
-                      onChange={this.onComponentChange}
-                    />
-                    <span style={{ fontSize: '13px' }}>Component {index + 1}</span>
-                  </label>
-                ))}
+                {this.state.diffComponents.map((comp, index) => {
+                  const isSelected = this.state.selectedComponent === index
+                  const nodeData = this.state.diffNodes.find((n: any) => n.component_id === comp.component_id)
+                  const nodes: any[] = nodeData ? nodeData.nodes : []
+                  return (
+                    <div key={index}>
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        backgroundColor: isSelected ? 'var(--background-color)' : 'transparent'
+                      }}>
+                        <input
+                          type="radio"
+                          name="component-view"
+                          value={index}
+                          checked={isSelected}
+                          onChange={this.onComponentChange}
+                        />
+                        <span style={{ fontSize: '13px' }}>Component {index + 1}</span>
+                      </label>
+                      {isSelected && nodes.length > 0 && (
+                        <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
+                          {nodes.map((node: any, ni: number) => {
+                            const lineNum = node.position ? node.position.split(':')[0] : '?'
+                            const side: 'before' | 'after' = nodeData?.kind === 'Removal' ? 'before' : 'after'
+                            const lineContent = this.getSourceLineContent(node.file, parseInt(lineNum, 10), side)
+                            return (
+                              <div key={ni} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '3px 6px',
+                                fontSize: '11px',
+                                borderRadius: '3px',
+                                color: 'var(--text-secondary-color)',
+                                gap: '6px'
+                              }}>
+                                <span
+                                  title={`${node.type}: ${node.content || '(no content)'}`}
+                                  style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}
+                                  onClick={() => this.scrollToLine(node.file, parseInt(lineNum, 10), side)}
+                                >
+                                  {lineNum}
+                                </span>
+                                <span
+                                  className="node-line-content"
+                                  title={lineContent}
+                                  style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', overflowX: 'auto', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                                  onClick={() => this.scrollToLine(node.file, parseInt(lineNum, 10), side)}
+                                >
+                                  {lineContent}
+                                </span>
+                                <span
+                                  style={{ fontSize: '10px', color: 'var(--diff-selected-border-color)', flexShrink: 0, cursor: 'pointer' }}
+                                  onClick={() => this.scrollToFile(node.file)}
+                                >
+                                  {node.file || ''}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -126,7 +186,14 @@ export class FolderCompareView extends React.Component<
                 <div><strong>Before:</strong> {this.state.beforeFolder}</div>
                 <div><strong>After:</strong> {this.state.afterFolder}</div>
               </div>
-              <Button onClick={this.onChangeFolders}>Change Folders</Button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <Button onClick={this.onChangeFolders}>Change Folders</Button>
+                {this.state.fileChanges.length > 0 && (
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary-color)' }}>
+                    {this.state.fileChanges.length} changed {this.state.fileChanges.length === 1 ? 'file' : 'files'}
+                  </span>
+                )}
+              </div>
             </div>
         
             {this.state.isLoading && <div style={{ padding: '20px' }}>Loading files...</div>}
@@ -145,20 +212,6 @@ export class FolderCompareView extends React.Component<
                 padding: '20px'
               }}>
             <div>
-              <div className="file-list-header" style={{ 
-                padding: '10px 20px',
-                backgroundColor: 'var(--box-alt-background-color)',
-                borderBottom: '1px solid var(--box-border-color)',
-                borderTopLeftRadius: '6px',
-                borderTopRightRadius: '6px',
-                position: 'sticky',
-                top: '0',
-                zIndex: 10,
-                marginBottom: '20px'
-              }}>
-                {this.state.fileChanges.length} changed {this.state.fileChanges.length === 1 ? 'file' : 'files'}
-              </div>
-              
               {this.state.fileChanges.map((file, index) => (
                 <div key={file.id} data-file-path={file.path} style={{ 
                   border: '1px solid var(--box-border-color)',
@@ -677,6 +730,33 @@ export class FolderCompareView extends React.Component<
   }
 
   /**
+   * Look up the full source line content from the loaded diff data.
+   */
+  private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
+    // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
+    // is just the bare name from diff_nodes.json (e.g. "Prog.java").
+    // Find the matching entry by checking if the key ends with +fileName.
+    let diff: ITextDiff | null | undefined
+    for (const [key, value] of this.state.fileDiffs.entries()) {
+      if (key === fileName || key.endsWith('+' + fileName)) {
+        diff = value
+        break
+      }
+    }
+    if (!diff) return ''
+
+    for (const hunk of diff.hunks) {
+      for (const line of hunk.lines) {
+        const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
+        if (matchLine === lineNum) {
+          return line.content.trimEnd()
+        }
+      }
+    }
+    return ''
+  }
+
+  /**
    * After all diffs have rendered, measure each inner scroll container and
    * shrink the wrapper + Grid to exactly that height.  This also locks the
    * Grid's height so AutoSizer's resize doesn't trigger re-virtualization.
@@ -717,6 +797,34 @@ export class FolderCompareView extends React.Component<
         })
       }
     }
+  }
+
+  private scrollToFile(fileName: string): void {
+    const container = document.querySelector(`.folder-compare-view [data-file-path="${fileName}"]`) as HTMLElement
+    if (container) {
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  private scrollToLine(fileName: string, lineNum: number, side: 'before' | 'after'): void {
+    const fileContainer = document.querySelector(`.folder-compare-view [data-file-path="${fileName}"]`)
+    if (!fileContainer) return
+
+    // Find the row containing a label with for="{lineNum}-{side}"
+    const label = fileContainer.querySelector(`label[for="${lineNum}-${side}"]`)
+    if (label) {
+      const row = label.closest('.row') as HTMLElement
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Brief flash highlight
+        row.style.outline = '2px solid var(--diff-selected-border-color)'
+        setTimeout(() => { row.style.outline = '' }, 1500)
+        return
+      }
+    }
+
+    // Fallback: scroll to file
+    this.scrollToFile(fileName)
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {
@@ -800,6 +908,19 @@ export class FolderCompareView extends React.Component<
     } catch (error) {
       console.log('No diff_components.json found or error loading it:', error)
       this.setState({ diffComponents: [] })
+    }
+
+    try {
+      const diffNodesPath = Path.resolve(__dirname, '../../../../../difftastic/Files/diff_nodes.json')
+      const nodesContent = await FSPromises.readFile(diffNodesPath, 'utf-8')
+      const nodesData = JSON.parse(nodesContent)
+
+      if (nodesData.diff_components && Array.isArray(nodesData.diff_components)) {
+        this.setState({ diffNodes: nodesData.diff_components })
+      }
+    } catch (error) {
+      console.log('No diff_nodes.json found or error loading it:', error)
+      this.setState({ diffNodes: [] })
     }
   }
 

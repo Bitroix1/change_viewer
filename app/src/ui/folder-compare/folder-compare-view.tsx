@@ -76,7 +76,7 @@ export class FolderCompareView extends React.Component<
           {/* Left Sidebar for Component Selection */}
           {this.state.diffComponents.length > 0 && (
             <div className="component-selector-sidebar" style={{
-              width: '300px',
+              width: '350px',
               borderRight: '1px solid var(--box-border-color)',
               backgroundColor: 'var(--box-alt-background-color)',
               padding: '15px',
@@ -84,14 +84,18 @@ export class FolderCompareView extends React.Component<
             }}>
               <style>{`
                 .node-line-content::-webkit-scrollbar {
-                  height: 2px !important;
+                  height: 8px !important;
                 }
                 .node-line-content::-webkit-scrollbar-thumb {
-                  background-color: var(--box-border-color) !important;
-                  border-radius: 1px;
+                  background-color: #888 !important;
+                  border-radius: 4px;
+                }
+                .node-line-content::-webkit-scrollbar-thumb:hover {
+                  background-color: #666 !important;
                 }
                 .node-line-content::-webkit-scrollbar-track {
-                  background: transparent !important;
+                  background: rgba(127,127,127,0.15) !important;
+                  border-radius: 4px;
                 }
               `}</style>
               <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>View Options</h3>
@@ -138,21 +142,51 @@ export class FolderCompareView extends React.Component<
                         />
                         <span style={{ fontSize: '13px' }}>Component {index + 1}</span>
                       </label>
-                      {isSelected && nodes.length > 0 && (
+                      {isSelected && nodes.length > 0 && (() => {
+                        // Find the node with the highest reachable_by score
+                        let maxReachableBy = -1
+                        let maxReachableIndex = -1
+                        let maxReachableCount = 0
+                        nodes.forEach((n: any, i: number) => {
+                          if (typeof n.reachable_by === 'number') {
+                            if (n.reachable_by > maxReachableBy) {
+                              maxReachableBy = n.reachable_by
+                              maxReachableIndex = i
+                              maxReachableCount = 1
+                            } else if (n.reachable_by === maxReachableBy) {
+                              maxReachableCount++
+                            }
+                          }
+                        })
+                        return (
                         <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
                           {nodes.map((node: any, ni: number) => {
                             const lineNum = node.position ? node.position.split(':')[0] : '?'
                             const side: 'before' | 'after' = nodeData?.kind === 'Removal' ? 'before' : 'after'
                             const lineContent = this.getSourceLineContent(node.file, parseInt(lineNum, 10), side)
+                            const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
                             return (
-                              <div key={ni} style={{
+                              <React.Fragment key={ni}>
+                              {isLikelySource && (
+                                <div style={{
+                                  fontSize: '9px',
+                                  color: '#e8a63a',
+                                  fontWeight: 600,
+                                  padding: '2px 6px 1px 6px',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  Likely source
+                                </div>
+                              )}
+                              <div style={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                padding: '3px 6px',
+                                alignItems: 'flex-start',
+                                padding: '6px 6px',
                                 fontSize: '11px',
                                 borderRadius: '3px',
                                 color: 'var(--text-secondary-color)',
-                                gap: '6px'
+                                gap: '6px',
+                                minHeight: '28px'
                               }}>
                                 <span
                                   title={`${node.type}: ${node.content || '(no content)'}`}
@@ -176,10 +210,12 @@ export class FolderCompareView extends React.Component<
                                   {node.file || ''}
                                 </span>
                               </div>
+                              </React.Fragment>
                             )
                           })}
                         </div>
-                      )}
+                        )
+                      })()}
                     </div>
                   )
                 })}
@@ -1149,46 +1185,43 @@ export class FolderCompareView extends React.Component<
               marginBottom: '6px',
               backgroundColor: 'var(--background-color)',
               borderRadius: '4px',
-              borderLeft: '3px solid var(--diff-selected-border-color)'
-            }}>
-              <div style={{ marginBottom: '4px', fontSize: '10px', color: 'var(--text-secondary-color)' }}>
-                {conn.direction === 'incoming' ? '\u2190 ' : '\u2192 '}<strong>{edgeType}</strong>
+              borderLeft: '3px solid var(--diff-selected-border-color)',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              if (conn.otherNode) {
+                this.setState({
+                  selectedNodeInfo: {
+                    javaId: conn.otherNode.java_id,
+                    type: conn.otherNode.type,
+                    content: conn.otherNode.content || '',
+                    position: conn.otherNode.position,
+                    file: conn.otherNode.file,
+                    componentIndex
+                  }
+                })
+                const lineNum = parseInt((conn.otherNode.position || '').split(':')[0], 10)
+                if (!isNaN(lineNum)) {
+                  const side: 'before' | 'after' = conn.edge.kind === 'Removal' ? 'before' : 'after'
+                  this.scrollToLine(conn.otherNode.file, lineNum, side)
+                }
+              }
+            }}
+            >
+              <div style={{ marginBottom: '4px', fontSize: '10px', color: 'var(--text-secondary-color)', cursor: 'inherit' }}>
+                {conn.direction === 'incoming' ? '\u2190 ' : '\u2192 '}<strong style={{ cursor: 'inherit' }}>{edgeType}</strong>
               </div>
-              <div style={{ marginBottom: '2px' }}>
+              <div style={{ marginBottom: '2px', cursor: 'inherit' }}>
                 {conn.otherNode?.type || '?'}
               </div>
               {conn.otherNode?.content && (
-                <div style={{ marginBottom: '2px', fontFamily: 'var(--font-family-monospace)', color: 'var(--text-color)' }}>
+                <div style={{ marginBottom: '2px', fontFamily: 'var(--font-family-monospace)', color: 'var(--text-color)', cursor: 'inherit' }}>
                   {conn.otherNode.content}
                 </div>
               )}
-              <div style={{ color: 'var(--text-secondary-color)', marginBottom: '4px' }}>
+              <div style={{ color: 'var(--text-secondary-color)', cursor: 'inherit' }}>
                 {conn.otherNode?.file} : {conn.otherNode?.position}
               </div>
-              <span
-                style={{ color: 'var(--diff-selected-border-color)', cursor: 'pointer', fontSize: '10px' }}
-                onClick={() => {
-                  if (conn.otherNode) {
-                    this.setState({
-                      selectedNodeInfo: {
-                        javaId: conn.otherNode.java_id,
-                        type: conn.otherNode.type,
-                        content: conn.otherNode.content || '',
-                        position: conn.otherNode.position,
-                        file: conn.otherNode.file,
-                        componentIndex
-                      }
-                    })
-                    const lineNum = parseInt((conn.otherNode.position || '').split(':')[0], 10)
-                    if (!isNaN(lineNum)) {
-                      const side: 'before' | 'after' = conn.edge.kind === 'Removal' ? 'before' : 'after'
-                      this.scrollToLine(conn.otherNode.file, lineNum, side)
-                    }
-                  }
-                }}
-              >
-                Go to node \u2192
-              </span>
             </div>
           )
         })}

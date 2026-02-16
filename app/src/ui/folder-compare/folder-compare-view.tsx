@@ -230,15 +230,10 @@ export class FolderCompareView extends React.Component<
       )
     }
     
-    // Calculate height to exactly fit content:
-    // 75px for diff header + (rows × 20px) for grid content
-    const lineCount = diff.hunks.reduce((total, hunk) => total + hunk.lines.length, 0)
-    const hunkCount = diff.hunks.length
-    const totalRows = lineCount + hunkCount  // Each hunk header is also a row
-    const calculatedHeight = 75 + (totalRows * 20)
-    
+    // Give AutoSizer a very large height so react-virtualized renders ALL rows
+    // (disabling virtualization). CSS on the wrapper clips the empty space.
     return (
-      <div style={{ height: `${calculatedHeight}px`, display: 'flex', flexDirection: 'column' }}>
+      <div className="diff-size-wrapper" style={{ height: '100000px', display: 'flex', flexDirection: 'column' }}>
         <Diff
           repository={this.getDummyRepository()}
           readOnly={true}
@@ -363,6 +358,7 @@ export class FolderCompareView extends React.Component<
   private mutationObserver: MutationObserver | null = null
   private isApplyingHighlighting = false
   private highlightingRAF: number | null = null
+  private diffHeightsAdjusted = false
 
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
@@ -375,6 +371,13 @@ export class FolderCompareView extends React.Component<
     if (!this.mutationObserver && !this.state.showFolderSelector && this.state.fileChanges.length > 0 && !this.state.isLoadingDiffs) {
       this.setupMutationObserver()
     }
+
+    // After all diffs finish loading, shrink wrappers to fit content
+    if (!this.state.isLoadingDiffs && this.state.fileDiffs.size > 0 && !this.diffHeightsAdjusted) {
+      this.diffHeightsAdjusted = true
+      // Wait for react-virtualized to render all rows inside the large container
+      setTimeout(() => this.shrinkWrappersToFit(), 500)
+    }
   }
 
   public componentWillUnmount(): void {
@@ -386,6 +389,7 @@ export class FolderCompareView extends React.Component<
 
     this.mutationObserver = new MutationObserver(() => {
       if (this.isApplyingHighlighting) return
+
       if (this.state.selectedComponent === 'all') return
 
       // Debounce via requestAnimationFrame to batch scroll-triggered DOM changes
@@ -672,6 +676,49 @@ export class FolderCompareView extends React.Component<
     }
   }
 
+  /**
+   * After all diffs have rendered, measure each inner scroll container and
+   * shrink the wrapper + Grid to exactly that height.  This also locks the
+   * Grid's height so AutoSizer's resize doesn't trigger re-virtualization.
+   */
+  private shrinkWrappersToFit(): void {
+    // Temporarily disconnect observer to avoid an infinite loop
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect()
+    }
+
+    document.querySelectorAll('.folder-compare-view .diff-size-wrapper').forEach(wrapper => {
+      const el = wrapper as HTMLElement
+      const inner = el.querySelector(
+        '.ReactVirtualized__Grid__innerScrollContainer'
+      ) as HTMLElement
+      const grid = el.querySelector(
+        '.ReactVirtualized__Grid'
+      ) as HTMLElement
+
+      if (inner && inner.scrollHeight > 0) {
+        const contentHeight = inner.scrollHeight + 2  // +2 for border-bottom and rounding
+        el.style.height = `${contentHeight}px`
+        // Lock Grid height so AutoSizer resize doesn't cause re-virtualization
+        if (grid) {
+          grid.style.height = `${contentHeight}px`
+          grid.style.overflow = 'hidden'
+        }
+      }
+    })
+
+    // Reconnect observer
+    if (this.mutationObserver) {
+      const container = document.querySelector('.folder-compare-view')
+      if (container) {
+        this.mutationObserver.observe(container, {
+          childList: true,
+          subtree: true,
+        })
+      }
+    }
+  }
+
   private getStatusLabel(kind: AppFileStatusKind): string {
     switch (kind) {
       case AppFileStatusKind.New:
@@ -757,6 +804,7 @@ export class FolderCompareView extends React.Component<
   }
 
   private onChangeFolders = () => {
+    this.diffHeightsAdjusted = false
     this.setState({
       showFolderSelector: true,
       fileChanges: [],

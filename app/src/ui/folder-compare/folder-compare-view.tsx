@@ -163,24 +163,11 @@ export class FolderCompareView extends React.Component<
                           {nodes.map((node: any, ni: number) => {
                             const lineNum = node.position ? node.position.split(':')[0] : '?'
                             const side: 'before' | 'after' = nodeData?.kind === 'Removal' ? 'before' : 'after'
-                            const lineContent = this.getSourceLineContent(node.file, parseInt(lineNum, 10), side)
                             const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
                             return (
-                              <React.Fragment key={ni}>
-                              {isLikelySource && (
-                                <div style={{
-                                  fontSize: '9px',
-                                  color: '#e8a63a',
-                                  fontWeight: 600,
-                                  padding: '2px 6px 0px 6px',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  Likely source
-                                </div>
-                              )}
-                              <div style={{
+                              <div key={ni} style={{
                                 display: 'flex',
-                                alignItems: 'flex-start',
+                                alignItems: 'center',
                                 padding: '6px 6px',
                                 fontSize: '11px',
                                 borderRadius: '3px',
@@ -189,28 +176,33 @@ export class FolderCompareView extends React.Component<
                                 minHeight: '28px'
                               }}>
                                 <span
-                                  title={`${node.type}: ${node.content || '(no content)'}`}
-                                  style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0 }}
-                                  onClick={() => this.selectNode(node, index, side)}
-                                >
-                                  {lineNum}
-                                </span>
-                                <span
                                   className="node-line-content"
-                                  title={lineContent}
-                                  style={{ fontFamily: 'var(--font-family-monospace)', whiteSpace: 'nowrap', overflowX: 'auto', cursor: 'pointer', flex: 1, minWidth: 0 }}
+                                  style={{ 
+                                    fontSize: '12px', 
+                                    color: 'var(--diff-selected-border-color)', 
+                                    cursor: 'pointer', 
+                                    marginTop: '-1px',
+                                    whiteSpace: 'nowrap',
+                                    overflowX: 'auto',
+                                    flex: 1,
+                                    minWidth: 0
+                                  }}
                                   onClick={() => this.selectNode(node, index, side)}
                                 >
-                                  {lineContent}
+                                  {node.file}::{lineNum}
                                 </span>
-                                <span
-                                  style={{ fontSize: '10px', color: 'var(--diff-selected-border-color)', flexShrink: 0, cursor: 'pointer' }}
-                                  onClick={() => this.selectNode(node, index, side)}
-                                >
-                                  {node.file || ''}
-                                </span>
+                                {isLikelySource && (
+                                  <span style={{
+                                    fontSize: '9px',
+                                    color: '#e8a63a',
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
+                                  }}>
+                                    Likely source
+                                  </span>
+                                )}
                               </div>
-                              </React.Fragment>
                             )
                           })}
                         </div>
@@ -249,7 +241,25 @@ export class FolderCompareView extends React.Component<
               <div style={{ padding: '20px' }}>No differences found</div>
             )}
             
-            {!this.state.isLoading && this.state.fileChanges.length > 0 && (
+            {!this.state.isLoading && this.state.fileChanges.length > 0 && (() => {
+              // When a component is selected, only show files that have highlights
+              const visibleFiles = this.state.selectedComponent === 'all'
+                ? this.state.fileChanges
+                : this.state.fileChanges.filter(file => {
+                    const rawDiff = this.state.fileDiffs.get(file.id)
+                    if (!rawDiff) return false
+                    return this.getFilteredDiffForComponent(file.path, rawDiff) !== null
+                  })
+
+              if (visibleFiles.length === 0) {
+                return (
+                  <div style={{ padding: '20px', color: 'var(--text-secondary-color)' }}>
+                    No changes found in this component
+                  </div>
+                )
+              }
+
+              return (
               <div className="folder-compare-content" style={{ 
                 flex: 1, 
                 overflow: 'auto',
@@ -257,12 +267,12 @@ export class FolderCompareView extends React.Component<
                 padding: '0 20px 20px 20px'
               }}>
             <div>
-              {this.state.fileChanges.map((file, index) => (
+              {visibleFiles.map((file, index) => (
                 <div key={file.id} data-file-path={file.path} style={{ 
                   border: '1px solid var(--box-border-color)',
                   borderRadius: '6px',
                   marginTop: index === 0 ? 0 : '20px',
-                  marginBottom: index === this.state.fileChanges.length - 1 ? '0' : '0',
+                  marginBottom: index === visibleFiles.length - 1 ? '0' : '0',
                   backgroundColor: 'var(--box-background-color)'
                 }}>
                   <div style={{ 
@@ -296,7 +306,8 @@ export class FolderCompareView extends React.Component<
               ))}
             </div>
               </div>
-            )}
+              )
+            })()}
           </div>
 
           {/* Right Panel for Node Details */}
@@ -319,9 +330,9 @@ export class FolderCompareView extends React.Component<
   }
 
   private renderDiffForFile(file: WorkingDirectoryFileChange): JSX.Element {
-    const diff = this.state.fileDiffs.get(file.id)
+    const rawDiff = this.state.fileDiffs.get(file.id)
     
-    if (diff === undefined) {
+    if (rawDiff === undefined) {
       return (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
           Loading diff...
@@ -329,10 +340,20 @@ export class FolderCompareView extends React.Component<
       )
     }
     
-    if (diff === null) {
+    if (rawDiff === null) {
       return (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
           Unable to load diff
+        </div>
+      )
+    }
+
+    // Filter hunks to only those relevant to the selected component
+    const diff = this.getFilteredDiffForComponent(file.path, rawDiff)
+    if (diff === null) {
+      return (
+        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
+          No changes in this component
         </div>
       )
     }
@@ -538,8 +559,12 @@ export class FolderCompareView extends React.Component<
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
     if (prevState.selectedComponent !== this.state.selectedComponent) {
-      // Use setTimeout to ensure DOM has been updated
-      setTimeout(() => this.applyComponentHighlightingToAll(), 0)
+      // Use setTimeout to ensure DOM has been updated after React re-render
+      setTimeout(() => {
+        this.applyComponentHighlightingToAll()
+        this.shrinkWrappersToFit()
+        this.setupScrollSync()
+      }, 500)
     }
 
     // Set up MutationObserver when diff content first appears
@@ -842,6 +867,59 @@ export class FolderCompareView extends React.Component<
   }
 
   /**
+   * Filter the diff to only contain hunks that have lines matching the
+   * selected component's highlights.  Returns null when no hunks remain.
+   */
+  private getFilteredDiffForComponent(
+    filePath: string,
+    diff: ITextDiff
+  ): ITextDiff | null {
+    if (this.state.selectedComponent === 'all') {
+      return diff
+    }
+
+    const highlights = this.getHighlightedLinesForComponent(filePath)
+    if (highlights.length === 0) {
+      return null
+    }
+
+    // Build sets of highlighted line numbers per side
+    const beforeLines = new Set<number>()
+    const afterLines = new Set<number>()
+    for (const h of highlights) {
+      if (h.side === 'before') beforeLines.add(h.line)
+      else afterLines.add(h.line)
+    }
+
+    const filteredHunks = diff.hunks.filter(hunk => {
+      for (const line of hunk.lines) {
+        if (
+          line.oldLineNumber !== null &&
+          beforeLines.has(line.oldLineNumber)
+        ) {
+          return true
+        }
+        if (
+          line.newLineNumber !== null &&
+          afterLines.has(line.newLineNumber)
+        ) {
+          return true
+        }
+      }
+      return false
+    })
+
+    if (filteredHunks.length === 0) {
+      return null
+    }
+
+    return {
+      ...diff,
+      hunks: filteredHunks,
+    } as ITextDiff
+  }
+
+  /**
    * Parse a position string like "5:12-13" and add it to the line map.
    * Format: "line:startCol-endCol" where columns are 0-based, endCol is exclusive.
    */
@@ -876,29 +954,29 @@ export class FolderCompareView extends React.Component<
   /**
    * Look up the full source line content from the loaded diff data.
    */
-  private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
-    // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
-    // is just the bare name from diff_nodes.json (e.g. "Prog.java").
-    // Find the matching entry by checking if the key ends with +fileName.
-    let diff: ITextDiff | null | undefined
-    for (const [key, value] of this.state.fileDiffs.entries()) {
-      if (key === fileName || key.endsWith('+' + fileName)) {
-        diff = value
-        break
-      }
-    }
-    if (!diff) return ''
+  // private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
+  //   // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
+  //   // is just the bare name from diff_nodes.json (e.g. "Prog.java").
+  //   // Find the matching entry by checking if the key ends with +fileName.
+  //   let diff: ITextDiff | null | undefined
+  //   for (const [key, value] of this.state.fileDiffs.entries()) {
+  //     if (key === fileName || key.endsWith('+' + fileName)) {
+  //       diff = value
+  //       break
+  //     }
+  //   }
+  //   if (!diff) return ''
 
-    for (const hunk of diff.hunks) {
-      for (const line of hunk.lines) {
-        const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
-        if (matchLine === lineNum) {
-          return line.content.trimEnd()
-        }
-      }
-    }
-    return ''
-  }
+  //   for (const hunk of diff.hunks) {
+  //     for (const line of hunk.lines) {
+  //       const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
+  //       if (matchLine === lineNum) {
+  //         return line.content.trimEnd()
+  //       }
+  //     }
+  //   }
+  //   return ''
+  // }
 
   /**
    * After all diffs have rendered, measure each inner scroll container and
@@ -1188,7 +1266,7 @@ export class FolderCompareView extends React.Component<
         </div>
 
         <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 600 }}>
-          Connected Edges ({connectedEdges.length})
+          Related Changes ({connectedEdges.length})
         </h4>
 
         {connectedEdges.length === 0 && (

@@ -162,7 +162,8 @@ export class FolderCompareView extends React.Component<
                         <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
                           {nodes.map((node: any, ni: number) => {
                             const lineNum = node.position ? node.position.split(':')[0] : '?'
-                            const side: 'before' | 'after' = nodeData?.kind === 'Removal' ? 'before' : 'after'
+                            // Use the individual node's kind, not the component's kind
+                            const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
                             const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
                             return (
                               <div key={ni} style={{
@@ -218,11 +219,6 @@ export class FolderCompareView extends React.Component<
           {/* Main Content Area */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <div className="folder-compare-header" style={{ padding: '10px', borderBottom: '1px solid var(--box-border-color)', backgroundColor: 'var(--box-background-color)' }}>
-              <h2 style={{ margin: '0 0 10px 0' }}>Folder Comparison</h2>
-              <div className="folder-paths" style={{ fontSize: '12px', marginBottom: '10px' }}>
-                <div><strong>Before:</strong> {this.state.beforeFolder}</div>
-                <div><strong>After:</strong> {this.state.afterFolder}</div>
-              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <Button onClick={this.onChangeFolders}>Change Folders</Button>
                 {this.state.fileChanges.length > 0 && (
@@ -241,48 +237,30 @@ export class FolderCompareView extends React.Component<
               <div style={{ padding: '20px' }}>No differences found</div>
             )}
             
-            {!this.state.isLoading && this.state.fileChanges.length > 0 && (() => {
-              // When a component is selected, only show files that have highlights
-              const visibleFiles = this.state.selectedComponent === 'all'
-                ? this.state.fileChanges
-                : this.state.fileChanges.filter(file => {
-                    const rawDiff = this.state.fileDiffs.get(file.id)
-                    if (!rawDiff) return false
-                    return this.getFilteredDiffForComponent(file.path, rawDiff) !== null
-                  })
-
-              if (visibleFiles.length === 0) {
-                return (
-                  <div style={{ padding: '20px', color: 'var(--text-secondary-color)' }}>
-                    No changes found in this component
-                  </div>
-                )
-              }
-
-              return (
+            {!this.state.isLoading && this.state.fileChanges.length > 0 && (
               <div className="folder-compare-content" style={{ 
                 flex: 1, 
                 overflow: 'auto',
                 minHeight: 0,
-                padding: '0 20px 20px 20px'
+                padding: '20px'
               }}>
             <div>
-              {visibleFiles.map((file, index) => (
+              {this.state.fileChanges.map((file, index) => (
                 <div key={file.id} data-file-path={file.path} style={{ 
                   border: '1px solid var(--box-border-color)',
                   borderRadius: '6px',
                   marginTop: index === 0 ? 0 : '20px',
-                  marginBottom: index === visibleFiles.length - 1 ? '0' : '0',
+                  marginBottom: index === this.state.fileChanges.length - 1 ? '0' : '0',
                   backgroundColor: 'var(--box-background-color)'
                 }}>
                   <div style={{ 
                     padding: '15px 20px', 
                     paddingTop: '35px',
-                    marginTop: '-20px',
+                    marginTop: '0px',
                     backgroundColor: 'var(--box-alt-background-color)',
                     borderBottom: '1px solid var(--box-border-color)',
                     position: 'sticky',
-                    top: 0,
+                    top: -20,
                     zIndex: 10,
                     borderTopLeftRadius: '6px',
                     borderTopRightRadius: '6px'
@@ -306,8 +284,7 @@ export class FolderCompareView extends React.Component<
               ))}
             </div>
               </div>
-              )
-            })()}
+            )}
           </div>
 
           {/* Right Panel for Node Details */}
@@ -330,9 +307,9 @@ export class FolderCompareView extends React.Component<
   }
 
   private renderDiffForFile(file: WorkingDirectoryFileChange): JSX.Element {
-    const rawDiff = this.state.fileDiffs.get(file.id)
+    const diff = this.state.fileDiffs.get(file.id)
     
-    if (rawDiff === undefined) {
+    if (diff === undefined) {
       return (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
           Loading diff...
@@ -340,20 +317,10 @@ export class FolderCompareView extends React.Component<
       )
     }
     
-    if (rawDiff === null) {
-      return (
-        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
-          Unable to load diff
-        </div>
-      )
-    }
-
-    // Filter hunks to only those relevant to the selected component
-    const diff = this.getFilteredDiffForComponent(file.path, rawDiff)
     if (diff === null) {
       return (
         <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-secondary-color)' }}>
-          No changes in this component
+          Unable to load diff
         </div>
       )
     }
@@ -377,19 +344,63 @@ export class FolderCompareView extends React.Component<
           onHideWhitespaceInDiffChanged={() => {}}
         />
         <style>{`
+          /* CSS Variables for filtered line opacity - adjust these to change faintness */
+          :root {
+            --filtered-line-opacity: 0.02;
+          }
+          
           /* === Fully filtered rows/sides (not in component at all) === */
-          .folder-compare-view .component-filtered,
-          .folder-compare-view .component-filtered.modified,
-          .folder-compare-view .component-filtered.added,
-          .folder-compare-view .component-filtered.deleted {
+          .folder-compare-view .component-filtered {
             background-color: var(--background-color) !important;
+          }
+          
+          /* Very faint coloring for filtered changed lines */
+          .folder-compare-view .component-filtered.added {
+            background-color: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
+          }
+          
+          .folder-compare-view .component-filtered.deleted {
+            background-color: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
+          }
+          
+          .folder-compare-view .component-filtered.modified {
+            background-color: var(--background-color) !important;
+          }
+          
+          /* For modified rows, apply faint colors to individual sides */
+          .folder-compare-view .component-filtered.modified .before {
+            background: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
+          }
+          
+          .folder-compare-view .component-filtered.modified .after {
+            background: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
           }
           
           .folder-compare-view .component-filtered .before,
           .folder-compare-view .component-filtered .after,
           .folder-compare-view .component-filtered-side {
-            background: var(--background-color) !important;
             color: var(--diff-text-color) !important;
+          }
+          
+          /* Override for added/deleted rows - apply faint color to their sides too */
+          .folder-compare-view .component-filtered.added .before,
+          .folder-compare-view .component-filtered.added .after {
+            background: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
+          }
+          
+          .folder-compare-view .component-filtered.deleted .before,
+          .folder-compare-view .component-filtered.deleted .after {
+            background: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
+          }
+          
+          .folder-compare-view .component-filtered-side {
+            background: var(--background-color) !important;
+          }
+          
+          /* Force override of line-number backgrounds for filtered lines */
+          .folder-compare-view .component-filtered.added .line-number,
+          .folder-compare-view .component-filtered.deleted .line-number {
+            background-color: transparent !important;
           }
           
           .folder-compare-view .component-filtered .line-number,
@@ -411,7 +422,6 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered .content-wrapper,
           .folder-compare-view .component-filtered-side .content,
           .folder-compare-view .component-filtered-side .content-wrapper {
-            background: var(--background-color) !important;
             color: var(--diff-text-color) !important;
           }
           
@@ -847,76 +857,28 @@ export class FolderCompareView extends React.Component<
     // Collect ranges per line-side combination
     const lineMap = new Map<string, {line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}>()
 
+    // Helper function to check if paths match (handles both full paths and basenames)
+    const pathMatches = (jsonFile: string, fullPath: string): boolean => {
+      return fullPath === jsonFile || fullPath.endsWith('/' + jsonFile) || fullPath.endsWith('\\' + jsonFile)
+    }
+
     for (const change of component.changes) {
       // "Removal" = edge existed in before but not after -> positions are in the before file
       // "Addition" = edge exists in after but not before -> positions are in the after file
       const side: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
 
       // Process "from" field
-      if (change.from && change.from.file === filePath && change.from.position) {
+      if (change.from && pathMatches(change.from.file, filePath) && change.from.position) {
         this.addPositionToLineMap(lineMap, change.from.position, side)
       }
 
       // Process "to" field
-      if (change.to && change.to.file === filePath && change.to.position) {
+      if (change.to && pathMatches(change.to.file, filePath) && change.to.position) {
         this.addPositionToLineMap(lineMap, change.to.position, side)
       }
     }
 
     return Array.from(lineMap.values())
-  }
-
-  /**
-   * Filter the diff to only contain hunks that have lines matching the
-   * selected component's highlights.  Returns null when no hunks remain.
-   */
-  private getFilteredDiffForComponent(
-    filePath: string,
-    diff: ITextDiff
-  ): ITextDiff | null {
-    if (this.state.selectedComponent === 'all') {
-      return diff
-    }
-
-    const highlights = this.getHighlightedLinesForComponent(filePath)
-    if (highlights.length === 0) {
-      return null
-    }
-
-    // Build sets of highlighted line numbers per side
-    const beforeLines = new Set<number>()
-    const afterLines = new Set<number>()
-    for (const h of highlights) {
-      if (h.side === 'before') beforeLines.add(h.line)
-      else afterLines.add(h.line)
-    }
-
-    const filteredHunks = diff.hunks.filter(hunk => {
-      for (const line of hunk.lines) {
-        if (
-          line.oldLineNumber !== null &&
-          beforeLines.has(line.oldLineNumber)
-        ) {
-          return true
-        }
-        if (
-          line.newLineNumber !== null &&
-          afterLines.has(line.newLineNumber)
-        ) {
-          return true
-        }
-      }
-      return false
-    })
-
-    if (filteredHunks.length === 0) {
-      return null
-    }
-
-    return {
-      ...diff,
-      hunks: filteredHunks,
-    } as ITextDiff
   }
 
   /**
@@ -954,29 +916,29 @@ export class FolderCompareView extends React.Component<
   /**
    * Look up the full source line content from the loaded diff data.
    */
-  // private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
-  //   // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
-  //   // is just the bare name from diff_nodes.json (e.g. "Prog.java").
-  //   // Find the matching entry by checking if the key ends with +fileName.
-  //   let diff: ITextDiff | null | undefined
-  //   for (const [key, value] of this.state.fileDiffs.entries()) {
-  //     if (key === fileName || key.endsWith('+' + fileName)) {
-  //       diff = value
-  //       break
-  //     }
-  //   }
-  //   if (!diff) return ''
+  private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
+    // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
+    // is just the bare name from diff_nodes.json (e.g. "Prog.java").
+    // Find the matching entry by checking if the key ends with +fileName.
+    let diff: ITextDiff | null | undefined
+    for (const [key, value] of this.state.fileDiffs.entries()) {
+      if (key === fileName || key.endsWith('+' + fileName)) {
+        diff = value
+        break
+      }
+    }
+    if (!diff) return ''
 
-  //   for (const hunk of diff.hunks) {
-  //     for (const line of hunk.lines) {
-  //       const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
-  //       if (matchLine === lineNum) {
-  //         return line.content.trimEnd()
-  //       }
-  //     }
-  //   }
-  //   return ''
-  // }
+    for (const hunk of diff.hunks) {
+      for (const line of hunk.lines) {
+        const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
+        if (matchLine === lineNum) {
+          return line.content.trimEnd()
+        }
+      }
+    }
+    return ''
+  }
 
   /**
    * After all diffs have rendered, measure each inner scroll container and
@@ -1122,14 +1084,29 @@ export class FolderCompareView extends React.Component<
   }
 
   private scrollToFile(fileName: string): void {
-    const container = document.querySelector(`.folder-compare-view [data-file-path="${fileName}"]`) as HTMLElement
-    if (container) {
-      container.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // Find file container by matching the end of the path (handles both full paths and basenames)
+    const allContainers = document.querySelectorAll('.folder-compare-view [data-file-path]')
+    for (const container of Array.from(allContainers)) {
+      const filePath = (container as HTMLElement).dataset.filePath || ''
+      if (filePath === fileName || filePath.endsWith('/' + fileName) || filePath.endsWith('\\' + fileName)) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        return
+      }
     }
   }
 
   private scrollToLine(fileName: string, lineNum: number, side: 'before' | 'after'): void {
-    const fileContainer = document.querySelector(`.folder-compare-view [data-file-path="${fileName}"]`)
+    // Find file container by matching the end of the path
+    const allContainers = document.querySelectorAll('.folder-compare-view [data-file-path]')
+    let fileContainer: Element | null = null
+    for (const container of Array.from(allContainers)) {
+      const filePath = (container as HTMLElement).dataset.filePath || ''
+      if (filePath === fileName || filePath.endsWith('/' + fileName) || filePath.endsWith('\\' + fileName)) {
+        fileContainer = container
+        break
+      }
+    }
+    
     if (!fileContainer) return
 
     // Find the row containing a label with for="{lineNum}-{side}"
@@ -1178,9 +1155,14 @@ export class FolderCompareView extends React.Component<
 
     const pos = `${lineNumber}:${startCol}-${endCol}`
 
+    // Helper function to check if paths match
+    const pathMatches = (jsonFile: string, fullPath: string): boolean => {
+      return fullPath === jsonFile || fullPath.endsWith('/' + jsonFile) || fullPath.endsWith('\\' + jsonFile)
+    }
+
     // Search edges for a matching from/to node at this position
     for (const change of component.changes) {
-      if (change.from && change.from.file === filePath && change.from.position === pos) {
+      if (change.from && pathMatches(change.from.file, filePath) && change.from.position === pos) {
         this.setState({
           selectedNodeInfo: {
             javaId: change.from.java_id,
@@ -1193,7 +1175,7 @@ export class FolderCompareView extends React.Component<
         })
         return
       }
-      if (change.to && change.to.file === filePath && change.to.position === pos) {
+      if (change.to && pathMatches(change.to.file, filePath) && change.to.position === pos) {
         this.setState({
           selectedNodeInfo: {
             javaId: change.to.java_id,
@@ -1221,20 +1203,32 @@ export class FolderCompareView extends React.Component<
     const component = this.state.diffComponents[componentIndex]
     if (!component) return null
 
-    // Find all edges involving this node
-    const connectedEdges: Array<{edge: any, otherNode: any, direction: 'incoming' | 'outgoing'}> = []
+    // Find all edges involving this node and collect unique file:line combinations
+    const uniqueLocations = new Map<string, {file: string, lineNum: number, side: 'before' | 'after'}>()
+    
     for (const change of component.changes) {
-      if (change.from && change.from.java_id === info.javaId) {
-        connectedEdges.push({ edge: change, otherNode: change.to, direction: 'outgoing' })
+      // Check if this edge involves the selected node
+      let otherNode: any = null
+      if (change.from && change.from.java_id === info.javaId && change.to) {
+        otherNode = change.to
+      } else if (change.to && change.to.java_id === info.javaId && change.from) {
+        otherNode = change.from
       }
-      if (change.to && change.to.java_id === info.javaId) {
-        connectedEdges.push({ edge: change, otherNode: change.from, direction: 'incoming' })
+      
+      if (otherNode && otherNode.position && otherNode.file) {
+        const lineNum = parseInt(otherNode.position.split(':')[0], 10)
+        if (!isNaN(lineNum)) {
+          // Determine side based on edge kind
+          const side: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
+          const key = `${otherNode.file}:${lineNum}:${side}`
+          uniqueLocations.set(key, { file: otherNode.file, lineNum, side })
+        }
       }
     }
 
     // Look up the node in diff_nodes.json for additional info
-    const nodeData = this.state.diffNodes.find((n: any) => n.component_id === component.component_id)
-    const diffNode = nodeData?.nodes?.find((n: any) => n.java_id === info.javaId)
+    //const nodeData = this.state.diffNodes.find((n: any) => n.component_id === component.component_id)
+    //const diffNode = nodeData?.nodes?.find((n: any) => n.java_id === info.javaId)
 
     return (
       <div style={{
@@ -1254,34 +1248,30 @@ export class FolderCompareView extends React.Component<
           >&times;</span>
         </div>
 
-        <div style={{ fontSize: '12px', marginBottom: '15px', padding: '10px', backgroundColor: 'var(--background-color)', borderRadius: '4px' }}>
-          <div style={{ marginBottom: '4px' }}><strong>Type:</strong> {info.type}</div>
-          {info.content && <div style={{ marginBottom: '4px' }}><strong>Content:</strong> <code style={{ fontFamily: 'var(--font-family-monospace)' }}>{info.content}</code></div>}
-          <div style={{ marginBottom: '4px' }}><strong>File:</strong> {info.file}</div>
-          <div style={{ marginBottom: '4px' }}><strong>Position:</strong> {info.position}</div>
-          <div style={{ marginBottom: '4px' }}><strong>Component:</strong> {componentIndex + 1} ({nodeData?.kind || ''})</div>
-          {diffNode && typeof diffNode.reachable_by === 'number' && (
-            <div><strong>Reachable by:</strong> {diffNode.reachable_by} node{diffNode.reachable_by !== 1 ? 's' : ''}</div>
-          )}
-        </div>
-
         <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 600 }}>
-          Related Changes ({connectedEdges.length})
+          Related Changes ({uniqueLocations.size})
         </h4>
 
-        {connectedEdges.length === 0 && (
+        {uniqueLocations.size === 0 && (
           <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)', fontStyle: 'italic' }}>
-            No direct edges for this node
+            No directly caused changes for this node
           </div>
         )}
 
-        {connectedEdges.map((conn, i) => {
-          const edgeLabelParts = (conn.edge.edge_label || '').split(':')
-          const edgeType = edgeLabelParts[0] || ''
+        {Array.from(uniqueLocations.values()).map((loc, i) => {
+          // Try to get content from the primary side first
+          let lineContent = this.getSourceLineContent(loc.file, loc.lineNum, loc.side)
+          
+          // If empty, try the opposite side as fallback (for modified lines where content exists on both sides)
+          if (!lineContent || lineContent.trim() === '') {
+            const oppositeSide = loc.side === 'before' ? 'after' : 'before'
+            lineContent = this.getSourceLineContent(loc.file, loc.lineNum, oppositeSide)
+          }
+          
           return (
             <div key={i} style={{
               fontSize: '11px',
-              padding: '8px',
+              padding: '10px',
               marginBottom: '6px',
               backgroundColor: 'var(--background-color)',
               borderRadius: '4px',
@@ -1289,38 +1279,31 @@ export class FolderCompareView extends React.Component<
               cursor: 'pointer'
             }}
             onClick={() => {
-              if (conn.otherNode) {
-                this.setState({
-                  selectedNodeInfo: {
-                    javaId: conn.otherNode.java_id,
-                    type: conn.otherNode.type,
-                    content: conn.otherNode.content || '',
-                    position: conn.otherNode.position,
-                    file: conn.otherNode.file,
-                    componentIndex
-                  }
-                })
-                const lineNum = parseInt((conn.otherNode.position || '').split(':')[0], 10)
-                if (!isNaN(lineNum)) {
-                  const side: 'before' | 'after' = conn.edge.kind === 'Removal' ? 'before' : 'after'
-                  this.scrollToLine(conn.otherNode.file, lineNum, side)
-                }
-              }
+              this.scrollToLine(loc.file, loc.lineNum, loc.side)
             }}
             >
-              <div style={{ marginBottom: '4px', fontSize: '10px', color: 'var(--text-secondary-color)', cursor: 'inherit' }}>
-                {conn.direction === 'incoming' ? '\u2190 ' : '\u2192 '}<strong style={{ cursor: 'inherit' }}>{edgeType}</strong>
+              <div style={{ 
+                marginBottom: '4px', 
+                fontSize: '12px', 
+                fontWeight: 600,
+                color: 'var(--text-color)', 
+                cursor: 'inherit',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
+                {loc.file}
               </div>
-              <div style={{ marginBottom: '2px', cursor: 'inherit' }}>
-                {conn.otherNode?.type || '?'}
-              </div>
-              {conn.otherNode?.content && (
-                <div style={{ marginBottom: '2px', fontFamily: 'var(--font-family-monospace)', color: 'var(--text-color)', cursor: 'inherit' }}>
-                  {conn.otherNode.content}
-                </div>
-              )}
-              <div style={{ color: 'var(--text-secondary-color)', cursor: 'inherit' }}>
-                {conn.otherNode?.file} : {conn.otherNode?.position}
+              <div style={{ 
+                fontFamily: 'var(--font-family-monospace)', 
+                color: 'var(--text-color)', 
+                cursor: 'inherit',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                fontSize: '12px'
+              }}>
+                <span style={{ color: 'var(--text-secondary-color)' }}>{loc.lineNum}:</span> {lineContent || '(empty line)'}
               </div>
             </div>
           )

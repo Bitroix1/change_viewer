@@ -35,6 +35,7 @@ interface IFolderCompareViewState {
     file: string
     componentIndex: number
   } | null
+  readonly collapsedKinds: ReadonlyArray<string>
 }
 
 export class FolderCompareView extends React.Component<
@@ -55,6 +56,7 @@ export class FolderCompareView extends React.Component<
       diffNodes: [],
       selectedComponent: 'all',
       selectedNodeInfo: null,
+      collapsedKinds: [],
     }
   }
 
@@ -98,8 +100,8 @@ export class FolderCompareView extends React.Component<
                   border-radius: 4px;
                 }
               `}</style>
-              <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>View Options</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>Diff View Options</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -107,7 +109,7 @@ export class FolderCompareView extends React.Component<
                   cursor: 'pointer',
                   padding: '8px',
                   borderRadius: '4px',
-                  backgroundColor: this.state.selectedComponent === 'all' ? 'var(--background-color)' : 'transparent'
+                  backgroundColor: this.state.selectedComponent === 'all' ? 'var(--box-border-color)' : 'var(--background-color)'
                 }}>
                   <input
                     type="radio"
@@ -116,102 +118,155 @@ export class FolderCompareView extends React.Component<
                     checked={this.state.selectedComponent === 'all'}
                     onChange={this.onComponentChange}
                   />
-                  <span style={{ fontSize: '13px' }}>Show All</span>
+                  <span style={{ fontSize: '13px' }}>Show All<br></br></span>
                 </label>
-                {this.state.diffComponents.map((comp, index) => {
-                  const isSelected = this.state.selectedComponent === index
-                  const nodeData = this.state.diffNodes.find((n: any) => n.component_id === comp.component_id)
-                  const nodes: any[] = nodeData ? nodeData.nodes : []
-                  return (
-                    <div key={index}>
-                      <label style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        backgroundColor: isSelected ? 'var(--background-color)' : 'transparent'
-                      }}>
-                        <input
-                          type="radio"
-                          name="component-view"
-                          value={index}
-                          checked={isSelected}
-                          onChange={this.onComponentChange}
-                        />
-                        <span style={{ fontSize: '13px' }}>Component {index + 1}</span>
-                      </label>
-                      {isSelected && nodes.length > 0 && (() => {
-                        // Find the node with the highest reachable_by score
-                        let maxReachableBy = -1
-                        let maxReachableIndex = -1
-                        let maxReachableCount = 0
-                        nodes.forEach((n: any, i: number) => {
-                          if (typeof n.reachable_by === 'number') {
-                            if (n.reachable_by > maxReachableBy) {
-                              maxReachableBy = n.reachable_by
-                              maxReachableIndex = i
-                              maxReachableCount = 1
-                            } else if (n.reachable_by === maxReachableBy) {
-                              maxReachableCount++
-                            }
-                          }
-                        })
-                        return (
-                        <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
-                          {nodes.map((node: any, ni: number) => {
-                            const lineNum = node.position ? node.position.split(':')[0] : '?'
-                            // Use the individual node's kind, not the component's kind
-                            const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
-                            const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
-                            return (
-                              <div key={ni} style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                padding: '6px 6px',
-                                fontSize: '11px',
-                                borderRadius: '3px',
-                                color: 'var(--text-secondary-color)',
-                                gap: '6px',
-                                minHeight: '28px'
-                              }}>
-                                <span
-                                  className="node-line-content"
-                                  style={{ 
-                                    fontSize: '12px', 
-                                    color: 'var(--diff-selected-border-color)', 
-                                    cursor: 'pointer', 
-                                    marginTop: '-1px',
-                                    whiteSpace: 'nowrap',
-                                    overflowX: 'auto',
-                                    flex: 1,
-                                    minWidth: 0
-                                  }}
-                                  onClick={() => this.selectNode(node, index, side)}
-                                >
-                                  {node.file}::{lineNum}
-                                </span>
-                                {isLikelySource && (
-                                  <span style={{
-                                    fontSize: '9px',
-                                    color: '#e8a63a',
-                                    fontWeight: 600,
-                                    whiteSpace: 'nowrap',
-                                    flexShrink: 0
-                                  }}>
-                                    Likely source
-                                  </span>
-                                )}
-                              </div>
-                            )
-                          })}
+                {(() => {
+                  // Group components by component_kind
+                  const kindGroups = new Map<string, Array<{comp: any, index: number}>>()
+                  this.state.diffComponents.forEach((comp, index) => {
+                    const kind = comp.component_kind || 'other'
+                    const group = kindGroups.get(kind)
+                    if (group) {
+                      group.push({ comp, index })
+                    } else {
+                      kindGroups.set(kind, [{ comp, index }])
+                    }
+                  })
+
+                  const kindLabels: Record<string, string> = {
+                    delete: 'Deletions',
+                    add: 'Additions',
+                    rename: 'Renames',
+                    modify: 'Modifications',
+                    other: 'Other',
+                  }
+
+                  return Array.from(kindGroups.entries()).map(([kind, items]) => {
+                    const isCollapsed = this.state.collapsedKinds.includes(kind)
+                    const label = kindLabels[kind] || kind.charAt(0).toUpperCase() + kind.slice(1) + 's'
+                    return (
+                      <div key={kind} style={{ marginBottom: '4px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            cursor: 'pointer',
+                            padding: '6px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: 'var(--box-border-color)',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            userSelect: 'none',
+                          }}
+                          onClick={() => this.toggleKindCollapse(kind)}
+                        >
+                          <span style={{ fontSize: '10px', display: 'inline-block', transition: 'transform 0.15s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
+                          <span>{label}</span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary-color)', marginLeft: 'auto' }}>({items.length})</span>
                         </div>
-                        )
-                      })()}
-                    </div>
-                  )
-                })}
+                        {!isCollapsed && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px', marginLeft: '8px' }}>
+                            {items.map(({ comp, index }) => {
+                              const isSelected = this.state.selectedComponent === index
+                              const nodeData = this.state.diffNodes.find((n: any) => n.component_id === comp.component_id)
+                              const nodes: any[] = nodeData ? nodeData.nodes : []
+                              return (
+                                <div key={index}>
+                                  <label style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    padding: '6px 8px',
+                                    borderRadius: '4px',
+                                    backgroundColor: isSelected ? 'var(--background-color)' : 'transparent'
+                                  }}>
+                                    <input
+                                      type="radio"
+                                      name="component-view"
+                                      value={index}
+                                      checked={isSelected}
+                                      onChange={this.onComponentChange}
+                                    />
+                                    <span style={{ fontSize: '12px' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
+                                  </label>
+                                  {isSelected && nodes.length > 0 && (() => {
+                                    // Find the node with the highest reachable_by score
+                                    let maxReachableBy = -1
+                                    let maxReachableIndex = -1
+                                    let maxReachableCount = 0
+                                    nodes.forEach((n: any, i: number) => {
+                                      if (typeof n.reachable_by === 'number') {
+                                        if (n.reachable_by > maxReachableBy) {
+                                          maxReachableBy = n.reachable_by
+                                          maxReachableIndex = i
+                                          maxReachableCount = 1
+                                        } else if (n.reachable_by === maxReachableBy) {
+                                          maxReachableCount++
+                                        }
+                                      }
+                                    })
+                                    return (
+                                    <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
+                                      {nodes.map((node: any, ni: number) => {
+                                        const lineNum = node.position ? node.position.split(':')[0] : '?'
+                                        // Use the individual node's kind, not the component's kind
+                                        const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
+                                        const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
+                                        return (
+                                          <div key={ni} style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            padding: '6px 6px',
+                                            fontSize: '11px',
+                                            borderRadius: '3px',
+                                            color: 'var(--text-secondary-color)',
+                                            gap: '6px',
+                                            minHeight: '28px'
+                                          }}>
+                                            <span
+                                              className="node-line-content"
+                                              style={{ 
+                                                fontSize: '12px', 
+                                                color: 'var(--diff-selected-border-color)', 
+                                                cursor: 'pointer', 
+                                                marginTop: '-1px',
+                                                whiteSpace: 'nowrap',
+                                                overflowX: 'auto',
+                                                flex: 1,
+                                                minWidth: 0
+                                              }}
+                                              onClick={() => this.selectNode(node, index, side)}
+                                            >
+                                              {node.file}::{lineNum}
+                                            </span>
+                                            {isLikelySource && (
+                                              <span style={{
+                                                fontSize: '9px',
+                                                color: '#e8a63a',
+                                                fontWeight: 600,
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0
+                                              }}>
+                                                Likely source
+                                              </span>
+                                            )}
+                                          </div>
+                                        )
+                                      })}
+                                    </div>
+                                    )
+                                  })()}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             </div>
           )}
@@ -346,55 +401,32 @@ export class FolderCompareView extends React.Component<
         <style>{`
           /* CSS Variables for filtered line opacity - adjust these to change faintness */
           :root {
-            --filtered-line-opacity: 0.02;
+            --filtered-line-opacity: 0.05;
           }
           
           /* === Fully filtered rows/sides (not in component at all) === */
+          /* Row-level backgrounds are always OPAQUE to prevent stacking.
+             Faint tint is applied only ONCE, on the .before/.after sides. */
           .folder-compare-view .component-filtered {
             background-color: var(--background-color) !important;
           }
-          
-          /* Very faint coloring for filtered changed lines */
-          .folder-compare-view .component-filtered.added {
-            background-color: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
-          }
-          
-          .folder-compare-view .component-filtered.deleted {
-            background-color: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
-          }
-          
+          .folder-compare-view .component-filtered.added,
+          .folder-compare-view .component-filtered.deleted,
           .folder-compare-view .component-filtered.modified {
             background-color: var(--background-color) !important;
           }
           
-          /* For modified rows, apply faint colors to individual sides */
-          .folder-compare-view .component-filtered.modified .before {
-            background: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
-          }
-          
-          .folder-compare-view .component-filtered.modified .after {
-            background: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
-          }
-          
+          /* Binary faint coloring: left (before) = faint red, right (after) = faint green.
+             Applied once per side — no stacking regardless of how many components touch the line. */
           .folder-compare-view .component-filtered .before,
-          .folder-compare-view .component-filtered .after,
-          .folder-compare-view .component-filtered-side {
+          .folder-compare-view .component-filtered-side.before {
+            background: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
             color: var(--diff-text-color) !important;
           }
-          
-          /* Override for added/deleted rows - apply faint color to their sides too */
-          .folder-compare-view .component-filtered.added .before,
-          .folder-compare-view .component-filtered.added .after {
+          .folder-compare-view .component-filtered .after,
+          .folder-compare-view .component-filtered-side.after {
             background: rgba(0, 255, 0, var(--filtered-line-opacity)) !important;
-          }
-          
-          .folder-compare-view .component-filtered.deleted .before,
-          .folder-compare-view .component-filtered.deleted .after {
-            background: rgba(255, 0, 0, var(--filtered-line-opacity)) !important;
-          }
-          
-          .folder-compare-view .component-filtered-side {
-            background: var(--background-color) !important;
+            color: var(--diff-text-color) !important;
           }
           
           /* Force override of line-number backgrounds for filtered lines */
@@ -518,9 +550,16 @@ export class FolderCompareView extends React.Component<
             white-space: pre !important;
             word-break: normal !important;
             overflow: hidden !important;
+            position: relative;
+            z-index: 1;
           }
           .folder-compare-view .content-wrapper {
             white-space: pre !important;
+          }
+          /* Line numbers should appear above content */
+          .folder-compare-view .line-number {
+            position: relative;
+            z-index: 2;
           }
           /* Clip box-shadow from sticky scrollbar so it doesn't bleed
              into the gap between files.  overflow:clip does NOT create
@@ -1378,6 +1417,19 @@ export class FolderCompareView extends React.Component<
     this.setState({
       selectedComponent: value === 'all' ? 'all' : parseInt(value, 10),
       selectedNodeInfo: null,
+    })
+  }
+
+  private toggleKindCollapse = (kind: string) => {
+    this.setState(prevState => {
+      const collapsed = [...prevState.collapsedKinds]
+      const idx = collapsed.indexOf(kind)
+      if (idx >= 0) {
+        collapsed.splice(idx, 1)
+      } else {
+        collapsed.push(kind)
+      }
+      return { collapsedKinds: collapsed }
     })
   }
 

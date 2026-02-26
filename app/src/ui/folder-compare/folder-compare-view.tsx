@@ -209,42 +209,6 @@ export class FolderCompareView extends React.Component<
                                     />
                                     <span style={{ fontSize: '12px' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
                                   </label>
-                                  {isSelected && this.state.hunkEntries.length > 0 && (
-                                    <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
-                                      {this.state.hunkEntries.map((entry, hi) => {
-                                        const baseName = entry.fileName.split('/').pop() || entry.fileName
-                                        return (
-                                          <div key={hi} style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            padding: '6px 6px',
-                                            fontSize: '11px',
-                                            borderRadius: '3px',
-                                            color: 'var(--text-secondary-color)',
-                                            gap: '6px',
-                                            minHeight: '28px'
-                                          }}>
-                                            <span
-                                              className="node-line-content"
-                                              style={{
-                                                fontSize: '12px',
-                                                color: 'var(--diff-selected-border-color)',
-                                                cursor: 'pointer',
-                                                marginTop: '-1px',
-                                                whiteSpace: 'nowrap',
-                                                overflowX: 'auto',
-                                                flex: 1,
-                                                minWidth: 0
-                                              }}
-                                              onClick={() => this.scrollToHunk(entry)}
-                                            >
-                                              {baseName}::{entry.beforeLine ?? '?'}/{entry.afterLine ?? '?'}
-                                            </span>
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  )}
                                 </div>
                               )
                             })}
@@ -637,6 +601,12 @@ export class FolderCompareView extends React.Component<
              by repackFile() pushing the row to top:-99999px. */
           .folder-compare-view .component-hidden {
             visibility: hidden !important;
+            top: -99999px !important;
+          }
+
+          /* Packed visible rows: CSS custom property overrides RV's inline top */
+          .folder-compare-view .component-packed {
+            top: var(--packed-top) !important;
           }
 
           /* Visual separator at the start of each custom hunk */
@@ -703,6 +673,10 @@ export class FolderCompareView extends React.Component<
             max-height: 0 !important;
             overflow: hidden !important;
             visibility: hidden !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding: 0 !important;
+            border: none !important;
           }
         `}</style>
       </div>
@@ -1393,66 +1367,6 @@ export class FolderCompareView extends React.Component<
       })
     })
     return entries
-  }
-
-  /**
-   * Scroll to a hunk separator in the diff view.
-   */
-  private scrollToHunk(entry: {fileName: string, beforeLine: number | null, afterLine: number | null}): void {
-    const allContainers = document.querySelectorAll('.folder-compare-view [data-file-path]')
-    for (const container of Array.from(allContainers)) {
-      const filePath = (container as HTMLElement).dataset.filePath || ''
-      if (filePath !== entry.fileName &&
-          !filePath.endsWith('/' + entry.fileName) &&
-          !filePath.endsWith('\\' + entry.fileName)) continue
-
-      const hunkStarts = container.querySelectorAll('.component-hunk-start')
-      const allRows = Array.from(
-        container.querySelectorAll('.row:not(.component-hunk-separator)')
-      ) as HTMLElement[]
-      for (const row of Array.from(hunkStarts)) {
-        let beforeLine = row.querySelector('.before .line-number')
-          ? extractLineNumber(row.querySelector('.before .line-number')!)
-          : null
-        let afterLine = row.querySelector('.after .line-number')
-          ? extractLineNumber(row.querySelector('.after .line-number')!)
-          : null
-
-        // Same forward-scan logic as extractHunkEntriesFromDOM
-        if (beforeLine === null || afterLine === null) {
-          const rowIdx = allRows.indexOf(row as HTMLElement)
-          if (rowIdx >= 0) {
-            for (let i = rowIdx + 1; i < allRows.length; i++) {
-              const r = allRows[i]
-              if (r.closest('.component-hidden') || r.classList.contains('component-hidden')) continue
-              const parent = r.parentElement
-              if (parent && parent.classList.contains('component-hidden')) continue
-              if (beforeLine === null) {
-                const bl2 = r.querySelector('.before .line-number')
-                if (bl2) beforeLine = extractLineNumber(bl2)
-              }
-              if (afterLine === null) {
-                const al2 = r.querySelector('.after .line-number')
-                if (al2) afterLine = extractLineNumber(al2)
-              }
-              if (beforeLine !== null && afterLine !== null) break
-            }
-          }
-        }
-
-        if (beforeLine === entry.beforeLine && afterLine === entry.afterLine) {
-          // Scroll to the separator above this row
-          const outerWrapper = row.closest('.component-hunk-start')?.parentElement
-          const separator = outerWrapper?.previousElementSibling
-          if (separator && separator.classList.contains('component-hunk-separator')) {
-            this.scrollIntoViewIfNeeded(separator, 'start')
-          } else {
-            this.scrollIntoViewIfNeeded(row, 'start')
-          }
-          return
-        }
-      }
-    }
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {

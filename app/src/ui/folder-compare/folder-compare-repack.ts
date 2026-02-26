@@ -45,6 +45,7 @@ export function repackFile(fileContainer: Element): void {
   // It is only cleared by applyComponentHighlightingToAll when 'all' is selected.
   outerWrappers.forEach(el => {
     if (el.classList.contains('component-hunk-separator')) return
+    el.classList.remove('component-packed')
     if (el.dataset.originalTop !== undefined) {
       el.style.top = el.dataset.originalTop
     }
@@ -80,6 +81,8 @@ export function repackFile(fileContainer: Element): void {
       el.style.top = '-99999px' // off-screen — height untouched
     } else {
       el.style.top = `${accTop}px`
+      el.classList.add('component-packed')
+      el.style.setProperty('--packed-top', `${accTop}px`)
       const h = parseInt(el.dataset.originalHeight || String(rowHeight), 10)
       const effectiveH = h > 0 ? h : rowHeight
       // If ReactVirtualized left this row at height:0 (an unrendered placeholder),

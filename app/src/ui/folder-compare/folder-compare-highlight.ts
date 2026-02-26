@@ -225,6 +225,9 @@ export function applyComponentHighlightingForFile(
   fileContainer.querySelectorAll('.component-hidden').forEach(el =>
     el.classList.remove('component-hidden')
   )
+  fileContainer.querySelectorAll('.component-packed').forEach(el =>
+    el.classList.remove('component-packed')
+  )
   fileContainer.querySelectorAll('.component-hunk-start').forEach(el =>
     el.classList.remove('component-hunk-start')
   )
@@ -445,6 +448,7 @@ export function applyComponentHighlightingToAll(
         }
       }
       htmlEl.classList.remove('component-hidden')
+      htmlEl.classList.remove('component-packed')
       // Clear both saved attributes so the next component switch re-records
       // the correct pristine values on its first repack pass
       delete htmlEl.dataset.originalTop
@@ -479,6 +483,9 @@ export function applyComponentHighlightingToAll(
     })
     document.querySelectorAll('.folder-compare-view .component-hidden').forEach(el =>
       el.classList.remove('component-hidden')
+    )
+    document.querySelectorAll('.folder-compare-view .component-packed').forEach(el =>
+      el.classList.remove('component-packed')
     )
     document.querySelectorAll(
       '.folder-compare-view .before, .folder-compare-view .after'

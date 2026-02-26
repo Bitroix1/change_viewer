@@ -28,6 +28,19 @@ interface FileTreeNode {
   filePaths: string[]
 }
 
+// ---------------------------------------------------------------------------
+// Resizable panel constants (minimum sizes in pixels)
+// ---------------------------------------------------------------------------
+const MIN_LEFT_PANEL_WIDTH = 200
+const MIN_MIDDLE_PANEL_WIDTH = 300
+const MIN_RIGHT_PANEL_WIDTH = 200
+const MIN_LEFT_TOP_HEIGHT = 100
+const MIN_LEFT_BOTTOM_HEIGHT = 100
+const DEFAULT_LEFT_PANEL_WIDTH = 350
+const DEFAULT_RIGHT_PANEL_WIDTH = 350
+/** Fraction of the left panel occupied by the top (options) section */
+const DEFAULT_LEFT_TOP_FRACTION = 0.55
+
 interface IFolderCompareViewProps {
   readonly dispatcher: Dispatcher
 }
@@ -55,6 +68,9 @@ interface IFolderCompareViewState {
   readonly collapsedFolders: ReadonlyArray<string>
   readonly hunkEntries: Array<{fileName: string, beforeLine: number | null, afterLine: number | null}>
   readonly selectedRightPanelLine: string | null
+  readonly leftPanelWidth: number
+  readonly rightPanelWidth: number
+  readonly leftTopFraction: number
 }
 
 export class FolderCompareView extends React.Component<
@@ -79,6 +95,9 @@ export class FolderCompareView extends React.Component<
       collapsedFolders: [],
       hunkEntries: [],
       selectedRightPanelLine: null,
+      leftPanelWidth: DEFAULT_LEFT_PANEL_WIDTH,
+      rightPanelWidth: DEFAULT_RIGHT_PANEL_WIDTH,
+      leftTopFraction: DEFAULT_LEFT_TOP_FRACTION,
     }
   }
 
@@ -94,14 +113,63 @@ export class FolderCompareView extends React.Component<
       )
     }
 
+    const hasLeftPanel = this.state.diffComponents.length > 0
+    const hasRightPanel = this.state.selectedComponent !== 'all' && this.state.selectedComponent !== 'misc'
+
     return (
       <div className="folder-compare-view" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', height: '100%' }}>
+        <style>{`
+          .resize-handle-h {
+            width: 4px;
+            cursor: col-resize;
+            flex-shrink: 0;
+            background: transparent;
+            transition: background-color 0.15s;
+            position: relative;
+            z-index: 20;
+          }
+          .resize-handle-h::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: -4px;
+            right: -4px;
+            cursor: col-resize;
+          }
+          .resize-handle-h:hover,
+          .resize-handle-h.active {
+            background-color: var(--diff-selected-border-color);
+          }
+          .resize-handle-v {
+            height: 4px;
+            cursor: row-resize;
+            flex-shrink: 0;
+            background-color: var(--background-color);
+            transition: background-color 0.15s;
+            position: relative;
+            z-index: 20;
+          }
+          .resize-handle-v::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -4px;
+            bottom: -4px;
+            cursor: row-resize;
+          }
+          .resize-handle-v:hover,
+          .resize-handle-v.active {
+            background-color: var(--diff-selected-border-color);
+          }
+        `}</style>
+        <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
           {/* Left Sidebar for Component Selection */}
-          {this.state.diffComponents.length > 0 && (
+          {hasLeftPanel && (
             <div className="component-selector-sidebar" style={{
-              width: '350px',
-              borderRight: '1px solid var(--box-border-color)',
+              width: `${this.state.leftPanelWidth}px`,
+              minWidth: `${MIN_LEFT_PANEL_WIDTH}px`,
               backgroundColor: 'var(--box-alt-background-color)',
               display: 'flex',
               flexDirection: 'column',
@@ -131,7 +199,7 @@ export class FolderCompareView extends React.Component<
                 }
               `}</style>
               {/* Scrollable top section: component list */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '15px', minHeight: 0, overflow: 'hidden' }}>
+              <div style={{ flex: `0 0 ${this.state.leftTopFraction * 100}%`, display: 'flex', flexDirection: 'column', padding: '15px', minHeight: `${MIN_LEFT_TOP_HEIGHT}px`, overflow: 'hidden' }}>
               <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>Diff View Options</h3>
                 <label style={{ 
                   display: 'flex', 
@@ -253,13 +321,16 @@ export class FolderCompareView extends React.Component<
                 </label>
                 </div>
               </div>
-              {/* Divider + sticky file list at bottom */}
+              {/* Vertical resize handle between top and bottom of left panel */}
+              <div
+                className={`resize-handle-v${this.draggingHandle === 'left-v' ? ' active' : ''}`}
+                onMouseDown={this.onLeftVerticalResizeStart}
+              />
+              {/* File list at bottom */}
               <div style={{
-                borderTop: '1px solid var(--box-border-color)',
                 padding: '12px 15px',
-                flexShrink: 0,
-                minHeight: '300px',
-                maxHeight: '50%',
+                flex: 1,
+                minHeight: `${MIN_LEFT_BOTTOM_HEIGHT}px`,
                 overflow: 'auto'
               }}>
                 <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
@@ -270,8 +341,16 @@ export class FolderCompareView extends React.Component<
             </div>
           )}
 
+          {/* Horizontal resize handle: left ↔ middle */}
+          {hasLeftPanel && (
+            <div
+              className={`resize-handle-h${this.draggingHandle === 'left-h' ? ' active' : ''}`}
+              onMouseDown={this.onLeftHorizontalResizeStart}
+            />
+          )}
+
           {/* Main Content Area */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: `${MIN_MIDDLE_PANEL_WIDTH}px` }}>
             <div className="folder-compare-header" style={{ padding: '10px', borderBottom: '1px solid var(--box-border-color)', backgroundColor: 'var(--box-background-color)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <Button onClick={this.onChangeFolders}>Change Folders</Button>
@@ -340,6 +419,14 @@ export class FolderCompareView extends React.Component<
               </div>
             )}
           </div>
+
+          {/* Horizontal resize handle: middle ↔ right */}
+          {hasRightPanel && (
+            <div
+              className={`resize-handle-h${this.draggingHandle === 'right-h' ? ' active' : ''}`}
+              onMouseDown={this.onRightHorizontalResizeStart}
+            />
+          )}
 
           {/* Right Panel for Changed Lines */}
           {this.renderRightPanel()}
@@ -1233,8 +1320,8 @@ export class FolderCompareView extends React.Component<
 
     return (
       <div style={{
-        width: '350px',
-        borderLeft: '1px solid var(--box-border-color)',
+        width: `${this.state.rightPanelWidth}px`,
+        minWidth: `${MIN_RIGHT_PANEL_WIDTH}px`,
         backgroundColor: 'var(--box-alt-background-color)',
         padding: '15px',
         overflow: 'auto',
@@ -1472,6 +1559,93 @@ export class FolderCompareView extends React.Component<
       hunkEntries: [],
       selectedRightPanelLine: null,
     })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Resize drag handlers
+  // ---------------------------------------------------------------------------
+
+  private draggingHandle: 'left-h' | 'right-h' | 'left-v' | null = null
+  private dragStartX = 0
+  private dragStartY = 0
+  private dragStartValue = 0
+  private dragStartSidebarHeight = 0
+
+  private onLeftHorizontalResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    this.draggingHandle = 'left-h'
+    this.dragStartX = e.clientX
+    this.dragStartValue = this.state.leftPanelWidth
+    document.addEventListener('mousemove', this.onResizeMove)
+    document.addEventListener('mouseup', this.onResizeEnd)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    this.forceUpdate()
+  }
+
+  private onRightHorizontalResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    this.draggingHandle = 'right-h'
+    this.dragStartX = e.clientX
+    this.dragStartValue = this.state.rightPanelWidth
+    document.addEventListener('mousemove', this.onResizeMove)
+    document.addEventListener('mouseup', this.onResizeEnd)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    this.forceUpdate()
+  }
+
+  private onLeftVerticalResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    this.draggingHandle = 'left-v'
+    this.dragStartY = e.clientY
+    this.dragStartValue = this.state.leftTopFraction
+    // measure the sidebar height for fraction calculation
+    const sidebar = (e.currentTarget as HTMLElement).closest('.component-selector-sidebar') as HTMLElement
+    this.dragStartSidebarHeight = sidebar ? sidebar.clientHeight : 600
+    document.addEventListener('mousemove', this.onResizeMove)
+    document.addEventListener('mouseup', this.onResizeEnd)
+    document.body.style.cursor = 'row-resize'
+    document.body.style.userSelect = 'none'
+    this.forceUpdate()
+  }
+
+  private onResizeMove = (e: MouseEvent) => {
+    if (this.draggingHandle === 'left-h') {
+      const delta = e.clientX - this.dragStartX
+      const containerWidth = document.querySelector('.folder-compare-view')?.clientWidth ?? window.innerWidth
+      const hasRight = this.state.selectedComponent !== 'all' && this.state.selectedComponent !== 'misc'
+      const rightReserved = hasRight ? this.state.rightPanelWidth + 4 : 0
+      const maxLeft = containerWidth - rightReserved - MIN_MIDDLE_PANEL_WIDTH - 4
+      const newWidth = Math.max(MIN_LEFT_PANEL_WIDTH, Math.min(maxLeft, this.dragStartValue + delta))
+      this.setState({ leftPanelWidth: newWidth })
+    } else if (this.draggingHandle === 'right-h') {
+      const delta = e.clientX - this.dragStartX
+      const containerWidth = document.querySelector('.folder-compare-view')?.clientWidth ?? window.innerWidth
+      const hasLeft = this.state.diffComponents.length > 0
+      const leftReserved = hasLeft ? this.state.leftPanelWidth + 4 : 0
+      const maxRight = containerWidth - leftReserved - MIN_MIDDLE_PANEL_WIDTH - 4
+      // Right panel grows when mouse moves LEFT (negative delta)
+      const newWidth = Math.max(MIN_RIGHT_PANEL_WIDTH, Math.min(maxRight, this.dragStartValue - delta))
+      this.setState({ rightPanelWidth: newWidth })
+    } else if (this.draggingHandle === 'left-v') {
+      const delta = e.clientY - this.dragStartY
+      const sidebarH = this.dragStartSidebarHeight
+      if (sidebarH <= 0) return
+      const minTopFrac = MIN_LEFT_TOP_HEIGHT / sidebarH
+      const maxTopFrac = 1 - MIN_LEFT_BOTTOM_HEIGHT / sidebarH
+      const newFrac = Math.max(minTopFrac, Math.min(maxTopFrac, this.dragStartValue + delta / sidebarH))
+      this.setState({ leftTopFraction: newFrac })
+    }
+  }
+
+  private onResizeEnd = () => {
+    this.draggingHandle = null
+    document.removeEventListener('mousemove', this.onResizeMove)
+    document.removeEventListener('mouseup', this.onResizeEnd)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    this.forceUpdate()
   }
 
   // ---------------------------------------------------------------------------

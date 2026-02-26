@@ -257,7 +257,6 @@ export class FolderCompareView extends React.Component<
                   Files
                 </h3>
                 {this.getRelevantFiles().map(filePath => {
-                  const baseName = filePath.split('/').pop() || filePath
                   return (
                     <div
                       key={filePath}
@@ -270,13 +269,15 @@ export class FolderCompareView extends React.Component<
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
+                        direction: 'rtl',
+                        textAlign: 'left',
                       }}
                       title={filePath}
                       onClick={() => this.scrollToFile(filePath)}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--box-border-color)')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      {baseName}
+                      <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{filePath}</span>
                     </div>
                   )
                 })}
@@ -1126,6 +1127,7 @@ export class FolderCompareView extends React.Component<
   private computeRightPanelEntries(): Array<{
     key: string
     file: string
+    fullPath: string
     line: number
     startCol: number
     side: 'before' | 'after'
@@ -1186,6 +1188,20 @@ export class FolderCompareView extends React.Component<
     const entries = Array.from(lineMap.entries())
       .sort((a, b) => b[1].reachable_by - a[1].reachable_by)
 
+    // Build a lookup to resolve bare filenames to full relative paths
+    const resolveFullPath = (bareFile: string): string => {
+      for (const fc of this.state.fileChanges) {
+        if (
+          fc.path === bareFile ||
+          fc.path.endsWith('/' + bareFile) ||
+          fc.path.endsWith('\\' + bareFile)
+        ) {
+          return fc.path
+        }
+      }
+      return bareFile
+    }
+
     return entries.map(([key, entry]) => {
       // Get full line content (without diff prefix, since DiffLine.content strips it)
       const rawContent = getSourceLineContent(
@@ -1202,6 +1218,7 @@ export class FolderCompareView extends React.Component<
       return {
         key,
         ...entry,
+        fullPath: resolveFullPath(entry.file),
         content: displayContent || '(empty)'
       }
     })
@@ -1302,8 +1319,15 @@ export class FolderCompareView extends React.Component<
                   justifyContent: 'space-between',
                   alignItems: 'center'
                 }}>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {entry.file}:{entry.line} ({entry.side === 'before' ? '-' : '+'})
+                  <span style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    direction: 'rtl',
+                    textAlign: 'left',
+                    minWidth: 0,
+                    flex: 1,
+                  }}>
+                    <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{entry.fullPath}:{entry.line} ({entry.side === 'before' ? '-' : '+'})</span>
                   </span>
                   {isLikelySource && (
                     <span style={{

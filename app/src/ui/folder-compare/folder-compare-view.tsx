@@ -21,6 +21,13 @@ import {
   getSourceLineContent,
 } from './folder-compare-data'
 
+interface FileTreeNode {
+  name: string
+  fullPath: string
+  children: FileTreeNode[]
+  filePaths: string[]
+}
+
 interface IFolderCompareViewProps {
   readonly dispatcher: Dispatcher
 }
@@ -45,6 +52,7 @@ interface IFolderCompareViewState {
     componentIndex: number
   } | null
   readonly collapsedKinds: ReadonlyArray<string>
+  readonly collapsedFolders: ReadonlyArray<string>
   readonly hunkEntries: Array<{fileName: string, beforeLine: number | null, afterLine: number | null}>
   readonly selectedRightPanelLine: string | null
 }
@@ -68,6 +76,7 @@ export class FolderCompareView extends React.Component<
       selectedComponent: 'all',
       selectedNodeInfo: null,
       collapsedKinds: [],
+      collapsedFolders: [],
       hunkEntries: [],
       selectedRightPanelLine: null,
     }
@@ -256,31 +265,7 @@ export class FolderCompareView extends React.Component<
                 <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
                   Files
                 </h3>
-                {this.getRelevantFiles().map(filePath => {
-                  return (
-                    <div
-                      key={filePath}
-                      className="sidebar-file-entry"
-                      style={{
-                        padding: '4px 6px',
-                        fontSize: '12px',
-                        borderRadius: '3px',
-                        color: 'var(--text-color)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        direction: 'rtl',
-                        textAlign: 'left',
-                      }}
-                      title={filePath}
-                      onClick={() => this.scrollToFile(filePath)}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--box-border-color)')}
-                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                    >
-                      <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{filePath}</span>
-                    </div>
-                  )
-                })}
+                {this.renderFileTree(this.getRelevantFiles())}
               </div>
             </div>
           )}
@@ -1487,6 +1472,172 @@ export class FolderCompareView extends React.Component<
       hunkEntries: [],
       selectedRightPanelLine: null,
     })
+  }
+
+  // ---------------------------------------------------------------------------
+  // File tree helpers
+  // ---------------------------------------------------------------------------
+
+  private buildFileTree(filePaths: string[]): FileTreeNode {
+    const root: FileTreeNode = { name: '', fullPath: '', children: [], filePaths: [] }
+    for (const fp of filePaths) {
+      const parts = fp.split('/')
+      let node = root
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i]
+        const isFile = i === parts.length - 1
+        if (isFile) {
+          node.filePaths.push(fp)
+        } else {
+          let child = node.children.find(c => c.name === part)
+          if (!child) {
+            child = {
+              name: part,
+              fullPath: parts.slice(0, i + 1).join('/'),
+              children: [],
+              filePaths: [],
+            }
+            node.children.push(child)
+          }
+          node = child
+        }
+      }
+    }
+    // Merge single-child folder chains
+    const merge = (node: FileTreeNode): void => {
+      for (const child of node.children) merge(child)
+      while (
+        node.children.length === 1 &&
+        node.filePaths.length === 0 &&
+        node.name !== '' // don't merge into root
+      ) {
+        const only = node.children[0]
+        node.name = node.name + '/' + only.name
+        node.fullPath = only.fullPath
+        node.children = only.children
+        node.filePaths = only.filePaths
+      }
+    }
+    for (const child of root.children) merge(child)
+    return root
+  }
+
+  private toggleFolderCollapse = (folderPath: string) => {
+    this.setState(prevState => {
+      const collapsed = [...prevState.collapsedFolders]
+      const idx = collapsed.indexOf(folderPath)
+      if (idx >= 0) {
+        collapsed.splice(idx, 1)
+      } else {
+        collapsed.push(folderPath)
+      }
+      return { collapsedFolders: collapsed }
+    })
+  }
+
+  private renderFileTree(filePaths: string[]): JSX.Element {
+    const tree = this.buildFileTree(filePaths)
+    return <div>{this.renderTreeNodes(tree, 0)}</div>
+  }
+
+  private renderTreeNodes(node: FileTreeNode, depth: number): JSX.Element[] {
+    const elements: JSX.Element[] = []
+    const indent = depth * 16
+
+    // Sort: folders first, then files
+    const sortedChildren = [...node.children].sort((a, b) => a.name.localeCompare(b.name))
+    const sortedFiles = [...node.filePaths].sort()
+
+    for (const child of sortedChildren) {
+      const isCollapsed = this.state.collapsedFolders.includes(child.fullPath)
+      elements.push(
+        <div
+          key={'folder:' + child.fullPath}
+          className="sidebar-file-entry"
+          style={{
+            padding: '3px 6px',
+            paddingLeft: `${6 + indent}px`,
+            fontSize: '12px',
+            borderRadius: '3px',
+            color: 'var(--text-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+          title={child.fullPath}
+          onClick={() => this.toggleFolderCollapse(child.fullPath)}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--box-border-color)')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+          <span style={{
+            fontSize: '8px',
+            display: 'inline-block',
+            transition: 'transform 0.15s',
+            transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+            flexShrink: 0,
+            width: '10px',
+            textAlign: 'center',
+          }}>&#9660;</span>
+          <svg width="14" height="14" viewBox="0 0 16 16" style={{ flexShrink: 0, fill: '#888' }}>
+            <path d="M.513 1.513A1.75 1.75 0 0 1 1.75 1h3.5c.55 0 1.07.26 1.4.7l.9 1.2a.25.25 0 0 0 .2.1H13a1 1 0 0 1 1 1v.5H2.75a.75.75 0 0 0 0 1.5h11.978a1 1 0 0 1 .994 1.117L15 13.25A1.75 1.75 0 0 1 13.25 15H1.75A1.75 1.75 0 0 1 0 13.25V2.75c0-.464.184-.91.513-1.237Z"/>
+          </svg>
+          <span style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            direction: 'rtl',
+            textAlign: 'left',
+            flex: 1,
+            minWidth: 0,
+          }}>
+            <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{child.name}</span>
+          </span>
+        </div>
+      )
+      if (!isCollapsed) {
+        elements.push(...this.renderTreeNodes(child, depth + 1))
+      }
+    }
+
+    for (const fp of sortedFiles) {
+      const fileName = fp.split('/').pop() || fp
+      elements.push(
+        <div
+          key={'file:' + fp}
+          className="sidebar-file-entry"
+          style={{
+            padding: '3px 6px',
+            paddingLeft: `${6 + indent + 14}px`,
+            fontSize: '12px',
+            borderRadius: '3px',
+            color: 'var(--text-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            cursor: 'pointer',
+          }}
+          title={fp}
+          onClick={() => this.scrollToFile(fp)}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--box-border-color)')}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" style={{ flexShrink: 0, fill: '#888' }}>
+            <path d="M1 1.75C1 .784 1.784 0 2.75 0h7.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25Zm1.75-.25a.25.25 0 0 0-.25.25v12.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V4.664a.25.25 0 0 0-.073-.177l-2.914-2.914a.25.25 0 0 0-.177-.073ZM8 3.25a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0V7h-1.5a.75.75 0 0 1 0-1.5h1.5V4A.75.75 0 0 1 8 3.25Zm-3 8a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z"/>
+          </svg>
+          <span style={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flex: 1,
+            minWidth: 0,
+          }}>{fileName}</span>
+        </div>
+      )
+    }
+
+    return elements
   }
 
   private toggleKindCollapse = (kind: string) => {

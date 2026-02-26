@@ -23,6 +23,81 @@ export interface LineHighlight {
 // Utilities
 // ---------------------------------------------------------------------------
 
+/** Check whether a relative file name from JSON matches a full/relative path. */
+function pathMatchesFile(jsonFile: string, fullPath: string): boolean {
+  return (
+    fullPath === jsonFile ||
+    fullPath.endsWith('/' + jsonFile) ||
+    fullPath.endsWith('\\' + jsonFile)
+  )
+}
+
+/**
+ * Collect ALL line numbers claimed by ANY component for a given file.
+ * Used by the "Miscellaneous" view to determine which changed lines are
+ * unclaimed (and therefore belong to misc).
+ */
+export function getClaimedLineNumbers(
+  diffComponents: any[],
+  filePath: string
+): Set<number> {
+  const claimed = new Set<number>()
+  for (const comp of diffComponents) {
+    if (!comp.changes) continue
+    for (const change of comp.changes) {
+      if (change.from && pathMatchesFile(change.from.file, filePath) && change.from.position) {
+        const line = parseInt(change.from.position.split(':')[0], 10)
+        if (!isNaN(line)) claimed.add(line)
+      }
+      if (change.to && pathMatchesFile(change.to.file, filePath) && change.to.position) {
+        const line = parseInt(change.to.position.split(':')[0], 10)
+        if (!isNaN(line)) claimed.add(line)
+      }
+    }
+  }
+  return claimed
+}
+
+/** Create a @@ hunk separator DOM element. */
+function createSeparatorElement(): HTMLDivElement {
+  const separator = document.createElement('div')
+  separator.className = 'component-hunk-separator hunk-info row'
+  separator.setAttribute('role', 'cell')
+  const expansionHandle = document.createElement('div')
+  expansionHandle.className = 'hunk-expansion-handle'
+  expansionHandle.style.width = '35px'
+  const placeholder = document.createElement('div')
+  placeholder.className = 'hunk-expansion-placeholder'
+  expansionHandle.appendChild(placeholder)
+  const contentDiv = document.createElement('div')
+  contentDiv.className = 'content'
+  const prefix = document.createElement('div')
+  prefix.className = 'prefix'
+  prefix.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+  const contentWrapper = document.createElement('div')
+  contentWrapper.className = 'content-wrapper'
+  contentWrapper.textContent = '@@'
+  contentDiv.appendChild(prefix)
+  contentDiv.appendChild(contentWrapper)
+  const contentDiv2 = document.createElement('div')
+  contentDiv2.className = 'content'
+  contentDiv2.style.display = 'flex'
+  const prefix2 = document.createElement('div')
+  prefix2.className = 'prefix'
+  prefix2.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+  const contentWrapper2 = document.createElement('div')
+  contentWrapper2.className = 'content-wrapper'
+  contentWrapper2.textContent = '@@       '
+  contentWrapper2.style.flex = '1'
+  contentWrapper2.style.textAlign = 'right'
+  contentDiv2.appendChild(prefix2)
+  contentDiv2.appendChild(contentWrapper2)
+  separator.appendChild(expansionHandle)
+  separator.appendChild(contentDiv)
+  separator.appendChild(contentDiv2)
+  return separator
+}
+
 /**
  * Extract the source-file line number from a `.line-number` element.
  * The label's `for` attribute has the format "{lineNumber}-before|after".
@@ -72,26 +147,21 @@ export function addPositionToLineMap(
  */
 export function getHighlightedLinesForComponent(
   diffComponents: any[],
-  selectedComponent: number | 'all',
+  selectedComponent: number | 'all' | 'misc',
   filePath: string
 ): LineHighlight[] {
-  if (selectedComponent === 'all') return []
+  if (selectedComponent === 'all' || selectedComponent === 'misc') return []
   const component = diffComponents[selectedComponent as number]
   if (!component || !component.changes) return []
-
-  const pathMatches = (jsonFile: string, fullPath: string): boolean =>
-    fullPath === jsonFile ||
-    fullPath.endsWith('/' + jsonFile) ||
-    fullPath.endsWith('\\' + jsonFile)
 
   const lineMap = new Map<string, LineHighlight>()
 
   for (const change of component.changes) {
     const side: HighlightSide = change.kind === 'Removal' ? 'before' : 'after'
-    if (change.from && pathMatches(change.from.file, filePath) && change.from.position) {
+    if (change.from && pathMatchesFile(change.from.file, filePath) && change.from.position) {
       addPositionToLineMap(lineMap, change.from.position, side)
     }
-    if (change.to && pathMatches(change.to.file, filePath) && change.to.position) {
+    if (change.to && pathMatchesFile(change.to.file, filePath) && change.to.position) {
       addPositionToLineMap(lineMap, change.to.position, side)
     }
   }
@@ -205,7 +275,7 @@ export function addCharHighlights(
 export function applyComponentHighlightingForFile(
   filePath: string,
   diffComponents: any[],
-  selectedComponent: number | 'all',
+  selectedComponent: number | 'all' | 'misc',
   handleCharHighlightClick: (e: Event) => void
 ): void {
   const fileContainer = document.querySelector(
@@ -237,6 +307,80 @@ export function applyComponentHighlightingForFile(
   fileContainer.querySelectorAll('.component-filtered-side').forEach(el =>
     el.classList.remove('component-filtered-side')
   )
+
+  // ── Miscellaneous mode: show changed rows NOT in any component ───────────
+  if (selectedComponent === 'misc') {
+    const claimedLines = getClaimedLineNumbers(diffComponents, filePath)
+    const CONTEXT = 3
+    const rowsArray = Array.from(fileContainer.querySelectorAll('.row')) as HTMLElement[]
+
+    // Anchors = changed rows where neither side's line is claimed
+    const anchorIndices = new Set<number>()
+    rowsArray.forEach((row, idx) => {
+      if (row.classList.contains('hunk-info')) return
+      const isChanged =
+        row.classList.contains('modified') ||
+        row.classList.contains('added') ||
+        row.classList.contains('deleted')
+      if (!isChanged) return
+      const blDiv = row.querySelector('.before .line-number')
+      const alDiv = row.querySelector('.after .line-number')
+      const bl = blDiv ? extractLineNumber(blDiv) : null
+      const al = alDiv ? extractLineNumber(alDiv) : null
+      const beforeClaimed = bl !== null && claimedLines.has(bl)
+      const afterClaimed = al !== null && claimedLines.has(al)
+      if (!beforeClaimed && !afterClaimed) {
+        anchorIndices.add(idx)
+      }
+    })
+
+    if (anchorIndices.size === 0) {
+      fileContainer.classList.add('component-file-hidden')
+      return
+    }
+    fileContainer.classList.remove('component-file-hidden')
+
+    const visibleIndices = new Set<number>()
+    for (const anchorIdx of anchorIndices) {
+      for (let d = -CONTEXT; d <= CONTEXT; d++) {
+        const i = anchorIdx + d
+        if (i >= 0 && i < rowsArray.length) visibleIndices.add(i)
+      }
+    }
+
+    const sortedVisible = Array.from(visibleIndices).sort((a, b) => a - b)
+    const needsSeparatorBefore = new Set<number>()
+    for (let i = 1; i < sortedVisible.length; i++) {
+      if (sortedVisible[i] - sortedVisible[i - 1] > 1) {
+        needsSeparatorBefore.add(sortedVisible[i])
+      }
+    }
+
+    let isFirstVisibleRow = true
+    rowsArray.forEach((htmlRow, idx) => {
+      if (htmlRow.classList.contains('hunk-info')) {
+        ;(htmlRow.parentElement ?? htmlRow).classList.add('component-hidden')
+        return
+      }
+      if (!visibleIndices.has(idx)) {
+        ;(htmlRow.parentElement ?? htmlRow).classList.add('component-hidden')
+        return
+      }
+      ;(htmlRow.parentElement ?? htmlRow).classList.remove('component-hidden')
+
+      if (isFirstVisibleRow || needsSeparatorBefore.has(idx)) {
+        htmlRow.classList.add('component-hunk-start')
+        const separator = createSeparatorElement()
+        const outerWrapper = htmlRow.parentElement
+        outerWrapper?.parentElement?.insertBefore(separator, outerWrapper)
+      } else {
+        htmlRow.classList.remove('component-hunk-start')
+      }
+      isFirstVisibleRow = false
+      // No char highlights or filtering for misc — show rows as-is
+    })
+    return
+  }
 
   const highlights = getHighlightedLinesForComponent(diffComponents, selectedComponent, filePath)
 
@@ -323,43 +467,7 @@ export function applyComponentHighlightingForFile(
     // Insert a visual hunk separator at the top of every hunk (including the first).
     if (isFirstVisibleRow || needsSeparatorBefore.has(idx)) {
       htmlRow.classList.add('component-hunk-start')
-      const separator = document.createElement('div')
-      separator.className = 'component-hunk-separator hunk-info row'
-      separator.setAttribute('role', 'cell')
-      const expansionHandle = document.createElement('div')
-      expansionHandle.className = 'hunk-expansion-handle'
-      expansionHandle.style.width = '35px'
-      const placeholder = document.createElement('div')
-      placeholder.className = 'hunk-expansion-placeholder'
-      expansionHandle.appendChild(placeholder)
-      const contentDiv = document.createElement('div')
-      contentDiv.className = 'content'
-      const prefix = document.createElement('div')
-      prefix.className = 'prefix'
-      prefix.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-      const contentWrapper = document.createElement('div')
-      contentWrapper.className = 'content-wrapper'
-      contentWrapper.textContent = '@@'
-      contentDiv.appendChild(prefix)
-      contentDiv.appendChild(contentWrapper)
-
-      const contentDiv2 = document.createElement('div')
-      contentDiv2.className = 'content'
-      contentDiv2.style.display = 'flex'
-      const prefix2 = document.createElement('div')
-      prefix2.className = 'prefix'
-      prefix2.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-      const contentWrapper2 = document.createElement('div')
-      contentWrapper2.className = 'content-wrapper'
-      contentWrapper2.textContent = '@@       '
-      contentWrapper2.style.flex = '1'
-      contentWrapper2.style.textAlign = 'right'
-      contentDiv2.appendChild(prefix2)
-      contentDiv2.appendChild(contentWrapper2)
-
-      separator.appendChild(expansionHandle)
-      separator.appendChild(contentDiv)
-      separator.appendChild(contentDiv2)
+      const separator = createSeparatorElement()
       const outerWrapper = htmlRow.parentElement
       outerWrapper?.parentElement?.insertBefore(separator, outerWrapper)
     } else {
@@ -425,7 +533,7 @@ export function applyComponentHighlightingForFile(
 export function applyComponentHighlightingToAll(
   fileChanges: ReadonlyArray<WorkingDirectoryFileChange>,
   diffComponents: any[],
-  selectedComponent: number | 'all',
+  selectedComponent: number | 'all' | 'misc',
   handleCharHighlightClick: (e: Event) => void
 ): void {
   if (selectedComponent === 'all') {

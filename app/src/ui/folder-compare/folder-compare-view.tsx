@@ -35,7 +35,7 @@ interface IFolderCompareViewState {
   readonly isLoadingDiffs: boolean
   readonly diffComponents: any[]
   readonly diffNodes: any[]
-  readonly selectedComponent: number | 'all'
+  readonly selectedComponent: number | 'all' | 'misc'
   readonly selectedNodeInfo: {
     javaId: number
     type: string
@@ -113,15 +113,17 @@ export class FolderCompareView extends React.Component<
                   background: rgba(127,127,127,0.15) !important;
                   border-radius: 4px;
                 }
+                .component-selector-sidebar ::-webkit-scrollbar-corner {
+                  background: transparent;
+                }
                 .sidebar-file-entry,
                 .sidebar-file-entry * {
                   cursor: pointer !important;
                 }
               `}</style>
               {/* Scrollable top section: component list */}
-              <div style={{ flex: 1, overflow: 'auto', padding: '15px', minHeight: 0 }}>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '15px', minHeight: 0, overflow: 'hidden' }}>
               <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>Diff View Options</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -140,6 +142,7 @@ export class FolderCompareView extends React.Component<
                   />
                   <span style={{ fontSize: '13px' }}>Show All<br></br></span>
                 </label>
+                <div style={{ flex: 1, overflow: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
                 {(() => {
                   // Group components by component_kind
                   const kindGroups = new Map<string, Array<{comp: any, index: number}>>()
@@ -165,14 +168,14 @@ export class FolderCompareView extends React.Component<
                     const isCollapsed = this.state.collapsedKinds.includes(kind)
                     const label = kindLabels[kind] || kind.charAt(0).toUpperCase() + kind.slice(1) + 's'
                     return (
-                      <div key={kind} style={{ marginBottom: '4px' }}>
+                      <div key={kind}>
                         <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '6px',
                             cursor: 'pointer',
-                            padding: '6px 8px',
+                            padding: '8px',
                             borderRadius: '4px',
                             backgroundColor: 'var(--box-border-color)',
                             fontSize: '12px',
@@ -218,7 +221,28 @@ export class FolderCompareView extends React.Component<
                     )
                   })
                 })()}
-              </div>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  marginTop: '6px',
+                  position: 'sticky',
+                  bottom: 0,
+                  backgroundColor: this.state.selectedComponent === 'misc' ? 'var(--box-border-color)' : 'var(--background-color)'
+                }}>
+                  <input
+                    type="radio"
+                    name="component-view"
+                    value="misc"
+                    checked={this.state.selectedComponent === 'misc'}
+                    onChange={this.onComponentChange}
+                  />
+                  <span style={{ fontSize: '13px' }}>Miscellaneous</span>
+                </label>
+                </div>
               </div>
               {/* Divider + sticky file list at bottom */}
               <div style={{
@@ -932,7 +956,7 @@ export class FolderCompareView extends React.Component<
    * "Show All" → all fileChanges; component → only files touched by that component.
    */
   private getRelevantFiles(): string[] {
-    if (this.state.selectedComponent === 'all') {
+    if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') {
       return this.state.fileChanges.map(f => f.path)
     }
     const componentIndex = this.state.selectedComponent as number
@@ -1045,7 +1069,7 @@ export class FolderCompareView extends React.Component<
     if (!fileContainer) return
     const filePath = fileContainer.dataset.filePath || ''
 
-    if (this.state.selectedComponent === 'all') return
+    if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return
     const componentIndex = this.state.selectedComponent as number
     const component = this.state.diffComponents[componentIndex]
     if (!component) return
@@ -1108,7 +1132,7 @@ export class FolderCompareView extends React.Component<
     reachable_by: number
     content: string
   }> {
-    if (this.state.selectedComponent === 'all') return []
+    if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return []
     const componentIndex = this.state.selectedComponent as number
     const component = this.state.diffComponents[componentIndex]
     if (!component) return []
@@ -1188,7 +1212,7 @@ export class FolderCompareView extends React.Component<
    * reachable_by score. Always visible when a component is selected.
    */
   private renderRightPanel(): JSX.Element | null {
-    if (this.state.selectedComponent === 'all') return null
+    if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return null
 
     const entries = this.computeRightPanelEntries()
 
@@ -1434,7 +1458,7 @@ export class FolderCompareView extends React.Component<
   private onComponentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
     this.setState({
-      selectedComponent: value === 'all' ? 'all' : parseInt(value, 10),
+      selectedComponent: value === 'all' ? 'all' : value === 'misc' ? 'misc' : parseInt(value, 10),
       selectedNodeInfo: null,
       hunkEntries: [],
       selectedRightPanelLine: null,

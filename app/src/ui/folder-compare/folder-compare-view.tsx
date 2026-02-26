@@ -1,16 +1,25 @@
 import * as React from 'react'
-import * as Path from 'path'
-import * as FSPromises from 'fs/promises'
 import { Button } from '../lib/button'
 import { Dispatcher } from '../dispatcher'
 import { FolderSelector } from './folder-selector'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { AppFileStatusKind } from '../../models/status'
-import { DiffSelection, DiffSelectionType } from '../../models/diff'
 import { ITextDiff, ImageDiffType } from '../../models/diff'
-import { computeDiff } from './diff-generator'
 import { Diff } from '../diff'
 import { Repository } from '../../models/repository'
+
+// -- Helper modules ----------------------------------------------------------
+import {
+  applyComponentHighlightingToAll,
+  extractLineNumber,
+} from './folder-compare-highlight'
+import { repackFile, shrinkWrappersToFit, setupScrollSync } from './folder-compare-repack'
+import {
+  loadDiffComponents,
+  loadAllDiffs,
+  compareDirectories,
+  getSourceLineContent,
+} from './folder-compare-data'
 
 interface IFolderCompareViewProps {
   readonly dispatcher: Dispatcher
@@ -309,8 +318,8 @@ export class FolderCompareView extends React.Component<
                   backgroundColor: 'var(--box-background-color)'
                 }}>
                   <div style={{ 
-                    padding: '15px 20px', 
-                    paddingTop: '35px',
+                    padding: '10px 20px', 
+                    paddingTop: '10px',
                     marginTop: '0px',
                     backgroundColor: 'var(--box-alt-background-color)',
                     borderBottom: '1px solid var(--box-border-color)',
@@ -381,8 +390,10 @@ export class FolderCompareView extends React.Component<
     }
     
     // Give AutoSizer a very large height so react-virtualized renders ALL rows
-    // (disabling virtualization). CSS on the wrapper clips the empty space.
+    // (disabling virtualization).  The diff-clip-wrapper (not diff-size-wrapper)
+    // is used for clipping so react-virtualized's resize observer never fires.
     return (
+      <div className="diff-clip-wrapper" style={{ overflow: 'hidden' }}>
       <div className="diff-size-wrapper" style={{ height: '100000px', display: 'flex', flexDirection: 'column' }}>
         <Diff
           repository={this.getDummyRepository()}
@@ -595,7 +606,84 @@ export class FolderCompareView extends React.Component<
             background: rgba(127,127,127,0.1);
             border-radius: 4px;
           }
+
+          /* === Hunk-based display: hide rows outside component hunks === */
+          /* Use visibility:hidden instead of display:none so that
+             CellMeasurer's ResizeObserver does not fire with height=0,
+             which would corrupt its cache and cause ReactVirtualized
+             to shrink row heights permanently.  Actual hiding is done
+             by repackFile() pushing the row to top:-99999px. */
+          .folder-compare-view .component-hidden {
+            visibility: hidden !important;
+          }
+
+          /* Visual separator at the start of each custom hunk */
+          .folder-compare-view .component-hunk-start {
+            position: relative;
+          }
+          .folder-compare-view .component-hunk-start::before {
+            content: '';
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid var(--box-border-color);
+            z-index: 5;
+          }
+
+          /* Hunk separator — absolutely positioned by repackFile() to match row layout */
+          .folder-compare-view .component-hunk-separator {
+            position: absolute;
+            left: 0;
+            right: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+          }
+
+          /* ── "Show All" hunk-info rows: replace full header text with @@  @@ ── */
+          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content-wrapper {
+            visibility: hidden;
+          }
+          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content {
+            display: flex;
+            align-items: center;
+          }
+          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content::before {
+            content: '@@';
+            visibility: visible;
+            flex: 1;
+            text-align: left;
+            color: var(--diff-hunk-text-color);
+            font-family: var(--font-family-monospace);
+            padding-left: 4px;
+          }
+          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content::after {
+            content: '@@';
+            visibility: visible;
+            flex: 1;
+            text-align: right;
+            color: var(--diff-hunk-text-color);
+            font-family: var(--font-family-monospace);
+            padding-right: 40px;
+          }
+
+          /* Hide file containers that have no component changes.
+             NEVER use display:none here — it removes elements from layout,
+             causing ReactVirtualized's ResizeObserver to report 0-height
+             rows, corrupting CellMeasurer's cache.  The Grid then either
+             removes row DOM or zeroes their heights, making the file blank
+             when switching back to "Show All".
+             Instead we collapse the container visually while preserving
+             internal layout so CellMeasurer is unaffected. */
+          .folder-compare-view .component-file-hidden {
+            max-height: 0 !important;
+            overflow: hidden !important;
+            visibility: hidden !important;
+          }
         `}</style>
+      </div>
       </div>
     )
   }
@@ -604,16 +692,14 @@ export class FolderCompareView extends React.Component<
   private isApplyingHighlighting = false
   private highlightingRAF: number | null = null
   private diffHeightsAdjusted = false
+  private shrinkPollingRAF: number | null = null
 
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
     if (prevState.selectedComponent !== this.state.selectedComponent) {
-      // Use setTimeout to ensure DOM has been updated after React re-render
-      setTimeout(() => {
-        this.applyComponentHighlightingToAll()
-        this.shrinkWrappersToFit()
-        this.setupScrollSync()
-      }, 500)
+      // componentDidUpdate fires after React has committed DOM changes,
+      // so a single animation frame is enough for the browser to settle.
+      requestAnimationFrame(() => this.applyAndRepackAll())
     }
 
     // Set up MutationObserver when diff content first appears
@@ -626,8 +712,16 @@ export class FolderCompareView extends React.Component<
       this.diffHeightsAdjusted = true
       // Wait for react-virtualized to render all rows inside the large container
       setTimeout(() => {
-        this.shrinkWrappersToFit()
-        this.setupScrollSync()
+        // Disconnect observer during initial layout to prevent loops
+        if (this.mutationObserver) this.mutationObserver.disconnect()
+        this.startShrinkPolling()
+        setupScrollSync()
+        if (this.mutationObserver) {
+          const container = document.querySelector('.folder-compare-view')
+          if (container) {
+            this.mutationObserver.observe(container, { childList: true, subtree: true })
+          }
+        }
       }, 500)
     }
   }
@@ -639,17 +733,37 @@ export class FolderCompareView extends React.Component<
   private setupMutationObserver(): void {
     this.cleanupMutationObserver()
 
-    this.mutationObserver = new MutationObserver(() => {
+    this.mutationObserver = new MutationObserver((mutations) => {
       if (this.isApplyingHighlighting) return
 
       if (this.state.selectedComponent === 'all') return
+
+      // Ignore mutations that consist *only* of our own separator
+      // insertions/removals (class names starting with 'component-').
+      // Those are produced by applyComponentHighlightingForFile and must not
+      // re-trigger another highlighting pass, which would cause an infinite
+      // re-apply loop and visual instability.
+      const hasExternalMutations = mutations.some(m => {
+        const isOurNode = (n: Node): boolean => {
+          const el = n as Element
+          return typeof el.classList !== 'undefined' &&
+            (el.classList.contains('component-hunk-separator') ||
+             el.classList.contains('component-char-highlight') ||
+             el.classList.contains('component-char-click-capture'))
+        }
+        return (
+          Array.from(m.addedNodes).some(n => !isOurNode(n)) ||
+          Array.from(m.removedNodes).some(n => !isOurNode(n))
+        )
+      })
+      if (!hasExternalMutations) return
 
       // Debounce via requestAnimationFrame to batch scroll-triggered DOM changes
       if (this.highlightingRAF) {
         cancelAnimationFrame(this.highlightingRAF)
       }
       this.highlightingRAF = requestAnimationFrame(() => {
-        this.applyComponentHighlightingToAll()
+        this.applyAndRepackAll()
       })
     })
 
@@ -667,442 +781,118 @@ export class FolderCompareView extends React.Component<
       cancelAnimationFrame(this.highlightingRAF)
       this.highlightingRAF = null
     }
+    if (this.shrinkPollingRAF) {
+      cancelAnimationFrame(this.shrinkPollingRAF)
+      this.shrinkPollingRAF = null
+    }
     if (this.mutationObserver) {
       this.mutationObserver.disconnect()
       this.mutationObserver = null
     }
   }
 
-  private applyComponentHighlightingToAll(): void {
-    this.isApplyingHighlighting = true
-
-    if (this.state.selectedComponent === 'all') {
-      // Remove all filtering across all files
-      document.querySelectorAll('.folder-compare-view .row').forEach(row => {
-        row.classList.remove('component-filtered')
-      })
-      document.querySelectorAll('.folder-compare-view .before, .folder-compare-view .after').forEach(side => {
-        side.classList.remove('component-filtered-side')
-        side.classList.remove('component-char-filtered')
-      })
-      document.querySelectorAll('.folder-compare-view .component-char-highlight').forEach(el => el.remove())
-      document.querySelectorAll('.folder-compare-view .component-char-click-capture').forEach(el => el.remove())
-      this.isApplyingHighlighting = false
-      return
-    }
-
-    // Apply highlighting scoped to each file's container
-    for (const file of this.state.fileChanges) {
-      this.applyComponentHighlightingForFile(file.path)
-    }
-
-    this.isApplyingHighlighting = false
-  }
-
   /**
-   * Extract the actual source file line number from a .line-number element.
-   * The label's `for` attribute has format "{lineNumber}-before" or "{lineNumber}-after".
+   * Poll shrinkWrappersToFit on every animation frame until the measured
+   * clip-wrapper height has been stable for several consecutive frames, or
+   * until maxAttempts is reached.  This is necessary because ReactVirtualized
+   * measures rows lazily over multiple frames, so a single one-shot call
+   * captures only the rows that have been measured so far.
    */
-  private extractLineNumber(lineNumberDiv: Element): number | null {
-    const label = lineNumberDiv.querySelector('label')
-    if (!label) return null
+  private startShrinkPolling(maxAttempts: number = 60): void {
+    if (this.shrinkPollingRAF !== null) {
+      cancelAnimationFrame(this.shrinkPollingRAF)
+      this.shrinkPollingRAF = null
+    }
 
-    const htmlFor = label.getAttribute('for')
-    if (!htmlFor) return null
+    let attempts = 0
+    let stableFrames = 0
+    const STABLE_THRESHOLD = 5 // must be unchanged for this many consecutive frames
 
-    const match = htmlFor.match(/^(\d+)-(before|after)$/)
-    return match ? parseInt(match[1], 10) : null
-  }
+    // Record the clip-wrapper heights from the previous frame.
+    const prevHeights = new Map<Element, number>()
 
-  private applyComponentHighlightingForFile(filePath: string): void {
-    // Scope to this specific file's container using data-file-path
-    const fileContainer = document.querySelector(`.folder-compare-view [data-file-path="${filePath}"]`)
-    if (!fileContainer) return
+    const poll = () => {
+      shrinkWrappersToFit()
 
-    // Clean up previous character highlights for this file
-    fileContainer.querySelectorAll('.component-char-highlight').forEach(el => el.remove())
-    fileContainer.querySelectorAll('.component-char-click-capture').forEach(el => el.remove())
-    fileContainer.querySelectorAll('.component-char-filtered').forEach(el => {
-      el.classList.remove('component-char-filtered')
-    })
+      // Check whether all clip-wrappers have stabilised.
+      let allStable = true
+      document
+        .querySelectorAll('.folder-compare-view .diff-clip-wrapper')
+        .forEach(cw => {
+          const h = parseInt((cw as HTMLElement).style.height || '0', 10)
+          if (h !== prevHeights.get(cw)) {
+            allStable = false
+            prevHeights.set(cw, h)
+          }
+        })
 
-    const highlights = this.getHighlightedLinesForComponent(filePath)
-
-    // Find all diff rows within this file's container
-    const diffRows = fileContainer.querySelectorAll('.row')
-
-    // Build lookup maps: line number → column ranges for before/after sides
-    const beforeHighlights = new Map<number, Array<{startCol: number, endCol: number}>>()
-    const afterHighlights = new Map<number, Array<{startCol: number, endCol: number}>>()
-
-    for (const h of highlights) {
-      const map = h.side === 'before' ? beforeHighlights : afterHighlights
-      const existing = map.get(h.line)
-      if (existing) {
-        existing.push(...h.ranges)
+      attempts++
+      if (allStable && prevHeights.size > 0) {
+        stableFrames++
       } else {
-        map.set(h.line, [...h.ranges])
+        stableFrames = 0
       }
-    }
 
-    if (highlights.length === 0) {
-      // No highlights for this file - filter all changed rows
-      diffRows.forEach(row => {
-        const htmlRow = row as HTMLElement
-        if (htmlRow.classList.contains('added') ||
-            htmlRow.classList.contains('deleted') ||
-            htmlRow.classList.contains('modified')) {
-          htmlRow.classList.add('component-filtered')
-          const beforeSide = htmlRow.querySelector('.before') as HTMLElement
-          const afterSide = htmlRow.querySelector('.after') as HTMLElement
-          if (beforeSide) beforeSide.classList.add('component-filtered-side')
-          if (afterSide) afterSide.classList.add('component-filtered-side')
-        }
-      })
-      return
-    }
-
-    diffRows.forEach(row => {
-      const htmlRow = row as HTMLElement
-
-      // Skip context and hunk-info rows
-      if (!htmlRow.classList.contains('modified') &&
-          !htmlRow.classList.contains('added') &&
-          !htmlRow.classList.contains('deleted')) {
+      if (stableFrames >= STABLE_THRESHOLD || attempts >= maxAttempts) {
+        this.shrinkPollingRAF = null
         return
       }
 
-      let beforeRanges: Array<{startCol: number, endCol: number}> | undefined
-      let afterRanges: Array<{startCol: number, endCol: number}> | undefined
+      this.shrinkPollingRAF = requestAnimationFrame(poll)
+    }
 
-      // Check before (left) side
-      const beforeLineNumDiv = htmlRow.querySelector('.before .line-number')
-      if (beforeLineNumDiv) {
-        const lineNumber = this.extractLineNumber(beforeLineNumDiv)
-        if (lineNumber !== null) {
-          beforeRanges = beforeHighlights.get(lineNumber)
-        }
-      }
-
-      // Check after (right) side
-      const afterLineNumDiv = htmlRow.querySelector('.after .line-number')
-      if (afterLineNumDiv) {
-        const lineNumber = this.extractLineNumber(afterLineNumDiv)
-        if (lineNumber !== null) {
-          afterRanges = afterHighlights.get(lineNumber)
-        }
-      }
-
-      const beforeSide = htmlRow.querySelector('.before') as HTMLElement
-      const afterSide = htmlRow.querySelector('.after') as HTMLElement
-
-      // Apply before side
-      if (beforeSide) {
-        if (beforeRanges && beforeRanges.length > 0) {
-          beforeSide.classList.remove('component-filtered-side')
-          beforeSide.classList.add('component-char-filtered')
-          const contentWrapper = beforeSide.querySelector('.content-wrapper') as HTMLElement
-          if (contentWrapper) {
-            this.addCharHighlights(contentWrapper, beforeRanges, 'before')
-          }
-        } else {
-          beforeSide.classList.add('component-filtered-side')
-          beforeSide.classList.remove('component-char-filtered')
-        }
-      }
-
-      // Apply after side
-      if (afterSide) {
-        if (afterRanges && afterRanges.length > 0) {
-          afterSide.classList.remove('component-filtered-side')
-          afterSide.classList.add('component-char-filtered')
-          const contentWrapper = afterSide.querySelector('.content-wrapper') as HTMLElement
-          if (contentWrapper) {
-            this.addCharHighlights(contentWrapper, afterRanges, 'after')
-          }
-        } else {
-          afterSide.classList.add('component-filtered-side')
-          afterSide.classList.remove('component-char-filtered')
-        }
-      }
-
-      // If both sides have no component ranges, mark the entire row as filtered
-      if (!beforeRanges && !afterRanges) {
-        htmlRow.classList.add('component-filtered')
-      } else {
-        htmlRow.classList.remove('component-filtered')
-      }
-    })
+    this.shrinkPollingRAF = requestAnimationFrame(poll)
   }
 
   /**
-   * Add absolute-positioned overlay spans on the content-wrapper to highlight
-   * specific character ranges. Uses monospace `ch` units for positioning.
+   * Central entry point: applies component highlighting + repacking/shrinking.
+   * Disconnects the MutationObserver during the operation to prevent recursive
+   * DOM-mutation loops, then reconnects it afterwards.
    */
-  private addCharHighlights(
-    contentWrapper: HTMLElement,
-    ranges: Array<{startCol: number, endCol: number}>,
-    side: 'before' | 'after'
-  ): void {
-    contentWrapper.style.position = 'relative'
-    contentWrapper.style.zIndex = '0'  // create stacking context so z-index:-1 overlays sit below text
+  private applyAndRepackAll(): void {
+    if (this.isApplyingHighlighting) return
+    this.isApplyingHighlighting = true
 
-    const highlightClass = side === 'before'
-      ? 'component-char-highlight component-highlight-delete'
-      : 'component-char-highlight component-highlight-add'
-
-    for (const range of ranges) {
-      // Positions are 0-based with exclusive end (e.g., "12-13" = 1 char at index 12)
-      if (range.endCol <= range.startCol) continue
-
-      const overlay = document.createElement('span')
-      overlay.className = highlightClass
-      overlay.style.left = `${range.startCol}ch`
-      overlay.style.width = `${range.endCol - range.startCol}ch`
-      contentWrapper.appendChild(overlay)
-
-      // Transparent click-capture overlay on top for node selection
-      const clickCapture = document.createElement('span')
-      clickCapture.className = 'component-char-click-capture'
-      clickCapture.style.position = 'absolute'
-      clickCapture.style.left = `${range.startCol}ch`
-      clickCapture.style.width = `${range.endCol - range.startCol}ch`
-      clickCapture.style.top = '0'
-      clickCapture.style.bottom = '0'
-      clickCapture.style.zIndex = '2'
-      clickCapture.style.cursor = 'pointer'
-      clickCapture.dataset.startCol = String(range.startCol)
-      clickCapture.dataset.endCol = String(range.endCol)
-      clickCapture.dataset.side = side
-      clickCapture.addEventListener('mousedown', this.handleCharHighlightClick)
-      contentWrapper.appendChild(clickCapture)
-    }
-  }
-
-  /**
-   * Get highlighted lines with character-level column ranges for the selected component.
-   * Returns entries with line number, side (before/after), and the specific column ranges.
-   */
-  private getHighlightedLinesForComponent(filePath: string): Array<{line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}> {
-    if (this.state.selectedComponent === 'all') {
-      return []
-    }
-
-    const component = this.state.diffComponents[this.state.selectedComponent as number]
-    if (!component || !component.changes) {
-      return []
-    }
-
-    // Collect ranges per line-side combination
-    const lineMap = new Map<string, {line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}>()
-
-    // Helper function to check if paths match (handles both full paths and basenames)
-    const pathMatches = (jsonFile: string, fullPath: string): boolean => {
-      return fullPath === jsonFile || fullPath.endsWith('/' + jsonFile) || fullPath.endsWith('\\' + jsonFile)
-    }
-
-    for (const change of component.changes) {
-      // "Removal" = edge existed in before but not after -> positions are in the before file
-      // "Addition" = edge exists in after but not before -> positions are in the after file
-      const side: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
-
-      // Process "from" field
-      if (change.from && pathMatches(change.from.file, filePath) && change.from.position) {
-        this.addPositionToLineMap(lineMap, change.from.position, side)
-      }
-
-      // Process "to" field
-      if (change.to && pathMatches(change.to.file, filePath) && change.to.position) {
-        this.addPositionToLineMap(lineMap, change.to.position, side)
-      }
-    }
-
-    return Array.from(lineMap.values())
-  }
-
-  /**
-   * Parse a position string like "5:12-13" and add it to the line map.
-   * Format: "line:startCol-endCol" where columns are 0-based, endCol is exclusive.
-   */
-  private addPositionToLineMap(
-    lineMap: Map<string, {line: number, side: 'before' | 'after', ranges: Array<{startCol: number, endCol: number}>}>,
-    position: string,
-    side: 'before' | 'after'
-  ): void {
-    const parts = position.split(':')
-    if (parts.length < 2) return
-
-    const lineNum = parseInt(parts[0], 10)
-    const colParts = parts[1].split('-')
-    if (colParts.length < 2) return
-
-    const startCol = parseInt(colParts[0], 10)
-    const endCol = parseInt(colParts[1], 10)
-
-    // Skip empty ranges (e.g., "7:34-34")
-    if (endCol <= startCol) return
-
-    const key = `${lineNum}-${side}`
-    const existing = lineMap.get(key)
-    if (existing) {
-      // Add range to existing entry (may overlap, that's OK for overlays)
-      existing.ranges.push({ startCol, endCol })
-    } else {
-      lineMap.set(key, { line: lineNum, side, ranges: [{ startCol, endCol }] })
-    }
-  }
-
-  /**
-   * Look up the full source line content from the loaded diff data.
-   */
-  private getSourceLineContent(fileName: string, lineNum: number, side: 'before' | 'after'): string {
-    // fileDiffs is keyed by file.id (e.g. "modified+Prog.java"), but fileName
-    // is just the bare name from diff_nodes.json (e.g. "Prog.java").
-    // Find the matching entry by checking if the key ends with +fileName.
-    let diff: ITextDiff | null | undefined
-    for (const [key, value] of this.state.fileDiffs.entries()) {
-      if (key === fileName || key.endsWith('+' + fileName)) {
-        diff = value
-        break
-      }
-    }
-    if (!diff) return ''
-
-    for (const hunk of diff.hunks) {
-      for (const line of hunk.lines) {
-        const matchLine = side === 'before' ? line.oldLineNumber : line.newLineNumber
-        if (matchLine === lineNum) {
-          return line.content.trimEnd()
-        }
-      }
-    }
-    return ''
-  }
-
-  /**
-   * After all diffs have rendered, measure each inner scroll container and
-   * shrink the wrapper + Grid to exactly that height.  This also locks the
-   * Grid's height so AutoSizer's resize doesn't trigger re-virtualization.
-   */
-  private shrinkWrappersToFit(): void {
-    // Temporarily disconnect observer to avoid an infinite loop
     if (this.mutationObserver) {
       this.mutationObserver.disconnect()
     }
 
-    document.querySelectorAll('.folder-compare-view .diff-size-wrapper').forEach(wrapper => {
-      const el = wrapper as HTMLElement
-      const inner = el.querySelector(
-        '.ReactVirtualized__Grid__innerScrollContainer'
-      ) as HTMLElement
-      const grid = el.querySelector(
-        '.ReactVirtualized__Grid'
-      ) as HTMLElement
+    try {
+      applyComponentHighlightingToAll(
+        this.state.fileChanges,
+        this.state.diffComponents,
+        this.state.selectedComponent,
+        this.handleCharHighlightClick
+      )
 
-      if (inner && inner.scrollHeight > 0) {
-        const contentHeight = inner.scrollHeight + 2  // +2 for border-bottom and rounding
-        el.style.height = `${contentHeight}px`
-        // Lock Grid height so AutoSizer resize doesn't cause re-virtualization
-        if (grid) {
-          grid.style.height = `${contentHeight}px`
-          grid.style.overflow = 'hidden'
+      if (this.state.selectedComponent === 'all') {
+        // Kick off polling: ReactVirtualized may still be lazily adjusting
+        // row heights after the file containers were unhidden, so a single
+        // shrinkWrappersToFit call can capture stale values.
+        this.startShrinkPolling()
+      } else {
+        for (const file of this.state.fileChanges) {
+          const fc = document.querySelector(
+            `.folder-compare-view [data-file-path="${file.path}"]`
+          )
+          if (fc) repackFile(fc)
         }
       }
-    })
 
-    // Reconnect observer
-    if (this.mutationObserver) {
-      const container = document.querySelector('.folder-compare-view')
-      if (container) {
-        this.mutationObserver.observe(container, {
-          childList: true,
-          subtree: true,
-        })
+      setupScrollSync()
+    } finally {
+      this.isApplyingHighlighting = false
+
+      if (this.mutationObserver) {
+        const container = document.querySelector('.folder-compare-view')
+        if (container) {
+          this.mutationObserver.observe(container, {
+            childList: true,
+            subtree: true,
+          })
+        }
       }
     }
-  }
-
-  /**
-   * For each file, add a master horizontal scrollbar per side (before/after)
-   * at the bottom of the diff. All content lines on the same side scroll
-   * together via synchronized scrollLeft.
-   */
-  private setupScrollSync(): void {
-    document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fileContainer => {
-      const diffContainer = fileContainer.querySelector('.diff-container') as HTMLElement
-      if (!diffContainer) return
-
-      // Skip if already set up
-      if (diffContainer.querySelector('.scroll-sync-bar')) return
-
-      const beforeContents = Array.from(fileContainer.querySelectorAll('.before .content')) as HTMLElement[]
-      const afterContents = Array.from(fileContainer.querySelectorAll('.after .content')) as HTMLElement[]
-
-      if (beforeContents.length === 0 && afterContents.length === 0) return
-
-      // Find max scroll width for each side
-      const maxBeforeSW = Math.max(0, ...beforeContents.map(el => el.scrollWidth))
-      const maxAfterSW = Math.max(0, ...afterContents.map(el => el.scrollWidth))
-
-      const firstBefore = beforeContents[0]
-      const firstAfter = afterContents[0]
-      const beforeOverflows = firstBefore && maxBeforeSW > firstBefore.clientWidth + 2
-      const afterOverflows = firstAfter && maxAfterSW > firstAfter.clientWidth + 2
-
-      if (!beforeOverflows && !afterOverflows) return
-
-      // Create sync bar container — always create both halves
-      const syncBar = document.createElement('div')
-      syncBar.className = 'scroll-sync-bar'
-
-      const beforeBar = document.createElement('div')
-      beforeBar.style.width = '50%'
-      const beforeInner = document.createElement('div')
-      beforeInner.style.height = '1px'
-      beforeBar.appendChild(beforeInner)
-
-      const afterBar = document.createElement('div')
-      afterBar.style.width = '50%'
-      const afterInner = document.createElement('div')
-      afterInner.style.height = '1px'
-      afterBar.appendChild(afterInner)
-
-      syncBar.appendChild(beforeBar)
-      syncBar.appendChild(afterBar)
-      diffContainer.appendChild(syncBar)
-
-      // Defer width calculation until the sync bar is laid out
-      requestAnimationFrame(() => {
-        // Use the max scrollWidth across both sides so both scrollbars
-        // have the same range and both sides are always scrollable.
-        const maxSW = Math.max(maxBeforeSW, maxAfterSW)
-        // Set inner width = maxScrollWidth.  The bar's visible portion
-        // (clientWidth) is roughly the same as the content's clientWidth,
-        // so scrollLeftMax ≈ maxSW - clientWidth, matching the overflow.
-        beforeInner.style.width = `${maxSW}px`
-        afterInner.style.width = `${maxSW}px`
-      })
-
-      // Scroll handler: translateX all .content-wrapper elements on that side.
-      // Unlike scrollLeft (which only affects lines whose content overflows),
-      // transform moves EVERY line by the same amount.
-      // Always attach handlers for both sides so both scrollbars work.
-      beforeBar.addEventListener('scroll', () => {
-        const sl = beforeBar.scrollLeft
-        beforeContents.forEach(el => {
-          const w = el.querySelector('.content-wrapper') as HTMLElement
-          if (w) w.style.transform = `translateX(-${sl}px)`
-        })
-      })
-
-      afterBar.addEventListener('scroll', () => {
-        const sl = afterBar.scrollLeft
-        afterContents.forEach(el => {
-          const w = el.querySelector('.content-wrapper') as HTMLElement
-          if (w) w.style.transform = `translateX(-${sl}px)`
-        })
-      })
-    })
   }
 
   private selectNode(node: any, componentIndex: number, side: 'before' | 'after'): void {
@@ -1180,7 +970,7 @@ export class FolderCompareView extends React.Component<
 
     const lineNumDiv = row.querySelector(`.${side} .line-number`)
     if (!lineNumDiv) return
-    const lineNumber = this.extractLineNumber(lineNumDiv)
+    const lineNumber = extractLineNumber(lineNumDiv)
     if (lineNumber === null) return
 
     const fileContainer = target.closest('[data-file-path]') as HTMLElement
@@ -1299,12 +1089,12 @@ export class FolderCompareView extends React.Component<
 
         {Array.from(uniqueLocations.values()).map((loc, i) => {
           // Try to get content from the primary side first
-          let lineContent = this.getSourceLineContent(loc.file, loc.lineNum, loc.side)
+          let lineContent = getSourceLineContent(loc.file, loc.lineNum, loc.side, this.state.fileDiffs)
           
           // If empty, try the opposite side as fallback (for modified lines where content exists on both sides)
           if (!lineContent || lineContent.trim() === '') {
             const oppositeSide = loc.side === 'before' ? 'after' : 'before'
-            lineContent = this.getSourceLineContent(loc.file, loc.lineNum, oppositeSide)
+            lineContent = getSourceLineContent(loc.file, loc.lineNum, oppositeSide, this.state.fileDiffs)
           }
           
           return (
@@ -1386,29 +1176,30 @@ export class FolderCompareView extends React.Component<
     })
 
     try {
-      const fileChanges = await this.compareDirectories(beforeFolder, afterFolder)
-      
-      // Load diff components
-      await this.loadDiffComponents(beforeFolder, afterFolder)
-      
+      const [fileChanges, { diffComponents, diffNodes }] = await Promise.all([
+        compareDirectories(beforeFolder, afterFolder),
+        loadDiffComponents(),
+      ])
+
       this.setState({
+        diffComponents,
+        diffNodes,
         fileChanges,
         isLoading: false,
         isLoadingDiffs: true,
       })
-      
-      // Load all diffs
-      await this.loadAllDiffs(beforeFolder, afterFolder, fileChanges)
-      
-      this.setState({
-        isLoadingDiffs: false,
-      })
+
+      await loadAllDiffs(
+        beforeFolder,
+        afterFolder,
+        fileChanges,
+        diffs => this.setState({ fileDiffs: diffs })
+      )
+
+      this.setState({ isLoadingDiffs: false })
     } catch (error) {
       console.error('Error comparing folders:', error)
-      this.setState({ 
-        isLoading: false,
-        isLoadingDiffs: false,
-      })
+      this.setState({ isLoading: false, isLoadingDiffs: false })
     }
   }
 
@@ -1433,35 +1224,6 @@ export class FolderCompareView extends React.Component<
     })
   }
 
-  private async loadDiffComponents(beforeFolder: string, afterFolder: string): Promise<void> {
-    try {
-      // Relative path to diff_components.json from the workspace root
-      const diffComponentsPath = Path.resolve(__dirname, '../../../../../difftastic/Files/diff_components.json')
-      const content = await FSPromises.readFile(diffComponentsPath, 'utf-8')
-      const data = JSON.parse(content)
-      
-      if (data.diff_components && Array.isArray(data.diff_components)) {
-        this.setState({ diffComponents: data.diff_components })
-      }
-    } catch (error) {
-      console.log('No diff_components.json found or error loading it:', error)
-      this.setState({ diffComponents: [] })
-    }
-
-    try {
-      const diffNodesPath = Path.resolve(__dirname, '../../../../../difftastic/Files/diff_nodes.json')
-      const nodesContent = await FSPromises.readFile(diffNodesPath, 'utf-8')
-      const nodesData = JSON.parse(nodesContent)
-
-      if (nodesData.diff_components && Array.isArray(nodesData.diff_components)) {
-        this.setState({ diffNodes: nodesData.diff_components })
-      }
-    } catch (error) {
-      console.log('No diff_nodes.json found or error loading it:', error)
-      this.setState({ diffNodes: [] })
-    }
-  }
-
   private onChangeFolders = () => {
     this.diffHeightsAdjusted = false
     this.setState({
@@ -1469,114 +1231,5 @@ export class FolderCompareView extends React.Component<
       fileChanges: [],
       fileDiffs: new Map(),
     })
-  }
-
-  private async loadAllDiffs(
-    beforeFolder: string,
-    afterFolder: string,
-    files: ReadonlyArray<WorkingDirectoryFileChange>
-  ): Promise<void> {
-    const newDiffs = new Map<string, ITextDiff | null>()
-    
-    // Load diffs for all files
-    for (const file of files) {
-      try {
-        const diff = await computeDiff(beforeFolder, afterFolder, file)
-        newDiffs.set(file.id, diff)
-      } catch (error) {
-        console.error(`Error loading diff for ${file.path}:`, error)
-        newDiffs.set(file.id, null)
-      }
-      
-      // Update state progressively so user sees diffs loading
-      this.setState({
-        fileDiffs: new Map(newDiffs)
-      })
-    }
-  }
-
-  private async compareDirectories(
-    beforePath: string,
-    afterPath: string
-  ): Promise<ReadonlyArray<WorkingDirectoryFileChange>> {
-    const changes: WorkingDirectoryFileChange[] = []
-    
-    // Get all files from both directories
-    const beforeFiles = await this.getAllFiles(beforePath)
-    const afterFiles = await this.getAllFiles(afterPath)
-    
-    // Create a set for faster lookup
-    const afterFileSet = new Set(afterFiles.map(f => f.relativePath))
-    const beforeFileSet = new Set(beforeFiles.map(f => f.relativePath))
-    
-    // Find deleted files (in before but not in after)
-    for (const beforeFile of beforeFiles) {
-      if (!afterFileSet.has(beforeFile.relativePath)) {
-        changes.push(this.createFileChange(beforeFile.relativePath, AppFileStatusKind.Deleted))
-      }
-    }
-    
-    // Find new files (in after but not in before)
-    for (const afterFile of afterFiles) {
-      if (!beforeFileSet.has(afterFile.relativePath)) {
-        changes.push(this.createFileChange(afterFile.relativePath, AppFileStatusKind.New))
-      }
-    }
-    
-    // Find modified files (in both but different)
-    for (const beforeFile of beforeFiles) {
-      if (afterFileSet.has(beforeFile.relativePath)) {
-        const afterFile = afterFiles.find(f => f.relativePath === beforeFile.relativePath)!
-        
-        // Compare file contents
-        const beforeContent = await FSPromises.readFile(beforeFile.fullPath, 'utf-8').catch(() => null)
-        const afterContent = await FSPromises.readFile(afterFile.fullPath, 'utf-8').catch(() => null)
-        
-        if (beforeContent !== null && afterContent !== null && beforeContent !== afterContent) {
-          changes.push(this.createFileChange(beforeFile.relativePath, AppFileStatusKind.Modified))
-        }
-      }
-    }
-    
-    return changes
-  }
-
-  private async getAllFiles(
-    directoryPath: string,
-    basePath: string = directoryPath
-  ): Promise<Array<{ fullPath: string; relativePath: string }>> {
-    const results: Array<{ fullPath: string; relativePath: string }> = []
-    
-    try {
-      const entries = await FSPromises.readdir(directoryPath, { withFileTypes: true })
-      
-      for (const entry of entries) {
-        const fullPath = Path.join(directoryPath, entry.name)
-        
-        if (entry.isDirectory()) {
-          // Recursively get files from subdirectories
-          const subFiles = await this.getAllFiles(fullPath, basePath)
-          results.push(...subFiles)
-        } else if (entry.isFile()) {
-          const relativePath = Path.relative(basePath, fullPath).replace(/\\/g, '/')
-          results.push({ fullPath, relativePath })
-        }
-      }
-    } catch (error) {
-      console.error(`Error reading directory ${directoryPath}:`, error)
-    }
-    
-    return results
-  }
-
-  private createFileChange(
-    path: string,
-    kind: AppFileStatusKind
-  ): WorkingDirectoryFileChange {
-    return new WorkingDirectoryFileChange(
-      path,
-      { kind: kind } as any,
-      DiffSelection.fromInitialSelection(DiffSelectionType.All)
-    )
   }
 }

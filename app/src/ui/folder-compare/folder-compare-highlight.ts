@@ -317,8 +317,8 @@ export function applyComponentHighlightingForFile(
 
     ;(htmlRow.parentElement ?? htmlRow).classList.remove('component-hidden')
 
-    // Insert a visual hunk separator when there is a gap in the visible sequence.
-    if (!isFirstVisibleRow && needsSeparatorBefore.has(idx)) {
+    // Insert a visual hunk separator at the top of every hunk (including the first).
+    if (isFirstVisibleRow || needsSeparatorBefore.has(idx)) {
       htmlRow.classList.add('component-hunk-start')
       const separator = document.createElement('div')
       separator.className = 'component-hunk-separator hunk-info row'

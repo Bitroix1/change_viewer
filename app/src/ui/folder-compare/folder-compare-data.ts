@@ -202,7 +202,12 @@ export function getSourceLineContent(
 ): string {
   let diff: ITextDiff | null | undefined
   for (const [key, value] of fileDiffs.entries()) {
-    if (key === fileName || key.endsWith('+' + fileName)) {
+    if (
+      key === fileName ||
+      key.endsWith('+' + fileName) ||
+      key.endsWith('/' + fileName) ||
+      key.endsWith('\\' + fileName)
+    ) {
       diff = value
       break
     }

@@ -45,6 +45,8 @@ interface IFolderCompareViewState {
     componentIndex: number
   } | null
   readonly collapsedKinds: ReadonlyArray<string>
+  readonly hunkEntries: Array<{fileName: string, beforeLine: number | null, afterLine: number | null}>
+  readonly selectedRightPanelLine: string | null
 }
 
 export class FolderCompareView extends React.Component<
@@ -66,6 +68,8 @@ export class FolderCompareView extends React.Component<
       selectedComponent: 'all',
       selectedNodeInfo: null,
       collapsedKinds: [],
+      hunkEntries: [],
+      selectedRightPanelLine: null,
     }
   }
 
@@ -178,8 +182,6 @@ export class FolderCompareView extends React.Component<
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px', marginLeft: '8px' }}>
                             {items.map(({ comp, index }) => {
                               const isSelected = this.state.selectedComponent === index
-                              const nodeData = this.state.diffNodes.find((n: any) => n.component_id === comp.component_id)
-                              const nodes: any[] = nodeData ? nodeData.nodes : []
                               return (
                                 <div key={index}>
                                   <label style={{
@@ -200,31 +202,12 @@ export class FolderCompareView extends React.Component<
                                     />
                                     <span style={{ fontSize: '12px' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
                                   </label>
-                                  {isSelected && nodes.length > 0 && (() => {
-                                    // Find the node with the highest reachable_by score
-                                    let maxReachableBy = -1
-                                    let maxReachableIndex = -1
-                                    let maxReachableCount = 0
-                                    nodes.forEach((n: any, i: number) => {
-                                      if (typeof n.reachable_by === 'number') {
-                                        if (n.reachable_by > maxReachableBy) {
-                                          maxReachableBy = n.reachable_by
-                                          maxReachableIndex = i
-                                          maxReachableCount = 1
-                                        } else if (n.reachable_by === maxReachableBy) {
-                                          maxReachableCount++
-                                        }
-                                      }
-                                    })
-                                    return (
+                                  {isSelected && this.state.hunkEntries.length > 0 && (
                                     <div style={{ marginLeft: '22px', borderLeft: '1px solid var(--box-border-color)', paddingLeft: '8px', marginBottom: '4px' }}>
-                                      {nodes.map((node: any, ni: number) => {
-                                        const lineNum = node.position ? node.position.split(':')[0] : '?'
-                                        // Use the individual node's kind, not the component's kind
-                                        const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
-                                        const isLikelySource = ni === maxReachableIndex && maxReachableBy > 0 && maxReachableCount === 1
+                                      {this.state.hunkEntries.map((entry, hi) => {
+                                        const baseName = entry.fileName.split('/').pop() || entry.fileName
                                         return (
-                                          <div key={ni} style={{
+                                          <div key={hi} style={{
                                             display: 'flex',
                                             alignItems: 'center',
                                             padding: '6px 6px',
@@ -236,37 +219,25 @@ export class FolderCompareView extends React.Component<
                                           }}>
                                             <span
                                               className="node-line-content"
-                                              style={{ 
-                                                fontSize: '12px', 
-                                                color: 'var(--diff-selected-border-color)', 
-                                                cursor: 'pointer', 
+                                              style={{
+                                                fontSize: '12px',
+                                                color: 'var(--diff-selected-border-color)',
+                                                cursor: 'pointer',
                                                 marginTop: '-1px',
                                                 whiteSpace: 'nowrap',
                                                 overflowX: 'auto',
                                                 flex: 1,
                                                 minWidth: 0
                                               }}
-                                              onClick={() => this.selectNode(node, index, side)}
+                                              onClick={() => this.scrollToHunk(entry)}
                                             >
-                                              {node.file}::{lineNum}
+                                              {baseName}::{entry.beforeLine ?? '?'}/{entry.afterLine ?? '?'}
                                             </span>
-                                            {isLikelySource && (
-                                              <span style={{
-                                                fontSize: '9px',
-                                                color: '#e8a63a',
-                                                fontWeight: 600,
-                                                whiteSpace: 'nowrap',
-                                                flexShrink: 0
-                                              }}>
-                                                Likely source
-                                              </span>
-                                            )}
                                           </div>
                                         )
                                       })}
                                     </div>
-                                    )
-                                  })()}
+                                  )}
                                 </div>
                               )
                             })}
@@ -351,8 +322,8 @@ export class FolderCompareView extends React.Component<
             )}
           </div>
 
-          {/* Right Panel for Node Details */}
-          {this.renderNodePanel()}
+          {/* Right Panel for Changed Lines */}
+          {this.renderRightPanel()}
         </div>
       </div>
     )
@@ -466,6 +437,12 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered-side .content,
           .folder-compare-view .component-filtered-side .content-wrapper {
             color: var(--diff-text-color) !important;
+          }
+
+          /* Override global cursor:default on right-panel entry boxes */
+          .right-panel-entry,
+          .right-panel-entry * {
+            cursor: pointer !important;
           }
           
           .folder-compare-view .component-filtered .cm-diff-delete,
@@ -697,9 +674,39 @@ export class FolderCompareView extends React.Component<
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
     if (prevState.selectedComponent !== this.state.selectedComponent) {
+      // Cancel any ongoing shrink-polling so it doesn't overwrite our
+      // repacked heights.  Run one final shrinkWrappersToFit synchronously
+      // to ensure clip-wrappers have correct baseline heights before we
+      // repack for the selected component.
+      if (this.shrinkPollingRAF !== null) {
+        cancelAnimationFrame(this.shrinkPollingRAF)
+        this.shrinkPollingRAF = null
+      }
+      if (this.state.selectedComponent !== 'all') {
+        shrinkWrappersToFit()
+      }
       // componentDidUpdate fires after React has committed DOM changes,
       // so a single animation frame is enough for the browser to settle.
-      requestAnimationFrame(() => this.applyAndRepackAll())
+      // We schedule a follow-up repack in the next frame because the
+      // first switch from "Show All" to a component can cause a layout
+      // shift (right-panel appearing) that triggers ReactVirtualized to
+      // re-render rows AFTER the initial repack.  The second pass
+      // re-packs those late rows so the diff content is never blank.
+      requestAnimationFrame(() => {
+        this.applyAndRepackAll()
+        requestAnimationFrame(() => {
+          if (this.state.selectedComponent !== 'all') {
+            for (const file of this.state.fileChanges) {
+              const fc = document.querySelector(
+                `.folder-compare-view [data-file-path="${file.path}"]`
+              )
+              if (fc && !fc.classList.contains('component-file-hidden')) {
+                repackFile(fc)
+              }
+            }
+          }
+        })
+      })
     }
 
     // Set up MutationObserver when diff content first appears
@@ -880,6 +887,12 @@ export class FolderCompareView extends React.Component<
       }
 
       setupScrollSync()
+
+      // Extract hunk entries from DOM for the left panel
+      if (this.state.selectedComponent !== 'all') {
+        const entries = this.extractHunkEntriesFromDOM()
+        this.setState({ hunkEntries: entries })
+      }
     } finally {
       this.isApplyingHighlighting = false
 
@@ -895,32 +908,35 @@ export class FolderCompareView extends React.Component<
     }
   }
 
-  private selectNode(node: any, componentIndex: number, side: 'before' | 'after'): void {
-    const lineNum = node.position ? parseInt(node.position.split(':')[0], 10) : NaN
-    this.setState({
-      selectedNodeInfo: {
-        javaId: node.java_id,
-        type: node.type,
-        content: node.content || '',
-        position: node.position,
-        file: node.file,
-        componentIndex
-      }
-    })
-    if (!isNaN(lineNum)) {
-      this.scrollToLine(node.file, lineNum, side)
-    }
-  }
-
   private scrollToFile(fileName: string): void {
     // Find file container by matching the end of the path (handles both full paths and basenames)
     const allContainers = document.querySelectorAll('.folder-compare-view [data-file-path]')
     for (const container of Array.from(allContainers)) {
       const filePath = (container as HTMLElement).dataset.filePath || ''
       if (filePath === fileName || filePath.endsWith('/' + fileName) || filePath.endsWith('\\' + fileName)) {
-        container.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        this.scrollIntoViewIfNeeded(container, 'start')
         return
       }
+    }
+  }
+
+  /**
+   * Scroll to an element only if it is not already visible within the
+   * `.folder-compare-content` scroll container.
+   */
+  private scrollIntoViewIfNeeded(el: Element, block: ScrollLogicalPosition = 'center'): void {
+    const scrollContainer = document.querySelector('.folder-compare-content')
+    if (!scrollContainer) {
+      el.scrollIntoView({ behavior: 'smooth', block })
+      return
+    }
+    const containerRect = scrollContainer.getBoundingClientRect()
+    const elRect = el.getBoundingClientRect()
+    const isVisible =
+      elRect.top >= containerRect.top &&
+      elRect.bottom <= containerRect.bottom
+    if (!isVisible) {
+      el.scrollIntoView({ behavior: 'smooth', block })
     }
   }
 
@@ -943,7 +959,7 @@ export class FolderCompareView extends React.Component<
     if (label) {
       const row = label.closest('.row') as HTMLElement
       if (row) {
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        this.scrollIntoViewIfNeeded(row, 'center')
         // Brief flash highlight
         row.style.outline = '2px solid var(--diff-selected-border-color)'
         setTimeout(() => { row.style.outline = '' }, 1500)
@@ -992,6 +1008,8 @@ export class FolderCompareView extends React.Component<
     // Search edges for a matching from/to node at this position
     for (const change of component.changes) {
       if (change.from && pathMatches(change.from.file, filePath) && change.from.position === pos) {
+        const entryLine = parseInt(change.from.position.split(':')[0], 10)
+        const entrySide: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
         this.setState({
           selectedNodeInfo: {
             javaId: change.from.java_id,
@@ -1000,11 +1018,14 @@ export class FolderCompareView extends React.Component<
             position: change.from.position,
             file: change.from.file,
             componentIndex
-          }
+          },
+          selectedRightPanelLine: `${change.from.file}:${entryLine}:${entrySide}`
         })
         return
       }
       if (change.to && pathMatches(change.to.file, filePath) && change.to.position === pos) {
+        const entryLine = parseInt(change.to.position.split(':')[0], 10)
+        const entrySide: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
         this.setState({
           selectedNodeInfo: {
             javaId: change.to.java_id,
@@ -1013,51 +1034,124 @@ export class FolderCompareView extends React.Component<
             position: change.to.position,
             file: change.to.file,
             componentIndex
-          }
+          },
+          selectedRightPanelLine: `${change.to.file}:${entryLine}:${entrySide}`
         })
         return
       }
     }
   }
 
-  private closeNodePanel = () => {
-    this.setState({ selectedNodeInfo: null })
-  }
-
-  private renderNodePanel(): JSX.Element | null {
-    const info = this.state.selectedNodeInfo
-    if (!info) return null
-
-    const componentIndex = info.componentIndex
+  /**
+   * Compute the right-panel entries: all changed lines in the current component
+   * from diff_nodes.json, deduplicated by file:line:side, sorted by reachable_by
+   * descending.
+   */
+  private computeRightPanelEntries(): Array<{
+    key: string
+    file: string
+    line: number
+    startCol: number
+    side: 'before' | 'after'
+    reachable_by: number
+    content: string
+  }> {
+    if (this.state.selectedComponent === 'all') return []
+    const componentIndex = this.state.selectedComponent as number
     const component = this.state.diffComponents[componentIndex]
-    if (!component) return null
+    if (!component) return []
 
-    // Find all edges involving this node and collect unique file:line combinations
-    const uniqueLocations = new Map<string, {file: string, lineNum: number, side: 'before' | 'after'}>()
-    
-    for (const change of component.changes) {
-      // Check if this edge involves the selected node
-      let otherNode: any = null
-      if (change.from && change.from.java_id === info.javaId && change.to) {
-        otherNode = change.to
-      } else if (change.to && change.to.java_id === info.javaId && change.from) {
-        otherNode = change.from
-      }
-      
-      if (otherNode && otherNode.position && otherNode.file) {
-        const lineNum = parseInt(otherNode.position.split(':')[0], 10)
-        if (!isNaN(lineNum)) {
-          // Determine side based on edge kind
-          const side: 'before' | 'after' = change.kind === 'Removal' ? 'before' : 'after'
-          const key = `${otherNode.file}:${lineNum}:${side}`
-          uniqueLocations.set(key, { file: otherNode.file, lineNum, side })
+    const nodeData = this.state.diffNodes.find(
+      (n: any) => n.component_id === component.component_id
+    )
+    if (!nodeData || !nodeData.nodes) return []
+
+    // Collect unique file:line:side entries, keeping earliest startCol and max reachable_by
+    const lineMap = new Map<string, {
+      file: string
+      line: number
+      startCol: number
+      side: 'before' | 'after'
+      reachable_by: number
+    }>()
+
+    for (const node of nodeData.nodes) {
+      if (!node.position || !node.file) continue
+      const parts = node.position.split(':')
+      if (parts.length < 2) continue
+      const line = parseInt(parts[0], 10)
+      const colParts = parts[1].split('-')
+      const startCol = parseInt(colParts[0], 10)
+      const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
+      const key = `${node.file}:${line}:${side}`
+
+      const existing = lineMap.get(key)
+      if (!existing) {
+        lineMap.set(key, {
+          file: node.file,
+          line,
+          startCol,
+          side,
+          reachable_by: node.reachable_by ?? 0
+        })
+      } else {
+        // Keep earliest startCol
+        if (startCol < existing.startCol) {
+          existing.startCol = startCol
+        }
+        // Keep max reachable_by
+        if ((node.reachable_by ?? 0) > existing.reachable_by) {
+          existing.reachable_by = node.reachable_by
         }
       }
     }
 
-    // Look up the node in diff_nodes.json for additional info
-    //const nodeData = this.state.diffNodes.find((n: any) => n.component_id === component.component_id)
-    //const diffNode = nodeData?.nodes?.find((n: any) => n.java_id === info.javaId)
+    // Sort by reachable_by descending
+    const entries = Array.from(lineMap.entries())
+      .sort((a, b) => b[1].reachable_by - a[1].reachable_by)
+
+    return entries.map(([key, entry]) => {
+      // Get full line content (without diff prefix, since DiffLine.content strips it)
+      const rawContent = getSourceLineContent(
+        entry.file, entry.line, entry.side, this.state.fileDiffs
+      )
+      // Strip leading whitespace first, then apply any remaining startCol
+      // offset (startCol typically equals the indentation level, so for most
+      // lines trimStart + a small remaining offset gives the code starting
+      // at the precise change position).
+      const trimmed = rawContent.trimStart()
+      const leadingWS = rawContent.length - trimmed.length
+      const remainingCol = Math.max(0, entry.startCol - leadingWS)
+      const displayContent = trimmed.substring(remainingCol)
+      return {
+        key,
+        ...entry,
+        content: displayContent || '(empty)'
+      }
+    })
+  }
+
+  /**
+   * Right panel: shows all changed lines in the component, sorted by
+   * reachable_by score. Always visible when a component is selected.
+   */
+  private renderRightPanel(): JSX.Element | null {
+    if (this.state.selectedComponent === 'all') return null
+
+    const entries = this.computeRightPanelEntries()
+
+    const componentIndex = this.state.selectedComponent as number
+    const component = this.state.diffComponents[componentIndex]
+    const componentName = component?.component_name || `Component ${component?.component_id ?? '?'}`
+    const componentKind = component?.component_kind || 'unknown'
+    const kindLabels: Record<string, string> = {
+      delete: 'Deletion',
+      add: 'Addition',
+      rename: 'Rename',
+      modify: 'Modification',
+      other: 'Other',
+    }
+    const kindLabel = kindLabels[componentKind] || componentKind.charAt(0).toUpperCase() + componentKind.slice(1)
 
     return (
       <div style={{
@@ -1068,77 +1162,219 @@ export class FolderCompareView extends React.Component<
         overflow: 'auto',
         flexShrink: 0
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-          <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>Node Details</h3>
-          <span
-            style={{ cursor: 'pointer', fontSize: '18px', padding: '2px 6px', lineHeight: 1 }}
-            onClick={this.closeNodePanel}
-            title="Close panel"
-          >&times;</span>
+        <div style={{
+          padding: '12px 14px',
+          marginBottom: '15px',
+          borderRadius: '6px',
+          backgroundColor: 'var(--box-border-color)',
+          opacity: 0.85
+        }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary-color)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {kindLabel}
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-color)' }}>
+            {componentName}
+          </div>
         </div>
 
-        <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', fontWeight: 600 }}>
-          Related Changes ({uniqueLocations.size})
-        </h4>
+        <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
+          Changed Lines ({entries.length})
+        </h3>
 
-        {uniqueLocations.size === 0 && (
+        {entries.length === 0 && (
           <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)', fontStyle: 'italic' }}>
-            No directly caused changes for this node
+            No changed lines
           </div>
         )}
 
-        {Array.from(uniqueLocations.values()).map((loc, i) => {
-          // Try to get content from the primary side first
-          let lineContent = getSourceLineContent(loc.file, loc.lineNum, loc.side, this.state.fileDiffs)
-          
-          // If empty, try the opposite side as fallback (for modified lines where content exists on both sides)
-          if (!lineContent || lineContent.trim() === '') {
-            const oppositeSide = loc.side === 'before' ? 'after' : 'before'
-            lineContent = getSourceLineContent(loc.file, loc.lineNum, oppositeSide, this.state.fileDiffs)
-          }
-          
-          return (
-            <div key={i} style={{
-              fontSize: '11px',
-              padding: '10px',
-              marginBottom: '6px',
-              backgroundColor: 'var(--background-color)',
-              borderRadius: '4px',
-              borderLeft: '3px solid var(--diff-selected-border-color)',
-              cursor: 'pointer'
-            }}
-            onClick={() => {
-              this.scrollToLine(loc.file, loc.lineNum, loc.side)
-            }}
-            >
-              <div style={{ 
-                marginBottom: '4px', 
-                fontSize: '12px', 
-                fontWeight: 600,
-                color: 'var(--text-color)', 
-                cursor: 'inherit',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis'
-              }}>
-                {loc.file}
+        {(() => {
+          // Determine the unique max reachable_by for the "Likely source" badge
+          const maxReachable = entries.length > 0
+            ? Math.max(...entries.map(e => e.reachable_by))
+            : 0
+          const maxCount = entries.filter(e => e.reachable_by === maxReachable).length
+          const likelySourceKey = maxReachable > 0 && maxCount === 1
+            ? entries.find(e => e.reachable_by === maxReachable)!.key
+            : null
+
+          return entries.map(entry => {
+            const isSelected = this.state.selectedRightPanelLine === entry.key
+            const isLikelySource = entry.key === likelySourceKey
+            return (
+              <div key={entry.key} className="right-panel-entry" style={{
+                fontSize: '11px',
+                padding: '10px',
+                marginBottom: '6px',
+                backgroundColor: isSelected ? 'var(--box-border-color)' : 'var(--background-color)',
+                borderRadius: '4px',
+                borderLeft: `3px solid ${isSelected ? 'var(--diff-selected-border-color)' : 'transparent'}`,
+                cursor: 'pointer'
+              }}
+              onClick={() => {
+                this.setState({ selectedRightPanelLine: entry.key })
+                this.scrollToLine(entry.file, entry.line, entry.side)
+              }}
+              >
+                <div style={{
+                  marginBottom: '4px',
+                  fontSize: '11px',
+                  color: 'var(--text-secondary-color)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {entry.file}:{entry.line} ({entry.side === 'before' ? '-' : '+'})
+                  </span>
+                  {isLikelySource && (
+                    <span style={{
+                      color: '#d4a017',
+                      fontWeight: 700,
+                      fontSize: '10px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      flexShrink: 0,
+                      marginLeft: '8px'
+                    }}>
+                      Likely source
+                    </span>
+                  )}
+                </div>
+                <div style={{
+                  fontFamily: 'var(--font-family-monospace)',
+                  color: 'var(--text-color)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontSize: '12px'
+                }}>
+                  {entry.content}
+                </div>
               </div>
-              <div style={{ 
-                fontFamily: 'var(--font-family-monospace)', 
-                color: 'var(--text-color)', 
-                cursor: 'inherit',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                fontSize: '12px'
-              }}>
-                <span style={{ color: 'var(--text-secondary-color)' }}>{loc.lineNum}:</span> {lineContent || '(empty line)'}
-              </div>
-            </div>
-          )
-        })}
+            )
+          })
+        })()}
       </div>
     )
+  }
+
+  /**
+   * Extract hunk boundary info from the DOM after highlighting is applied.
+   * Each entry corresponds to a component-hunk-start row.
+   */
+  private extractHunkEntriesFromDOM(): Array<{
+    fileName: string
+    beforeLine: number | null
+    afterLine: number | null
+  }> {
+    const entries: Array<{fileName: string, beforeLine: number | null, afterLine: number | null}> = []
+    document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fileContainer => {
+      const filePath = (fileContainer as HTMLElement).dataset.filePath || ''
+      if (fileContainer.classList.contains('component-file-hidden')) return
+
+      const hunkStartRows = fileContainer.querySelectorAll('.component-hunk-start')
+      const allRows = Array.from(
+        fileContainer.querySelectorAll('.row:not(.component-hunk-separator)')
+      ) as HTMLElement[]
+      hunkStartRows.forEach(row => {
+        let beforeLine = row.querySelector('.before .line-number')
+          ? extractLineNumber(row.querySelector('.before .line-number')!)
+          : null
+        let afterLine = row.querySelector('.after .line-number')
+          ? extractLineNumber(row.querySelector('.after .line-number')!)
+          : null
+
+        // If a side has no line number (e.g. pure add/delete), scan forward
+        // through visible rows to find the next row with a line number on
+        // that side.
+        if (beforeLine === null || afterLine === null) {
+          const rowIdx = allRows.indexOf(row as HTMLElement)
+          if (rowIdx >= 0) {
+            for (let i = rowIdx + 1; i < allRows.length; i++) {
+              const r = allRows[i]
+              if (r.closest('.component-hidden') || r.classList.contains('component-hidden')) continue
+              const parent = r.parentElement
+              if (parent && parent.classList.contains('component-hidden')) continue
+              if (beforeLine === null) {
+                const bl = r.querySelector('.before .line-number')
+                if (bl) beforeLine = extractLineNumber(bl)
+              }
+              if (afterLine === null) {
+                const al = r.querySelector('.after .line-number')
+                if (al) afterLine = extractLineNumber(al)
+              }
+              if (beforeLine !== null && afterLine !== null) break
+            }
+          }
+        }
+
+        entries.push({ fileName: filePath, beforeLine, afterLine })
+      })
+    })
+    return entries
+  }
+
+  /**
+   * Scroll to a hunk separator in the diff view.
+   */
+  private scrollToHunk(entry: {fileName: string, beforeLine: number | null, afterLine: number | null}): void {
+    const allContainers = document.querySelectorAll('.folder-compare-view [data-file-path]')
+    for (const container of Array.from(allContainers)) {
+      const filePath = (container as HTMLElement).dataset.filePath || ''
+      if (filePath !== entry.fileName &&
+          !filePath.endsWith('/' + entry.fileName) &&
+          !filePath.endsWith('\\' + entry.fileName)) continue
+
+      const hunkStarts = container.querySelectorAll('.component-hunk-start')
+      const allRows = Array.from(
+        container.querySelectorAll('.row:not(.component-hunk-separator)')
+      ) as HTMLElement[]
+      for (const row of Array.from(hunkStarts)) {
+        let beforeLine = row.querySelector('.before .line-number')
+          ? extractLineNumber(row.querySelector('.before .line-number')!)
+          : null
+        let afterLine = row.querySelector('.after .line-number')
+          ? extractLineNumber(row.querySelector('.after .line-number')!)
+          : null
+
+        // Same forward-scan logic as extractHunkEntriesFromDOM
+        if (beforeLine === null || afterLine === null) {
+          const rowIdx = allRows.indexOf(row as HTMLElement)
+          if (rowIdx >= 0) {
+            for (let i = rowIdx + 1; i < allRows.length; i++) {
+              const r = allRows[i]
+              if (r.closest('.component-hidden') || r.classList.contains('component-hidden')) continue
+              const parent = r.parentElement
+              if (parent && parent.classList.contains('component-hidden')) continue
+              if (beforeLine === null) {
+                const bl2 = r.querySelector('.before .line-number')
+                if (bl2) beforeLine = extractLineNumber(bl2)
+              }
+              if (afterLine === null) {
+                const al2 = r.querySelector('.after .line-number')
+                if (al2) afterLine = extractLineNumber(al2)
+              }
+              if (beforeLine !== null && afterLine !== null) break
+            }
+          }
+        }
+
+        if (beforeLine === entry.beforeLine && afterLine === entry.afterLine) {
+          // Scroll to the separator above this row
+          const outerWrapper = row.closest('.component-hunk-start')?.parentElement
+          const separator = outerWrapper?.previousElementSibling
+          if (separator && separator.classList.contains('component-hunk-separator')) {
+            this.scrollIntoViewIfNeeded(separator, 'start')
+          } else {
+            this.scrollIntoViewIfNeeded(row, 'start')
+          }
+          return
+        }
+      }
+    }
   }
 
   private getStatusLabel(kind: AppFileStatusKind): string {
@@ -1208,6 +1444,8 @@ export class FolderCompareView extends React.Component<
     this.setState({
       selectedComponent: value === 'all' ? 'all' : parseInt(value, 10),
       selectedNodeInfo: null,
+      hunkEntries: [],
+      selectedRightPanelLine: null,
     })
   }
 

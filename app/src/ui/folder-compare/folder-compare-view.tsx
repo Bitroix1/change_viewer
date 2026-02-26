@@ -94,8 +94,9 @@ export class FolderCompareView extends React.Component<
               width: '350px',
               borderRight: '1px solid var(--box-border-color)',
               backgroundColor: 'var(--box-alt-background-color)',
-              padding: '15px',
-              overflow: 'auto'
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
             }}>
               <style>{`
                 .node-line-content::-webkit-scrollbar {
@@ -112,7 +113,13 @@ export class FolderCompareView extends React.Component<
                   background: rgba(127,127,127,0.15) !important;
                   border-radius: 4px;
                 }
+                .sidebar-file-entry,
+                .sidebar-file-entry * {
+                  cursor: pointer !important;
+                }
               `}</style>
+              {/* Scrollable top section: component list */}
+              <div style={{ flex: 1, overflow: 'auto', padding: '15px', minHeight: 0 }}>
               <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>Diff View Options</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <label style={{ 
@@ -247,6 +254,44 @@ export class FolderCompareView extends React.Component<
                     )
                   })
                 })()}
+              </div>
+              </div>
+              {/* Divider + sticky file list at bottom */}
+              <div style={{
+                borderTop: '1px solid var(--box-border-color)',
+                padding: '12px 15px',
+                flexShrink: 0,
+                minHeight: '300px',
+                maxHeight: '50%',
+                overflow: 'auto'
+              }}>
+                <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
+                  Files
+                </h3>
+                {this.getRelevantFiles().map(filePath => {
+                  const baseName = filePath.split('/').pop() || filePath
+                  return (
+                    <div
+                      key={filePath}
+                      className="sidebar-file-entry"
+                      style={{
+                        padding: '4px 6px',
+                        fontSize: '12px',
+                        borderRadius: '3px',
+                        color: 'var(--text-color)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                      title={filePath}
+                      onClick={() => this.scrollToFile(filePath)}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--box-border-color)')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      {baseName}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -906,6 +951,39 @@ export class FolderCompareView extends React.Component<
         }
       }
     }
+  }
+
+  /**
+   * Return the list of file paths relevant to the current selection.
+   * "Show All" → all fileChanges; component → only files touched by that component.
+   */
+  private getRelevantFiles(): string[] {
+    if (this.state.selectedComponent === 'all') {
+      return this.state.fileChanges.map(f => f.path)
+    }
+    const componentIndex = this.state.selectedComponent as number
+    const component = this.state.diffComponents[componentIndex]
+    if (!component || !component.changes) return []
+
+    const pathMatches = (jsonFile: string, fullPath: string): boolean =>
+      fullPath === jsonFile ||
+      fullPath.endsWith('/' + jsonFile) ||
+      fullPath.endsWith('\\' + jsonFile)
+
+    const matchedPaths = new Set<string>()
+    for (const change of component.changes) {
+      const files: string[] = []
+      if (change.from?.file) files.push(change.from.file)
+      if (change.to?.file) files.push(change.to.file)
+      for (const jsonFile of files) {
+        for (const fc of this.state.fileChanges) {
+          if (pathMatches(jsonFile, fc.path)) {
+            matchedPaths.add(fc.path)
+          }
+        }
+      }
+    }
+    return Array.from(matchedPaths)
   }
 
   private scrollToFile(fileName: string): void {

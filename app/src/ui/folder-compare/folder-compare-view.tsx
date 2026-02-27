@@ -7,6 +7,7 @@ import { AppFileStatusKind } from '../../models/status'
 import { ITextDiff, ImageDiffType } from '../../models/diff'
 import { Diff } from '../diff'
 import { Repository } from '../../models/repository'
+import { DiffSearchInput } from '../diff/diff-search-input'
 
 // -- Helper modules ----------------------------------------------------------
 import {
@@ -71,6 +72,7 @@ interface IFolderCompareViewState {
   readonly leftPanelWidth: number
   readonly rightPanelWidth: number
   readonly leftTopFraction: number
+  readonly isSearching: boolean
 }
 
 export class FolderCompareView extends React.Component<
@@ -98,6 +100,7 @@ export class FolderCompareView extends React.Component<
       leftPanelWidth: DEFAULT_LEFT_PANEL_WIDTH,
       rightPanelWidth: DEFAULT_RIGHT_PANEL_WIDTH,
       leftTopFraction: DEFAULT_LEFT_TOP_FRACTION,
+      isSearching: false,
     }
   }
 
@@ -361,6 +364,26 @@ export class FolderCompareView extends React.Component<
                 )}
               </div>
             </div>
+
+            {this.state.isSearching && (
+              <div style={{
+                padding: '6px 10px',
+                borderBottom: '1px solid var(--box-border-color)',
+                backgroundColor: 'var(--box-background-color)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}>
+                <DiffSearchInput
+                  onSearch={this.onFolderSearch}
+                  onClose={this.closeFolderSearch}
+                />
+                <span
+                  ref={this.searchCountRef}
+                  style={{ fontSize: '12px', color: 'var(--text-secondary-color)', whiteSpace: 'nowrap' }}
+                />
+              </div>
+            )}
         
             {this.state.isLoading && <div style={{ padding: '20px' }}>Loading files...</div>}
             
@@ -436,15 +459,8 @@ export class FolderCompareView extends React.Component<
   }
 
   private getDummyRepository(): Repository {
-    // Create a minimal dummy repository object for the Diff component
-    // It doesn't need to be functional, just satisfy the type requirements
-    return {
-      id: 0,
-      path: this.state.beforeFolder || '',
-      name: 'Folder Comparison',
-      missing: false,
-      hash: 'folder-compare-temp',
-    } as Repository
+    // Use the memoised version so the reference is stable across renders
+    return this.getStableRepository()
   }
 
   private renderDiffForFile(file: WorkingDirectoryFileChange): JSX.Element {
@@ -482,9 +498,9 @@ export class FolderCompareView extends React.Component<
           hideWhitespaceInDiff={false}
           showSideBySideDiff={true}
           showDiffCheckMarks={false}
-          onOpenBinaryFile={() => {}}
-          onChangeImageDiffType={() => {}}
-          onHideWhitespaceInDiffChanged={() => {}}
+          onOpenBinaryFile={this.noopHandler}
+          onChangeImageDiffType={this.noopHandler}
+          onHideWhitespaceInDiffChanged={this.noopHandler}
         />
         <style>{`
           /* CSS Variables for filtered line opacity - adjust these to change faintness */
@@ -787,6 +803,41 @@ export class FolderCompareView extends React.Component<
   private diffHeightsAdjusted = false
   private shrinkPollingRAF: number | null = null
 
+  // -- Memoised Diff props (prevent unnecessary <Diff> re-renders) ----------
+  private cachedRepository: Repository | null = null
+  private cachedBeforeFolder = ''
+  private readonly noopHandler = () => {}
+
+  private getStableRepository(): Repository {
+    if (
+      !this.cachedRepository ||
+      this.cachedBeforeFolder !== (this.state.beforeFolder || '')
+    ) {
+      this.cachedBeforeFolder = this.state.beforeFolder || ''
+      this.cachedRepository = {
+        id: 0,
+        path: this.cachedBeforeFolder,
+        name: 'Folder Comparison',
+        missing: false,
+        hash: 'folder-compare-temp',
+      } as Repository
+    }
+    return this.cachedRepository
+  }
+
+  // -- Folder-level search state --------------------------------------------
+  private folderSearchMatches: Array<{ row: HTMLElement; side: 'before' | 'after'; occurrence: number }> = []
+  private folderSearchIndex = -1
+  private folderSearchQuery = ''
+  private searchCountRef = React.createRef<HTMLSpanElement>()
+
+  public componentDidMount(): void {
+    // Intercept find-text (capture phase) so individual SideBySideDiff
+    // instances inside each <Diff> never see the event.
+    document.addEventListener('find-text', this.onFolderFindText, true)
+    window.addEventListener('keydown', this.onFolderKeyDown, true)
+  }
+
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
     if (prevState.selectedComponent !== this.state.selectedComponent) {
@@ -830,6 +881,12 @@ export class FolderCompareView extends React.Component<
       this.setupMutationObserver()
     }
 
+    // When the search bar opens or closes the content area height changes;
+    // re-shrink wrappers so no extra space appears.
+    if (prevState.isSearching !== this.state.isSearching) {
+      requestAnimationFrame(() => shrinkWrappersToFit())
+    }
+
     // After all diffs finish loading, shrink wrappers to fit content
     if (!this.state.isLoadingDiffs && this.state.fileDiffs.size > 0 && !this.diffHeightsAdjusted) {
       this.diffHeightsAdjusted = true
@@ -851,6 +908,9 @@ export class FolderCompareView extends React.Component<
 
   public componentWillUnmount(): void {
     this.cleanupMutationObserver()
+    document.removeEventListener('find-text', this.onFolderFindText, true)
+    window.removeEventListener('keydown', this.onFolderKeyDown, true)
+    this.clearSearchHighlight()
   }
 
   private setupMutationObserver(): void {
@@ -869,10 +929,18 @@ export class FolderCompareView extends React.Component<
       const hasExternalMutations = mutations.some(m => {
         const isOurNode = (n: Node): boolean => {
           const el = n as Element
-          return typeof el.classList !== 'undefined' &&
+          if (typeof el.classList !== 'undefined' &&
             (el.classList.contains('component-hunk-separator') ||
              el.classList.contains('component-char-highlight') ||
-             el.classList.contains('component-char-click-capture'))
+             el.classList.contains('component-char-click-capture') ||
+             el.classList.contains('folder-search-mark')))
+            return true
+          // Text nodes created/removed by search mark insertion/removal
+          if (n.nodeType === Node.TEXT_NODE) {
+            const p = n.parentElement
+            if (p && p.classList.contains('content-wrapper')) return true
+          }
+          return false
         }
         return (
           Array.from(m.addedNodes).some(n => !isOurNode(n)) ||
@@ -1072,10 +1140,17 @@ export class FolderCompareView extends React.Component<
   /**
    * Scroll to an element only if it is not already visible within the
    * `.folder-compare-content` scroll container.
+   *
+   * IMPORTANT: We must NOT use `el.scrollIntoView()` because it scrolls
+   * every scrollable ancestor — including the ReactVirtualized Grid
+   * container inside each diff.  That shifts content within the
+   * `diff-clip-wrapper` and creates empty space at the bottom.
+   * Instead we manually adjust only the `.folder-compare-content` scrollTop.
    */
   private scrollIntoViewIfNeeded(el: Element, block: ScrollLogicalPosition = 'center'): void {
-    const scrollContainer = document.querySelector('.folder-compare-content')
+    const scrollContainer = document.querySelector('.folder-compare-content') as HTMLElement | null
     if (!scrollContainer) {
+      // Absolute fallback — should never happen in practice
       el.scrollIntoView({ behavior: 'smooth', block })
       return
     }
@@ -1084,9 +1159,21 @@ export class FolderCompareView extends React.Component<
     const isVisible =
       elRect.top >= containerRect.top &&
       elRect.bottom <= containerRect.bottom
-    if (!isVisible) {
-      el.scrollIntoView({ behavior: 'smooth', block })
+    if (isVisible) return
+
+    // Compute the desired scrollTop so only the outer container moves.
+    const elTopRelative = elRect.top - containerRect.top + scrollContainer.scrollTop
+    let targetScrollTop: number
+    if (block === 'start') {
+      targetScrollTop = elTopRelative
+    } else if (block === 'end') {
+      targetScrollTop = elTopRelative - containerRect.height + elRect.height
+    } else {
+      // 'center' (default)
+      targetScrollTop = elTopRelative - containerRect.height / 2 + elRect.height / 2
     }
+    targetScrollTop = Math.max(0, Math.min(targetScrollTop, scrollContainer.scrollHeight - containerRect.height))
+    scrollContainer.scrollTo({ top: targetScrollTop, behavior: 'smooth' })
   }
 
   private scrollToLine(fileName: string, lineNum: number, side: 'before' | 'after'): void {
@@ -1825,6 +1912,267 @@ export class FolderCompareView extends React.Component<
       }
       return { collapsedKinds: collapsed }
     })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Folder-level search (Ctrl+F)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Capture-phase handler for the custom 'find-text' event dispatched by
+   * app.tsx when the user presses Ctrl+F.  By stopping propagation in the
+   * capture phase we prevent every individual SideBySideDiff instance from
+   * opening its own search bar.
+   */
+  private onFolderFindText = (e: Event) => {
+    if (this.state.showFolderSelector) return
+    e.stopPropagation()
+    e.preventDefault()
+    if (!this.state.isSearching) {
+      this.setState({ isSearching: true })
+    }
+  }
+
+  /**
+   * Capture-phase keydown handler — catches Ctrl+F before SideBySideDiff's
+   * own window-level keydown listener can open per-file search.
+   */
+  private onFolderKeyDown = (e: KeyboardEvent) => {
+    if (this.state.showFolderSelector) return
+    if (e.key === 'Escape' && this.state.isSearching) {
+      e.stopPropagation()
+      e.preventDefault()
+      this.closeFolderSearch()
+      return
+    }
+    const isCmdOrCtrl = e.ctrlKey || e.metaKey
+    if (isCmdOrCtrl && !e.shiftKey && !e.altKey && e.key === 'f') {
+      e.stopPropagation()
+      e.preventDefault()
+      if (!this.state.isSearching) {
+        this.setState({ isSearching: true })
+      }
+    }
+  }
+
+  private closeFolderSearch = () => {
+    this.clearSearchHighlight()
+    this.folderSearchMatches = []
+    this.folderSearchIndex = -1
+    this.folderSearchQuery = ''
+    this.setState({ isSearching: false })
+  }
+
+  private onFolderSearch = (query: string, direction: 'next' | 'previous') => {
+    if (!query || query.trim() === '') {
+      this.clearSearchHighlight()
+      this.folderSearchMatches = []
+      this.folderSearchIndex = -1
+      this.folderSearchQuery = ''
+      this.updateSearchCountDisplay()
+      return
+    }
+
+    if (query !== this.folderSearchQuery) {
+      // New search
+      this.folderSearchQuery = query
+      this.folderSearchMatches = this.findMatchingSides(query)
+      this.folderSearchIndex = this.folderSearchMatches.length > 0 ? 0 : -1
+    } else if (this.folderSearchMatches.length > 0) {
+      // Navigate within existing results
+      const delta = direction === 'next' ? 1 : -1
+      this.folderSearchIndex =
+        (this.folderSearchIndex + delta + this.folderSearchMatches.length) %
+        this.folderSearchMatches.length
+    }
+
+    this.clearSearchHighlight()
+    if (this.folderSearchIndex >= 0) {
+      this.highlightSearchMatch(this.folderSearchIndex)
+    }
+    this.updateSearchCountDisplay()
+  }
+
+  /**
+   * Walk the visible diff rows in the middle panel and return a list of
+   * per-occurrence matches.  Each entry is a {row, side, occurrence} tuple.
+   * Both sides of every row are searched independently.  If the query appears
+   * N times on one side, N separate entries are created (occurrence 0..N-1).
+   * Order: top-to-bottom, and within each row before (LHS) first then
+   * after (RHS), and within each side left-to-right.
+   */
+  private findMatchingSides(
+    query: string
+  ): Array<{ row: HTMLElement; side: 'before' | 'after'; occurrence: number }> {
+    const container = document.querySelector('.folder-compare-content')
+    if (!container) return []
+
+    const matches: Array<{ row: HTMLElement; side: 'before' | 'after'; occurrence: number }> = []
+    const lowerQuery = query.toLowerCase()
+
+    const rows = container.querySelectorAll('.row')
+    for (const row of Array.from(rows)) {
+      const htmlRow = row as HTMLElement
+
+      // Skip hidden / separator / hunk-info rows
+      if (htmlRow.classList.contains('component-hidden')) continue
+      if (htmlRow.classList.contains('component-hunk-separator')) continue
+      if (htmlRow.classList.contains('hunk-info')) continue
+      const parentEl = htmlRow.parentElement
+      if (parentEl?.classList.contains('component-hidden')) continue
+      const fc = htmlRow.closest('[data-file-path]')
+      if (fc?.classList.contains('component-file-hidden')) continue
+
+      // Count occurrences on each side
+      for (const side of ['before', 'after'] as const) {
+        const cw = htmlRow.querySelector(
+          `.${side} .content-wrapper`
+        ) as HTMLElement
+        if (!cw) continue
+        const text = this.getSearchableText(cw).toLowerCase()
+        let searchFrom = 0
+        let occ = 0
+        while (true) {
+          const idx = text.indexOf(lowerQuery, searchFrom)
+          if (idx === -1) break
+          matches.push({ row: htmlRow, side, occurrence: occ })
+          occ++
+          searchFrom = idx + lowerQuery.length
+        }
+      }
+    }
+
+    return matches
+  }
+
+  /**
+   * Extract visible text from a content-wrapper, skipping overlay elements
+   * (character highlight overlays, click-capture spans) that would otherwise
+   * cause phantom duplicate matches.
+   */
+  private getSearchableText(contentWrapper: HTMLElement): string {
+    let text = ''
+    const walker = document.createTreeWalker(
+      contentWrapper,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const parent = node.parentElement
+          if (!parent) return NodeFilter.FILTER_REJECT
+          if (
+            parent.classList.contains('component-char-highlight') ||
+            parent.classList.contains('component-char-click-capture') ||
+            parent.classList.contains('component-hunk-separator')
+          ) {
+            return NodeFilter.FILTER_REJECT
+          }
+          return NodeFilter.FILTER_ACCEPT
+        },
+      }
+    )
+    let textNode: Text | null
+    while ((textNode = walker.nextNode() as Text | null)) {
+      text += textNode.textContent
+    }
+    return text
+  }
+
+  private clearSearchHighlight(): void {
+    document
+      .querySelectorAll('.folder-compare-view .folder-search-mark')
+      .forEach(mark => {
+        const parent = mark.parentNode
+        if (parent) {
+          parent.replaceChild(document.createTextNode(mark.textContent || ''), mark)
+          parent.normalize() // merge adjacent text nodes
+        }
+      })
+  }
+
+  /**
+   * Highlight the Nth occurrence of the search query inside the content-wrapper
+   * on the given side by wrapping it in a <mark> element with an orange
+   * background.  Only the word itself is highlighted, not the whole line.
+   */
+  private highlightSearchMatch(index: number): void {
+    const match = this.folderSearchMatches[index]
+    if (!match) return
+    const { row, side, occurrence } = match
+    this.scrollIntoViewIfNeeded(row, 'center')
+
+    const cw = row.querySelector(`.${side} .content-wrapper`) as HTMLElement
+    if (!cw) return
+
+    const query = this.folderSearchQuery.toLowerCase()
+    const queryLen = this.folderSearchQuery.length
+
+    // Walk text nodes (same filter as getSearchableText) and find the
+    // Nth (occurrence) match of the query string.
+    const walker = document.createTreeWalker(
+      cw,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const parent = node.parentElement
+          if (!parent) return NodeFilter.FILTER_REJECT
+          if (
+            parent.classList.contains('component-char-highlight') ||
+            parent.classList.contains('component-char-click-capture') ||
+            parent.classList.contains('component-hunk-separator')
+          ) {
+            return NodeFilter.FILTER_REJECT
+          }
+          return NodeFilter.FILTER_ACCEPT
+        },
+      }
+    )
+
+    let seen = 0
+    let textNode: Text | null
+    while ((textNode = walker.nextNode() as Text | null)) {
+      const nodeText = textNode.textContent || ''
+      let searchFrom = 0
+      while (true) {
+        const idx = nodeText.toLowerCase().indexOf(query, searchFrom)
+        if (idx === -1) break
+        if (seen === occurrence) {
+          // Split the text node and wrap the match in a <mark>
+          const matchStart = textNode.splitText(idx)
+          const afterMatch = matchStart.splitText(queryLen)
+          void afterMatch // stays in DOM
+
+          const mark = document.createElement('mark')
+          mark.className = 'folder-search-mark'
+          mark.style.backgroundColor = 'rgba(255, 165, 0, 0.6)'
+          mark.style.color = 'inherit'
+          mark.style.borderRadius = '2px'
+          mark.style.padding = '0'
+          mark.textContent = matchStart.textContent
+          matchStart.parentNode!.replaceChild(mark, matchStart)
+          return
+        }
+        seen++
+        searchFrom = idx + queryLen
+      }
+    }
+  }
+
+  /**
+   * Update the search-count display via the DOM ref, avoiding a full
+   * React re-render (which would cascade into <Diff>/ReactVirtualized
+   * re-measuring rows and corrupting clip-wrapper heights).
+   */
+  private updateSearchCountDisplay(): void {
+    const el = this.searchCountRef.current
+    if (!el) return
+    if (!this.folderSearchQuery) {
+      el.textContent = ''
+      return
+    }
+    el.textContent =
+      this.folderSearchMatches.length > 0
+        ? `${this.folderSearchIndex + 1} of ${this.folderSearchMatches.length}`
+        : 'No results'
   }
 
   private onChangeFolders = () => {

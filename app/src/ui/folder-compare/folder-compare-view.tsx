@@ -1,4 +1,6 @@
 import * as React from 'react'
+import * as Path from 'path'
+import * as FSPromises from 'fs/promises'
 import { Button } from '../lib/button'
 import { Dispatcher } from '../dispatcher'
 import { FolderSelector } from './folder-selector'
@@ -8,11 +10,14 @@ import { ITextDiff, ImageDiffType } from '../../models/diff'
 import { Diff } from '../diff'
 import { Repository } from '../../models/repository'
 import { DiffSearchInput } from '../diff/diff-search-input'
+import { showContextualMenu } from '../../lib/menu-item'
 
 // -- Helper modules ----------------------------------------------------------
 import {
   applyComponentHighlightingToAll,
   extractLineNumber,
+  injectExpandButtonsIntoHunkInfoRows,
+  injectBoundaryExpandButtons,
 } from './folder-compare-highlight'
 import { repackFile, shrinkWrappersToFit, setupScrollSync } from './folder-compare-repack'
 import {
@@ -430,7 +435,6 @@ export class FolderCompareView extends React.Component<
                   </div>
                   
                   <div className="diff-container" style={{ 
-                    backgroundColor: 'var(--background-color)',
                     display: 'flex',
                     flexDirection: 'column'
                   }}>
@@ -747,6 +751,108 @@ export class FolderCompareView extends React.Component<
             overflow: hidden;
           }
 
+          /* ── Expand-context button on hunk separators / hunk-info rows ── */
+          .folder-compare-view .expand-context-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            color: var(--diff-hunk-text-color);
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+          }
+          .folder-compare-view .expand-context-btn:hover {
+            background: var(--diff-hover-background-color);
+            color: var(--diff-hover-text-color);
+          }
+          .folder-compare-view .expand-context-icon {
+            pointer-events: none;
+          }
+          /* In "Show All" hunk-info the expansion handle already has the
+             right background; just make the button fill it fully. */
+          .folder-compare-view .hunk-info:not(.component-hunk-separator) .expand-context-btn {
+            width: 100%;
+            height: 100%;
+          }
+
+          /* Expanded context rows inserted by expand-hunk-context handler */
+          .folder-compare-view .expanded-context-row {
+            position: absolute;
+            width: 100%;
+          }
+          .folder-compare-view .expanded-context-row .row {
+            display: flex;
+            flex-direction: row;
+            line-height: 20px;
+            height: 100%;
+          }
+          .folder-compare-view .expanded-context-row .before,
+          .folder-compare-view .expanded-context-row .after {
+            width: 50%;
+            display: flex;
+            background: var(--diff-background-color);
+            color: var(--diff-text-color);
+          }
+          .folder-compare-view .expanded-context-row .line-number {
+            flex-shrink: 0;
+            background: var(--diff-gutter-background-color);
+            color: var(--diff-line-number-color);
+            display: flex;
+            box-sizing: content-box;
+            position: relative;
+            z-index: 2;
+            align-items: center;
+            justify-content: center;
+          }
+          .folder-compare-view .expanded-context-row .line-number label {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-variant-numeric: tabular-nums;
+          }
+          .folder-compare-view .expanded-context-row .content {
+            white-space: pre !important;
+            word-break: normal !important;
+            overflow: hidden !important;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+          }
+          .folder-compare-view .expanded-context-row .prefix {
+            user-select: none;
+            white-space: nowrap;
+          }
+          .folder-compare-view .expanded-context-row .content-wrapper {
+            white-space: pre !important;
+            flex: 1;
+          }
+
+          /* ── Expanded hunk-info (hidden after user clicks expand) ── */
+          .folder-compare-view .hunk-expanded {
+            top: -99999px !important;
+            visibility: hidden !important;
+          }
+
+          /* ── Override RV inner container overflow so injected elements
+               (boundary expand buttons, etc.) are visible even when RV
+               resets the container height.  Clipping is handled by
+               diff-clip-wrapper instead. ── */
+          .folder-compare-view .ReactVirtualized__Grid__innerScrollContainer {
+            overflow: visible !important;
+          }
+
+          /* ── Bottom boundary expand button (now uses standard hunk-info structure) ── */
+          .folder-compare-view .expand-boundary-bottom {
+            position: absolute;
+            width: 100%;
+          }
+
           /* ── "Show All" hunk-info rows: replace full header text with @@  @@ ── */
           .folder-compare-view .hunk-info:not(.component-hunk-separator) .content-wrapper {
             visibility: hidden;
@@ -836,6 +942,7 @@ export class FolderCompareView extends React.Component<
     // instances inside each <Diff> never see the event.
     document.addEventListener('find-text', this.onFolderFindText, true)
     window.addEventListener('keydown', this.onFolderKeyDown, true)
+    document.addEventListener('expand-hunk-context', this.onExpandHunkContext as unknown as EventListener, true)
   }
 
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
@@ -896,6 +1003,10 @@ export class FolderCompareView extends React.Component<
         if (this.mutationObserver) this.mutationObserver.disconnect()
         this.startShrinkPolling()
         setupScrollSync()
+        // Inject expand buttons into "Show All" hunk-info rows
+        injectExpandButtonsIntoHunkInfoRows()
+        // Inject boundary expand buttons at bottom of each file
+        injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
         if (this.mutationObserver) {
           const container = document.querySelector('.folder-compare-view')
           if (container) {
@@ -910,6 +1021,7 @@ export class FolderCompareView extends React.Component<
     this.cleanupMutationObserver()
     document.removeEventListener('find-text', this.onFolderFindText, true)
     window.removeEventListener('keydown', this.onFolderKeyDown, true)
+    document.removeEventListener('expand-hunk-context', this.onExpandHunkContext as unknown as EventListener, true)
     this.clearSearchHighlight()
   }
 
@@ -933,7 +1045,11 @@ export class FolderCompareView extends React.Component<
             (el.classList.contains('component-hunk-separator') ||
              el.classList.contains('component-char-highlight') ||
              el.classList.contains('component-char-click-capture') ||
-             el.classList.contains('folder-search-mark')))
+             el.classList.contains('folder-search-mark') ||
+             el.classList.contains('expand-context-btn') ||
+             el.classList.contains('expand-context-icon') ||
+             el.classList.contains('expanded-context-row') ||
+             el.classList.contains('expand-boundary-bottom')))
             return true
           // Text nodes created/removed by search mark insertion/removal
           if (n.nodeType === Node.TEXT_NODE) {
@@ -1061,6 +1177,10 @@ export class FolderCompareView extends React.Component<
         // row heights after the file containers were unhidden, so a single
         // shrinkWrappersToFit call can capture stale values.
         this.startShrinkPolling()
+        // Re-inject expand buttons into restored hunk-info rows
+        injectExpandButtonsIntoHunkInfoRows()
+        // Re-inject boundary expand buttons at bottom of each file
+        injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
       } else {
         for (const file of this.state.fileChanges) {
           const fc = document.querySelector(
@@ -1068,6 +1188,8 @@ export class FolderCompareView extends React.Component<
           )
           if (fc) repackFile(fc)
         }
+        // Inject boundary expand buttons at bottom of each file (component mode)
+        injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
       }
 
       setupScrollSync()
@@ -2182,5 +2304,502 @@ export class FolderCompareView extends React.Component<
       fileChanges: [],
       fileDiffs: new Map(),
     })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Expand hunk context
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Handle the custom `expand-hunk-context` event dispatched by expand buttons
+   * on both "Show All" hunk-info rows and component-hunk-separator rows.
+   *
+   * In **every** mode this reads the actual source files from the compared
+   * folders and inserts context rows for the lines that the diff output did
+   * not include.
+   *
+   * For "Show All" hunk-info rows the gap is determined from the diff hunk
+   * headers.  For component-hunk-separators the gap is determined from the
+   * line numbers of the adjacent visible DOM rows.
+   */
+  private onExpandHunkContext = async (e: CustomEvent) => {
+    const outerWrapper = e.detail?.outerWrapper as HTMLElement
+    if (!outerWrapper) return
+
+    // Cancel any active shrink polling so it cannot overwrite the
+    // clip-wrapper height that repackFile is about to set.
+    if (this.shrinkPollingRAF !== null) {
+      cancelAnimationFrame(this.shrinkPollingRAF)
+      this.shrinkPollingRAF = null
+    }
+
+    const isComponentSeparator = !!e.detail?.isComponentSeparator
+    const isBottomBoundary = !!e.detail?.isBottomBoundary
+
+    // --- Locate the file container and inner scroll container ---------------
+    const fileContainer = outerWrapper.closest('[data-file-path]') as HTMLElement
+    if (!fileContainer) return
+
+    const filePath = fileContainer.dataset.filePath
+    if (!filePath) return
+
+    const inner = outerWrapper.closest(
+      '.ReactVirtualized__Grid__innerScrollContainer'
+    ) as HTMLElement
+    if (!inner) return
+
+    // --- Read the source files first (both modes need them) ----------------
+    const beforeFilePath = Path.join(this.state.beforeFolder, filePath)
+    const afterFilePath = Path.join(this.state.afterFolder, filePath)
+
+    let beforeLines: string[] = []
+    let afterLines: string[] = []
+
+    try {
+      const content = await FSPromises.readFile(beforeFilePath, 'utf-8')
+      beforeLines = content.split('\n')
+    } catch { /* file may not exist for added files */ }
+
+    try {
+      const content = await FSPromises.readFile(afterFilePath, 'utf-8')
+      afterLines = content.split('\n')
+    } catch { /* file may not exist for deleted files */ }
+
+    // --- Determine the missing line range ----------------------------------
+    let beforeMissStart: number
+    let beforeMissEnd: number
+    let afterMissStart: number
+    let afterMissEnd: number
+
+    if (isBottomBoundary) {
+      // Bottom boundary: expand from last visible line to end of file.
+      // Walk backwards through inner children to find the last visible line numbers.
+      const children = Array.from(inner.children) as HTMLElement[]
+      let lastBeforeLine = 0
+      let lastAfterLine = 0
+      for (let i = children.length - 1; i >= 0; i--) {
+        const el = children[i]
+        if (el.classList.contains('expand-boundary-bottom')) continue
+        if (el.classList.contains('expanded-context-row')) continue
+        if (el.classList.contains('component-hunk-separator')) continue
+        if (parseInt(el.style.top || '0', 10) < -9999) continue
+        if (el.classList.contains('component-hidden')) continue
+        const row = (el.querySelector('.row') as HTMLElement) ?? el
+        if (lastBeforeLine === 0) {
+          const n = row.querySelector('.before .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) lastBeforeLine = v
+        }
+        if (lastAfterLine === 0) {
+          const n = row.querySelector('.after .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) lastAfterLine = v
+        }
+        if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
+      }
+      beforeMissStart = lastBeforeLine + 1
+      beforeMissEnd = beforeLines.length
+      afterMissStart = lastAfterLine + 1
+      afterMissEnd = afterLines.length
+    } else if (isComponentSeparator) {
+      // Component / misc mode: derive the gap from adjacent visible rows.
+      const children = Array.from(inner.children) as HTMLElement[]
+      const separatorIdx = children.indexOf(outerWrapper)
+      if (separatorIdx === -1) return
+
+      // Walk backwards to find the last visible before/after line numbers
+      let lastBeforeLine = 0
+      let lastAfterLine = 0
+      for (let i = separatorIdx - 1; i >= 0; i--) {
+        const el = children[i]
+        if (el.classList.contains('component-hunk-separator')) break
+        if (el.classList.contains('expanded-context-row')) continue
+        if (el.classList.contains('component-hidden')) continue
+        if (parseInt(el.style.top || '0', 10) < -9999) continue
+        const row = (el.querySelector('.row') as HTMLElement) ?? el
+        if (lastBeforeLine === 0) {
+          const n = row.querySelector('.before .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) lastBeforeLine = v
+        }
+        if (lastAfterLine === 0) {
+          const n = row.querySelector('.after .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) lastAfterLine = v
+        }
+        if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
+      }
+
+      // Walk forwards to find the first visible before/after line numbers
+      let firstBeforeLine = Infinity
+      let firstAfterLine = Infinity
+      for (let i = separatorIdx + 1; i < children.length; i++) {
+        const el = children[i]
+        if (el.classList.contains('component-hunk-separator')) break
+        if (el.classList.contains('expanded-context-row')) continue
+        if (el.classList.contains('component-hidden')) continue
+        if (parseInt(el.style.top || '0', 10) < -9999) continue
+        const row = (el.querySelector('.row') as HTMLElement) ?? el
+        if (firstBeforeLine === Infinity) {
+          const n = row.querySelector('.before .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) firstBeforeLine = v
+        }
+        if (firstAfterLine === Infinity) {
+          const n = row.querySelector('.after .line-number')
+          const v = n ? extractLineNumber(n) : null
+          if (v !== null) firstAfterLine = v
+        }
+        if (firstBeforeLine !== Infinity && firstAfterLine !== Infinity) break
+      }
+
+      beforeMissStart = lastBeforeLine + 1
+      beforeMissEnd = firstBeforeLine === Infinity
+        ? beforeLines.length   // expand to end of file
+        : firstBeforeLine - 1
+      afterMissStart = lastAfterLine + 1
+      afterMissEnd = firstAfterLine === Infinity
+        ? afterLines.length
+        : firstAfterLine - 1
+    } else {
+      // "Show All" hunk-info: use diff hunk headers to compute the gap.
+      // fileDiffs is keyed by file.id (e.g. "Modified+path") — match flexibly.
+      let diff: ITextDiff | null = null
+      for (const [key, value] of this.state.fileDiffs.entries()) {
+        if (
+          key === filePath ||
+          key.endsWith('+' + filePath) ||
+          key.endsWith('/' + filePath) ||
+          key.endsWith('\\' + filePath)
+        ) {
+          diff = value
+          break
+        }
+      }
+      if (!diff) return
+
+      // Find which hunk this expand button belongs to
+      const allHunkWrappers = Array.from(inner.children).filter(child => {
+        const el = child as HTMLElement
+        if (el.classList.contains('component-hunk-separator')) return false
+        if (el.classList.contains('expanded-context-row')) return false
+        return el.querySelector('.hunk-info') !== null || el.classList.contains('hunk-info')
+      }) as HTMLElement[]
+
+      const hunkIndex = allHunkWrappers.indexOf(outerWrapper)
+      if (hunkIndex === -1) return
+
+      const hunk = diff.hunks[hunkIndex]
+      if (!hunk) return
+
+      if (hunkIndex === 0) {
+        // First hunk — expand from line 1 to hunk start
+        beforeMissStart = 1
+        beforeMissEnd = hunk.header.oldStartLine - 1
+        afterMissStart = 1
+        afterMissEnd = hunk.header.newStartLine - 1
+      } else {
+        const prevHunk = diff.hunks[hunkIndex - 1]
+        beforeMissStart = prevHunk.header.oldStartLine + prevHunk.header.oldLineCount
+        beforeMissEnd = hunk.header.oldStartLine - 1
+        afterMissStart = prevHunk.header.newStartLine + prevHunk.header.newLineCount
+        afterMissEnd = hunk.header.newStartLine - 1
+      }
+    }
+
+    // --- Nothing to expand? ------------------------------------------------
+    if (beforeMissEnd < beforeMissStart && afterMissEnd < afterMissStart) {
+      // For component separators or bottom boundary, still remove the element
+      if (isComponentSeparator || isBottomBoundary) {
+        if (this.mutationObserver) this.mutationObserver.disconnect()
+        try {
+          outerWrapper.remove()
+          repackFile(fileContainer)
+        } finally {
+          if (this.mutationObserver) {
+            const container = document.querySelector('.folder-compare-view')
+            if (container) {
+              this.mutationObserver.observe(container, { childList: true, subtree: true })
+            }
+          }
+        }
+      }
+      return
+    }
+
+    // --- Insert context rows from source files -----------------------------
+    if (this.mutationObserver) this.mutationObserver.disconnect()
+
+    try {
+      const beforeCount = Math.max(0, beforeMissEnd - beforeMissStart + 1)
+      const afterCount = Math.max(0, afterMissEnd - afterMissStart + 1)
+      const rowCount = Math.max(beforeCount, afterCount)
+
+      // Get a reference row height and line-number gutter width from siblings
+      const siblings = Array.from(inner.children) as HTMLElement[]
+      let rowHeight = 20
+      let gutterWidth = ''
+      for (const sib of siblings) {
+        const h = parseInt(sib.style.height || '0', 10)
+        if (
+          h > 0 &&
+          !sib.classList.contains('component-hunk-separator') &&
+          !sib.classList.contains('expanded-context-row')
+        ) {
+          rowHeight = h
+          // Sample the gutter width from the first .line-number in this row
+          if (!gutterWidth) {
+            const ln = sib.querySelector('.line-number') as HTMLElement
+            if (ln && ln.style.width) gutterWidth = ln.style.width
+          }
+          if (gutterWidth) break
+        }
+      }
+
+      const fragment = document.createDocumentFragment()
+      for (let i = 0; i < rowCount; i++) {
+        const beforeLineNum =
+          beforeMissStart + i <= beforeMissEnd ? beforeMissStart + i : null
+        const afterLineNum =
+          afterMissStart + i <= afterMissEnd ? afterMissStart + i : null
+        const beforeContent =
+          beforeLineNum !== null && beforeLineNum <= beforeLines.length
+            ? beforeLines[beforeLineNum - 1] ?? ''
+            : ''
+        const afterContent =
+          afterLineNum !== null && afterLineNum <= afterLines.length
+            ? afterLines[afterLineNum - 1] ?? ''
+            : ''
+
+        const wrapper = this.createContextRowElement(
+          beforeLineNum,
+          afterLineNum,
+          beforeContent,
+          afterContent,
+          rowHeight,
+          gutterWidth
+        )
+        wrapper.classList.add('expanded-context-row')
+        fragment.appendChild(wrapper)
+      }
+
+      // Insert context rows before the separator / hunk-info wrapper
+      inner.insertBefore(fragment, outerWrapper)
+
+      // Hide/remove the hunk header (for both modes)
+      if (isBottomBoundary) {
+        // Remove the bottom boundary expand button
+        outerWrapper.remove()
+      } else if (isComponentSeparator) {
+        outerWrapper.remove()
+      } else {
+        // Hide the entire hunk-info wrapper (not just the expand button)
+        outerWrapper.classList.add('hunk-expanded')
+        outerWrapper.style.top = '-99999px'
+      }
+
+      // Re-position all rows — repackFile sets the clip-wrapper height
+      // correctly.  Do NOT call shrinkWrappersToFit() here: it can recompute
+      // a smaller height if RV has overwritten inline tops on a later frame.
+      repackFile(fileContainer)
+
+      // Sync expanded rows with current horizontal scroll position
+      this.syncExpandedRowsScroll(fileContainer)
+    } finally {
+      if (this.mutationObserver) {
+        const container = document.querySelector('.folder-compare-view')
+        if (container) {
+          this.mutationObserver.observe(container, { childList: true, subtree: true })
+        }
+      }
+    }
+  }
+
+  /**
+   * Create a DOM element mimicking a side-by-side context row with the given
+   * before/after line numbers and content.  Used to fill in lines between
+   * diff hunks when the user clicks "Expand context".
+   */
+  private createContextRowElement(
+    beforeLineNum: number | null,
+    afterLineNum: number | null,
+    beforeContent: string,
+    afterContent: string,
+    rowHeight: number,
+    gutterWidth: string
+  ): HTMLDivElement {
+    const wrapper = document.createElement('div')
+    wrapper.style.position = 'absolute'
+    wrapper.style.width = '100%'
+    wrapper.style.height = `${rowHeight}px`
+
+    const row = document.createElement('div')
+    row.className = 'context row'
+    row.setAttribute('role', 'cell')
+    row.style.height = '100%'
+
+    // Before side
+    const beforeSide = document.createElement('div')
+    beforeSide.className = 'before'
+    const beforeLineNumDiv = this.createLineNumberElement(beforeLineNum, 'before', gutterWidth)
+    const beforeContentDiv = this.createContentElement(beforeContent)
+    beforeSide.appendChild(beforeLineNumDiv)
+    beforeSide.appendChild(beforeContentDiv)
+
+    // After side
+    const afterSide = document.createElement('div')
+    afterSide.className = 'after'
+    const afterLineNumDiv = this.createLineNumberElement(afterLineNum, 'after', gutterWidth)
+    const afterContentDiv = this.createContentElement(afterContent)
+    afterSide.appendChild(afterLineNumDiv)
+    afterSide.appendChild(afterContentDiv)
+
+    row.appendChild(beforeSide)
+    row.appendChild(afterSide)
+    wrapper.appendChild(row)
+
+    // Right-click anywhere on this expanded row → show combined context menu
+    wrapper.addEventListener('contextmenu', (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      showContextualMenu([
+        {
+          label: 'Collapse',
+          action: () => this.collapseExpandedRows(wrapper),
+        },
+        { type: 'separator' },
+        { role: 'copy' },
+        { role: 'selectAll' },
+      ])
+    })
+
+    return wrapper
+  }
+
+  private createLineNumberElement(lineNum: number | null, side: 'before' | 'after', gutterWidth: string): HTMLDivElement {
+    const div = document.createElement('div')
+    div.className = 'line-number'
+    if (gutterWidth) div.style.width = gutterWidth
+    if (lineNum !== null) {
+      const label = document.createElement('label')
+      label.setAttribute('for', `${lineNum}-${side}`)
+      const span = document.createElement('span')
+      const srOnly = document.createElement('span')
+      srOnly.className = 'sr-only'
+      srOnly.textContent = 'Line '
+      span.appendChild(srOnly)
+      span.appendChild(document.createTextNode(String(lineNum)))
+      label.appendChild(span)
+      div.appendChild(label)
+    }
+    return div
+  }
+
+  private createContentElement(text: string): HTMLDivElement {
+    const contentDiv = document.createElement('div')
+    contentDiv.className = 'content'
+    const prefix = document.createElement('div')
+    prefix.className = 'prefix'
+    prefix.textContent = '\u00A0\u00A0\u00A0\u00A0\u00A0'
+    const contentWrapper = document.createElement('div')
+    contentWrapper.className = 'content-wrapper'
+    contentWrapper.textContent = text
+    contentDiv.appendChild(prefix)
+    contentDiv.appendChild(contentWrapper)
+    return contentDiv
+  }
+
+  /**
+   * Apply the current horizontal scroll offset to newly-inserted expanded
+   * context rows so they are in sync with the rest of the diff.
+   */
+  private syncExpandedRowsScroll(fileContainer: Element): void {
+    const syncBar = fileContainer.querySelector('.scroll-sync-bar')
+    if (!syncBar) return
+    const bars = syncBar.children as HTMLCollectionOf<HTMLElement>
+    const beforeBar = bars[0]
+    const afterBar = bars[1]
+    if (beforeBar) {
+      const sl = beforeBar.scrollLeft
+      if (sl > 0) {
+        fileContainer.querySelectorAll('.expanded-context-row .before .content-wrapper').forEach(w => {
+          ;(w as HTMLElement).style.transform = `translateX(-${sl}px)`
+        })
+      }
+    }
+    if (afterBar) {
+      const sl = afterBar.scrollLeft
+      if (sl > 0) {
+        fileContainer.querySelectorAll('.expanded-context-row .after .content-wrapper').forEach(w => {
+          ;(w as HTMLElement).style.transform = `translateX(-${sl}px)`
+        })
+      }
+    }
+  }
+
+  /**
+   * Collapse (remove) all expanded-context-row elements that belong to the
+   * same expansion group as the right-clicked row, and restore the hunk header.
+   */
+  private collapseExpandedRows(clickedRow: HTMLElement): void {
+    const inner = clickedRow.closest(
+      '.ReactVirtualized__Grid__innerScrollContainer'
+    ) as HTMLElement
+    if (!inner) return
+    const fileContainer = clickedRow.closest('[data-file-path]') as HTMLElement
+    if (!fileContainer) return
+
+    // Cancel any active shrink polling so it cannot overwrite heights
+    if (this.shrinkPollingRAF !== null) {
+      cancelAnimationFrame(this.shrinkPollingRAF)
+      this.shrinkPollingRAF = null
+    }
+
+    // Disconnect MutationObserver during DOM manipulation
+    if (this.mutationObserver) this.mutationObserver.disconnect()
+
+    try {
+      // Find the contiguous block of expanded-context-rows around clickedRow
+      const children = Array.from(inner.children) as HTMLElement[]
+      const idx = children.indexOf(clickedRow)
+      if (idx === -1) return
+
+      let startIdx = idx
+      while (startIdx > 0 && children[startIdx - 1].classList.contains('expanded-context-row')) {
+        startIdx--
+      }
+      let endIdx = idx
+      while (endIdx < children.length - 1 && children[endIdx + 1].classList.contains('expanded-context-row')) {
+        endIdx++
+      }
+
+      // The hunk header that was hidden is immediately after the block
+      const hunkWrapper = children[endIdx + 1]
+
+      // Remove all expanded-context-row elements in this block
+      for (let i = endIdx; i >= startIdx; i--) {
+        children[i].remove()
+      }
+
+      // Restore the hunk header if it was hidden
+      if (hunkWrapper && hunkWrapper.classList.contains('hunk-expanded')) {
+        hunkWrapper.classList.remove('hunk-expanded')
+        hunkWrapper.style.top = '' // will be re-positioned by repackFile
+        const btn = hunkWrapper.querySelector('.expand-context-btn') as HTMLElement
+        if (btn) btn.style.display = ''
+      }
+
+      repackFile(fileContainer)
+
+      // Re-inject boundary expand buttons (in case a bottom boundary was collapsed)
+      injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
+    } finally {
+      if (this.mutationObserver) {
+        const container = document.querySelector('.folder-compare-view')
+        if (container) {
+          this.mutationObserver.observe(container, { childList: true, subtree: true })
+        }
+      }
+    }
   }
 }

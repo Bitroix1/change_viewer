@@ -5,6 +5,8 @@
  * Callers pass the necessary state slices as arguments.
  */
 
+import * as fs from 'fs'
+import * as Path from 'path'
 import { WorkingDirectoryFileChange } from '../../models/status'
 
 // ---------------------------------------------------------------------------
@@ -58,7 +60,28 @@ export function getClaimedLineNumbers(
   return claimed
 }
 
-/** Create a @@ hunk separator DOM element. */
+/** The expand-context SVG path data (GitHub's unfold / expand icon). */
+const EXPAND_SVG_PATH =
+  'm8.177.677 2.896 2.896a.25.25 0 0 1-.177.427H8.75v1.25a.75.75 0 0 1-1.5 0V4H5.104a.25.25 0 0 1-.177-.427L7.823.677a.25.25 0 0 1 .354 0ZM7.25 10.75a.75.75 0 0 1 1.5 0V12h2.146a.25.25 0 0 1 .177.427l-2.896 2.896a.25.25 0 0 1-.354 0l-2.896-2.896A.25.25 0 0 1 5.104 12H7.25v-1.25Zm-5-2a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5ZM6 8a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1 0-1.5h.5A.75.75 0 0 1 6 8Zm2.25.75a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5ZM12 8a.75.75 0 0 1-.75.75h-.5a.75.75 0 0 1 0-1.5h.5A.75.75 0 0 1 12 8Zm2.25.75a.75.75 0 0 0 0-1.5h-.5a.75.75 0 0 0 0 1.5h.5Z'
+
+/**
+ * Build the SVG element used as the expand-context icon.
+ * Shared between component-hunk-separators and "Show All" hunk-info rows.
+ */
+export function createExpandSvg(): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', '0 0 16 16')
+  svg.setAttribute('width', '16')
+  svg.setAttribute('height', '16')
+  svg.setAttribute('fill', 'currentColor')
+  svg.classList.add('expand-context-icon')
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  path.setAttribute('d', EXPAND_SVG_PATH)
+  svg.appendChild(path)
+  return svg
+}
+
+/** Create a @@ hunk separator DOM element with an expand-context button. */
 function createSeparatorElement(): HTMLDivElement {
   const separator = document.createElement('div')
   separator.className = 'component-hunk-separator hunk-info row'
@@ -66,9 +89,26 @@ function createSeparatorElement(): HTMLDivElement {
   const expansionHandle = document.createElement('div')
   expansionHandle.className = 'hunk-expansion-handle'
   expansionHandle.style.width = '35px'
-  const placeholder = document.createElement('div')
-  placeholder.className = 'hunk-expansion-placeholder'
-  expansionHandle.appendChild(placeholder)
+  // Expand button
+  const expandBtn = document.createElement('button')
+  expandBtn.className = 'expand-context-btn'
+  expandBtn.title = 'Expand context'
+  expandBtn.appendChild(createExpandSvg())
+  expandBtn.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const sep = (e.currentTarget as HTMLElement).closest('.component-hunk-separator') as HTMLElement
+    if (sep) {
+      // Dispatch event for the view to handle both hidden-row reveal and
+      // source-file gap insertion.
+      sep.dispatchEvent(
+        new CustomEvent('expand-hunk-context', {
+          bubbles: true,
+          detail: { outerWrapper: sep, isComponentSeparator: true },
+        })
+      )
+    }
+  })
+  expansionHandle.appendChild(expandBtn)
   const contentDiv = document.createElement('div')
   contentDiv.className = 'content'
   const prefix = document.createElement('div')
@@ -287,6 +327,18 @@ export function applyComponentHighlightingForFile(
   fileContainer.querySelectorAll('.component-char-highlight').forEach(el => el.remove())
   fileContainer.querySelectorAll('.component-char-click-capture').forEach(el => el.remove())
   fileContainer.querySelectorAll('.component-hunk-separator').forEach(el => el.remove())
+  fileContainer.querySelectorAll('.expanded-context-row').forEach(el => el.remove())
+  fileContainer.querySelectorAll('.expand-boundary-bottom').forEach(el => el.remove())
+  fileContainer.querySelectorAll('.hunk-expanded').forEach(el => {
+    el.classList.remove('hunk-expanded')
+    // Restore the original top position (we pushed it off-screen)
+    const htmlEl = el as HTMLElement
+    if (htmlEl.dataset.originalTop !== undefined) {
+      htmlEl.style.top = htmlEl.dataset.originalTop
+    }
+    const btn = el.querySelector('.expand-context-btn') as HTMLElement
+    if (btn) btn.style.display = ''
+  })
   fileContainer.querySelectorAll('.component-char-filtered').forEach(el => {
     el.classList.remove('component-char-filtered')
     const cw = el.querySelector('.content-wrapper') as HTMLElement
@@ -581,7 +633,8 @@ export function applyComponentHighlightingToAll(
       Array.from(inner.children).forEach(child => {
         const row = child as HTMLElement
         const top = parseInt(row.style.top || '0', 10)
-        const h = parseInt(row.style.height || '0', 10)
+        const rawH = parseInt(row.style.height || '0', 10)
+        const h = (top >= 0 && rawH <= 0) ? 20 : rawH
         if (top >= 0) contentHeight = Math.max(contentHeight, top + h)
       })
       if (contentHeight > 0) {
@@ -610,6 +663,24 @@ export function applyComponentHighlightingToAll(
     document.querySelectorAll('.folder-compare-view .component-hunk-separator').forEach(el =>
       el.remove()
     )
+    // Remove expanded context rows (source lines injected by expand handler)
+    document.querySelectorAll('.folder-compare-view .expanded-context-row').forEach(el =>
+      el.remove()
+    )
+    // Remove boundary expand buttons (re-injected after cleanup)
+    document.querySelectorAll('.folder-compare-view .expand-boundary-bottom').forEach(el =>
+      el.remove()
+    )
+    // Restore expand buttons on hunk-info rows that were previously expanded
+    document.querySelectorAll('.folder-compare-view .hunk-expanded').forEach(el => {
+      el.classList.remove('hunk-expanded')
+      const htmlEl = el as HTMLElement
+      if (htmlEl.dataset.originalTop !== undefined) {
+        htmlEl.style.top = htmlEl.dataset.originalTop
+      }
+      const btn = el.querySelector('.expand-context-btn') as HTMLElement
+      if (btn) btn.style.display = ''
+    })
     document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(el =>
       el.classList.remove('component-file-hidden')
     )
@@ -624,4 +695,280 @@ export function applyComponentHighlightingToAll(
       handleCharHighlightClick
     )
   }
+}
+
+// ---------------------------------------------------------------------------
+// Inject expand buttons into "Show All" hunk-info rows
+// ---------------------------------------------------------------------------
+
+/**
+ * Add an expand-context button to every original git `.hunk-info` row inside
+ * the folder-compare view.  Called after diffs are rendered or after switching
+ * back to "Show All".  Idempotent — skips rows that already have one.
+ *
+ * Clicking the expand button dispatches a `expand-hunk-context` CustomEvent on
+ * the hunk-info row's outer wrapper.  The React view catches this event and
+ * loads the missing source-file lines to fill the gap between hunks.
+ */
+export function injectExpandButtonsIntoHunkInfoRows(): void {
+  document
+    .querySelectorAll(
+      '.folder-compare-view .hunk-info:not(.component-hunk-separator)'
+    )
+    .forEach(row => {
+      // Skip if already injected
+      if (row.querySelector('.expand-context-btn')) return
+
+      const handle = row.querySelector('.hunk-expansion-handle')
+      if (!handle) return
+
+      // Check if this is the first hunk-info in its file container.
+      // If the first content row after it starts at line 1 on both sides,
+      // there is nothing before it to expand — hide the button.
+      const outerWrapper = row.parentElement as HTMLElement
+      if (outerWrapper) {
+        const inner = outerWrapper.parentElement as HTMLElement
+        if (inner) {
+          const siblings = Array.from(inner.children) as HTMLElement[]
+          const myIdx = siblings.indexOf(outerWrapper)
+          // Check if this is the first hunk-info (no preceding hunk-info rows)
+          const isFirstHunk = !siblings.slice(0, myIdx).some(sib => {
+            const hi = sib.querySelector('.hunk-info:not(.component-hunk-separator)')
+            return hi !== null
+          })
+          if (isFirstHunk) {
+            // Look at the next sibling for line numbers
+            const next = siblings[myIdx + 1]
+            if (next) {
+              const nextRow = (next.querySelector('.row') as HTMLElement) ?? next
+              const beforeLabel = nextRow.querySelector('.before .line-number label')
+              const afterLabel = nextRow.querySelector('.after .line-number label')
+              const beforeLine = beforeLabel ? parseInt(beforeLabel.getAttribute('for')?.split('-')[0] || '0', 10) : 0
+              const afterLine = afterLabel ? parseInt(afterLabel.getAttribute('for')?.split('-')[0] || '0', 10) : 0
+              if (beforeLine <= 1 && afterLine <= 1) {
+                // Nothing before line 1 — hide the expand button handle
+                handle.innerHTML = ''
+                return
+              }
+            }
+          }
+        }
+      }
+
+      const btn = document.createElement('button')
+      btn.className = 'expand-context-btn'
+      btn.title = 'Expand context'
+      btn.appendChild(createExpandSvg())
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const hunkRow = (e.currentTarget as HTMLElement).closest('.hunk-info') as HTMLElement
+        if (!hunkRow) return
+        const outerWrapper = hunkRow.parentElement as HTMLElement
+        if (!outerWrapper) return
+        // Dispatch a custom event for the React view to handle
+        outerWrapper.dispatchEvent(
+          new CustomEvent('expand-hunk-context', { bubbles: true, detail: { outerWrapper } })
+        )
+      })
+
+      // Clear existing placeholder content and insert our button
+      handle.innerHTML = ''
+      handle.appendChild(btn)
+    })
+}
+
+// ---------------------------------------------------------------------------
+// Inject boundary expand buttons at the top/bottom of each file
+// ---------------------------------------------------------------------------
+
+/**
+ * For each file's inner scroll container, add an expand button element at the
+ * bottom (and re-use the first hunk-info for the top) so the user can expand
+ * to the very beginning / end of the file.
+ *
+ * The bottom element dispatches a `expand-hunk-context` CustomEvent with
+ * `isBottomBoundary: true`.  The top is already handled by the first
+ * hunk-info (hunkIndex 0).
+ *
+ * Idempotent — skips files that already have the boundary element.
+ */
+export function injectBoundaryExpandButtons(
+  beforeFolder?: string,
+  afterFolder?: string
+): void {
+  document
+    .querySelectorAll('.folder-compare-view [data-file-path]')
+    .forEach(fileContainer => {
+      const inner = fileContainer.querySelector(
+        '.ReactVirtualized__Grid__innerScrollContainer'
+      ) as HTMLElement
+      if (!inner) return
+
+      // Skip if already injected
+      if (inner.querySelector('.expand-boundary-bottom')) return
+
+      const filePath = (fileContainer as HTMLElement).dataset.filePath || ''
+
+      // --- Check if last visible lines are already at the end of file ---
+      // If so, there's nothing to expand — skip the bottom boundary entirely.
+      if (beforeFolder && afterFolder && filePath) {
+        // Find last visible line numbers in the DOM
+        const children = Array.from(inner.children) as HTMLElement[]
+        let lastBeforeLine = 0
+        let lastAfterLine = 0
+        for (let i = children.length - 1; i >= 0; i--) {
+          const el = children[i]
+          if (el.classList.contains('component-hunk-separator')) continue
+          if (el.classList.contains('expanded-context-row')) continue
+          if (parseInt(el.style.top || '0', 10) < -9999) continue
+          if (el.classList.contains('component-hidden')) continue
+          const row = (el.querySelector('.row') as HTMLElement) ?? el
+          if (lastBeforeLine === 0) {
+            const n = row.querySelector('.before .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastBeforeLine = v
+          }
+          if (lastAfterLine === 0) {
+            const n = row.querySelector('.after .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastAfterLine = v
+          }
+          if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
+        }
+
+        // Read total line counts from the source files
+        let beforeTotal = 0
+        let afterTotal = 0
+        try {
+          const content = fs.readFileSync(Path.join(beforeFolder, filePath), 'utf-8')
+          beforeTotal = content.split('\n').length
+        } catch { /* file may not exist for added files */ }
+        try {
+          const content = fs.readFileSync(Path.join(afterFolder, filePath), 'utf-8')
+          afterTotal = content.split('\n').length
+        } catch { /* file may not exist for deleted files */ }
+
+        // If last visible lines reach the end of both files, skip
+        const beforeAtEnd = beforeTotal === 0 || lastBeforeLine >= beforeTotal
+        const afterAtEnd = afterTotal === 0 || lastAfterLine >= afterTotal
+        if (beforeAtEnd && afterAtEnd) return
+      }
+
+      // Compute the current bottom position from siblings
+      let bottomPosition = 0
+      let sibRowHeight = 20
+      Array.from(inner.children).forEach(child => {
+        const row = child as HTMLElement
+        // For component-packed rows, read the authoritative --packed-top
+        // instead of inline style.top (which RV may have overwritten).
+        let top: number
+        if (row.classList.contains('component-packed')) {
+          const packedTop = row.style.getPropertyValue('--packed-top')
+          top = packedTop ? parseInt(packedTop, 10) : parseInt(row.style.top || '0', 10)
+        } else {
+          top = parseInt(row.style.top || '0', 10)
+        }
+        const h = parseInt(row.style.height || '0', 10)
+        if (top >= 0 && h > 0) {
+          bottomPosition = Math.max(bottomPosition, top + h)
+          sibRowHeight = h
+        }
+      })
+
+      // Sample the line-number gutter width from the nearest sibling row
+      let gutterWidth = ''
+      for (const sib of Array.from(inner.children) as HTMLElement[]) {
+        const ln = sib.querySelector('.line-number') as HTMLElement
+        if (ln && ln.style.width) { gutterWidth = ln.style.width; break }
+      }
+
+      // Create the bottom boundary element as a proper hunk-info row
+      // matching the structure of the top hunk-info rows.
+      const wrapper = document.createElement('div')
+      wrapper.className = 'expand-boundary-bottom'
+      wrapper.setAttribute('role', 'row')
+      wrapper.style.position = 'absolute'
+      wrapper.style.width = '100%'
+      wrapper.style.height = `${sibRowHeight}px`
+      wrapper.style.top = `${bottomPosition}px`
+      wrapper.style.left = '0px'
+
+      const hunkInfoRow = document.createElement('div')
+      hunkInfoRow.className = 'hunk-info row'
+      hunkInfoRow.setAttribute('role', 'cell')
+      hunkInfoRow.style.height = '100%'
+
+      // Expansion handle with button (left side)
+      const expansionHandle = document.createElement('div')
+      expansionHandle.className = 'hunk-expansion-handle'
+      expansionHandle.style.width = gutterWidth || '35px'
+
+      const btn = document.createElement('button')
+      btn.className = 'expand-context-btn'
+      btn.title = 'Expand to end of file'
+      btn.appendChild(createExpandSvg())
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        wrapper.dispatchEvent(
+          new CustomEvent('expand-hunk-context', {
+            bubbles: true,
+            detail: { outerWrapper: wrapper, isBottomBoundary: true },
+          })
+        )
+      })
+      expansionHandle.appendChild(btn)
+
+      // Content div (before side) with @@
+      const contentDiv = document.createElement('div')
+      contentDiv.className = 'content'
+      const prefix = document.createElement('div')
+      prefix.className = 'prefix'
+      prefix.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+      const contentWrapper = document.createElement('div')
+      contentWrapper.className = 'content-wrapper'
+      contentWrapper.textContent = '@@'
+      contentDiv.appendChild(prefix)
+      contentDiv.appendChild(contentWrapper)
+
+      // Content div (after side) with @@
+      const contentDiv2 = document.createElement('div')
+      contentDiv2.className = 'content'
+      const prefix2 = document.createElement('div')
+      prefix2.className = 'prefix'
+      prefix2.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+      const contentWrapper2 = document.createElement('div')
+      contentWrapper2.className = 'content-wrapper'
+      contentWrapper2.textContent = '@@'
+      contentDiv2.appendChild(prefix2)
+      contentDiv2.appendChild(contentWrapper2)
+
+      hunkInfoRow.appendChild(expansionHandle)
+      hunkInfoRow.appendChild(contentDiv)
+      hunkInfoRow.appendChild(contentDiv2)
+      wrapper.appendChild(hunkInfoRow)
+      inner.appendChild(wrapper)
+
+      // Grow inner container and Grid so the boundary element is not clipped
+      // by ReactVirtualized's overflow.  Only grow, never shrink.
+      const totalH = bottomPosition + sibRowHeight + 2
+      const curInnerH = parseInt(inner.style.height || '0', 10)
+      if (totalH > curInnerH) {
+        inner.style.height = `${totalH}px`
+      }
+      const grid = inner.parentElement as HTMLElement | null
+      if (grid) {
+        const curGridH = parseInt(grid.style.height || '0', 10)
+        if (totalH > curGridH) {
+          grid.style.height = `${totalH}px`
+        }
+      }
+      // Also grow the clip-wrapper so boundary is not visually clipped
+      const clipWrapper = (fileContainer as HTMLElement).querySelector('.diff-clip-wrapper') as HTMLElement | null
+      if (clipWrapper) {
+        const curClipH = parseInt(clipWrapper.style.height || '0', 10)
+        if (totalH > curClipH) {
+          clipWrapper.style.height = `${totalH}px`
+        }
+      }
+    })
 }

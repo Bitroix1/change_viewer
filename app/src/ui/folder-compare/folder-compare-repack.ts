@@ -45,6 +45,8 @@ export function repackFile(fileContainer: Element): void {
   // It is only cleared by applyComponentHighlightingToAll when 'all' is selected.
   outerWrappers.forEach(el => {
     if (el.classList.contains('component-hunk-separator')) return
+    if (el.classList.contains('expanded-context-row')) return
+    if (el.classList.contains('expand-boundary-bottom')) return
     el.classList.remove('component-packed')
     if (el.dataset.originalTop !== undefined) {
       el.style.top = el.dataset.originalTop
@@ -60,6 +62,8 @@ export function repackFile(fileContainer: Element): void {
   // switch.
   outerWrappers.forEach(el => {
     if (el.classList.contains('component-hunk-separator')) return
+    if (el.classList.contains('expanded-context-row')) return
+    if (el.classList.contains('expand-boundary-bottom')) return
     const h = parseInt(el.style.height || '0', 10)
     if (h > 0) rowHeight = h
     if (el.dataset.originalTop === undefined) {
@@ -77,7 +81,17 @@ export function repackFile(fileContainer: Element): void {
       el.style.top = `${accTop}px`
       el.style.height = `${rowHeight}px`
       accTop += rowHeight
-    } else if (el.classList.contains('component-hidden')) {
+    } else if (el.classList.contains('expanded-context-row')) {
+      // Expanded context rows have a fixed height set when created
+      const h = parseInt(el.style.height || String(rowHeight), 10)
+      el.style.top = `${accTop}px`
+      accTop += h > 0 ? h : rowHeight
+    } else if (el.classList.contains('expand-boundary-bottom')) {
+      // Bottom boundary expand button — position at the end
+      el.style.top = `${accTop}px`
+      el.style.height = `${rowHeight}px`
+      accTop += rowHeight
+    } else if (el.classList.contains('component-hidden') || el.classList.contains('hunk-expanded')) {
       el.style.top = '-99999px' // off-screen — height untouched
     } else {
       el.style.top = `${accTop}px`
@@ -95,11 +109,120 @@ export function repackFile(fileContainer: Element): void {
     }
   })
 
+  // Grow the inner scroll container so expanded rows are not clipped.
+  // ReactVirtualized sets this to its own measured total; we only grow,
+  // never shrink, to avoid interfering with its bookkeeping.
+  if (accTop > 0 && inner) {
+    const curH = parseInt(inner.style.height || '0', 10)
+    if (accTop > curH) {
+      inner.style.height = `${accTop}px`
+    }
+    // Also grow the Grid element (parent of inner) if needed.
+    const grid = inner.parentElement as HTMLElement | null
+    if (grid) {
+      const gridH = parseInt(grid.style.height || '0', 10)
+      if (accTop > gridH) {
+        grid.style.height = `${accTop}px`
+      }
+    }
+  }
+
   // Clip the visible area via diff-clip-wrapper only.
   if (accTop > 0 && clipWrapper) {
     clipWrapper.style.height = `${accTop}px`
     clipWrapper.style.overflow = 'hidden'
   }
+}
+
+// ---------------------------------------------------------------------------
+// expandHunkAtElement
+// ---------------------------------------------------------------------------
+
+/**
+ * Expand hidden context rows around a hunk separator or hunk-info row.
+ *
+ * When the user clicks the expand button on a separator, we reveal every
+ * `component-hidden` row between the clicked separator and its neighbours
+ * (previous separator above, next separator below — or the edges of the
+ * container).  The separator itself is then removed and the file is
+ * re-packed so the layout is consistent.
+ *
+ * For "Show All" hunk-info rows (which are *not* `component-hunk-separator`
+ * elements but rather the original git diff hunk headers), we expand by
+ * revealing any `component-hidden` rows adjacent to the hunk-info row.
+ * Since "Show All" does not hide rows, this is effectively a no-op there
+ * unless a component/misc view was previously active.  The main use case
+ * for "Show All" expand is when the diff itself has collapsed context
+ * (e.g. only 3 context lines between hunks) and the user wants to see the
+ * full file.  For those we simply mark the hunk-info row itself as expanded
+ * (hiding it and revealing all hidden neighbours).
+ */
+export function expandHunkAtElement(clickedEl: HTMLElement): void {
+  // Walk up to the innerScrollContainer
+  const inner = clickedEl.closest(
+    '.ReactVirtualized__Grid__innerScrollContainer'
+  ) as HTMLElement
+  if (!inner) return
+
+  const fileContainer = inner.closest('[data-file-path]') as HTMLElement
+  if (!fileContainer) return
+
+  const children = Array.from(inner.children) as HTMLElement[]
+  const clickedIdx = children.indexOf(clickedEl)
+  if (clickedIdx === -1) return
+
+  // Determine the range of children to un-hide.
+  // Walk backwards to find the previous separator (or start)
+  let startIdx = clickedIdx
+  for (let i = clickedIdx - 1; i >= 0; i--) {
+    const el = children[i]
+    if (
+      el.classList.contains('component-hunk-separator') ||
+      (el.querySelector('.row.hunk-info') !== null && el !== clickedEl) ||
+      (el.classList.contains('hunk-info') && el !== clickedEl)
+    ) {
+      break
+    }
+    startIdx = i
+  }
+
+  // Walk forward to find the next separator (or end)
+  let endIdx = clickedIdx
+  for (let i = clickedIdx + 1; i < children.length; i++) {
+    const el = children[i]
+    if (
+      el.classList.contains('component-hunk-separator') ||
+      (el.querySelector('.row.hunk-info') !== null && el !== clickedEl) ||
+      (el.classList.contains('hunk-info') && el !== clickedEl)
+    ) {
+      break
+    }
+    endIdx = i
+  }
+
+  // Reveal all hidden rows in [startIdx, endIdx]
+  for (let i = startIdx; i <= endIdx; i++) {
+    const el = children[i]
+    if (el === clickedEl) continue
+    el.classList.remove('component-hidden')
+    // Also reveal nested rows (the outer wrapper wraps a .row child)
+    el.querySelectorAll('.component-hidden').forEach(child => {
+      child.classList.remove('component-hidden')
+    })
+  }
+
+  // Remove the separator itself (if it's a component-hunk-separator)
+  if (clickedEl.classList.contains('component-hunk-separator')) {
+    clickedEl.remove()
+  } else {
+    // For "Show All" hunk-info rows, just hide the expand button to indicate expanded
+    clickedEl.classList.add('hunk-expanded')
+    const btn = clickedEl.querySelector('.expand-context-btn') as HTMLElement
+    if (btn) btn.style.display = 'none'
+  }
+
+  // Re-pack to fix absolute positions
+  repackFile(fileContainer)
 }
 
 // ---------------------------------------------------------------------------
@@ -131,11 +254,28 @@ export function shrinkWrappersToFit(): void {
     // contribute 0 to scrollHeight even though they occupy vertical space in
     // the layout.  Instead we look at each row's absolute top + height and
     // take the maximum, which is the true bottom edge of the content.
+    //
+    // For rows with the `component-packed` class, we read the authoritative
+    // `--packed-top` CSS custom property instead of the inline `style.top`.
+    // ReactVirtualized's ResizeObserver may overwrite the inline top after
+    // repackFile runs, but the CSS custom property is never touched by RV.
     let contentHeight = 0
     Array.from(inner.children).forEach(child => {
       const row = child as HTMLElement
-      const top = parseInt(row.style.top || '0', 10)
-      const h = parseInt(row.style.height || '0', 10)
+
+      // Determine the authoritative top position
+      let top: number
+      if (row.classList.contains('component-packed')) {
+        const packedTop = row.style.getPropertyValue('--packed-top')
+        top = packedTop ? parseInt(packedTop, 10) : parseInt(row.style.top || '0', 10)
+      } else {
+        top = parseInt(row.style.top || '0', 10)
+      }
+
+      // Use a 20px fallback for rows that haven't been measured yet
+      const rawH = parseInt(row.style.height || '0', 10)
+      const h = (top >= 0 && rawH <= 0) ? 20 : rawH
+
       // Skip rows that were pushed off-screen by repackFile (top = -99999px)
       if (top >= 0) {
         contentHeight = Math.max(contentHeight, top + h)
@@ -146,10 +286,25 @@ export function shrinkWrappersToFit(): void {
 
     contentHeight += 2 // small buffer for border / subpixel rounding
 
-    // Only clip the outer wrapper — leave inner/Grid heights entirely to
-    // ReactVirtualized so it can keep managing row rendering correctly.
+    // Clip the outer wrapper.
     el.style.height = `${contentHeight}px`
     el.style.overflow = 'hidden'
+
+    // Also grow the inner container and Grid so boundary expand buttons
+    // (which are not managed by ReactVirtualized) are not clipped by the
+    // inner container's overflow.  Only grow, never shrink, to avoid
+    // interfering with RV's bookkeeping.
+    const curInnerH = parseInt(inner.style.height || '0', 10)
+    if (contentHeight > curInnerH) {
+      inner.style.height = `${contentHeight}px`
+    }
+    const grid = inner.parentElement as HTMLElement | null
+    if (grid) {
+      const curGridH = parseInt(grid.style.height || '0', 10)
+      if (contentHeight > curGridH) {
+        grid.style.height = `${contentHeight}px`
+      }
+    }
   })
 }
 
@@ -212,7 +367,11 @@ export function setupScrollSync(): void {
 
     beforeBar.addEventListener('scroll', () => {
       const sl = beforeBar.scrollLeft
-      beforeContents.forEach(el => {
+      // Use a live query so dynamically-inserted expanded-context-rows are included
+      const liveContents = Array.from(
+        fileContainer.querySelectorAll('.before .content')
+      ) as HTMLElement[]
+      liveContents.forEach(el => {
         const w = el.querySelector('.content-wrapper') as HTMLElement
         if (w) w.style.transform = `translateX(-${sl}px)`
       })
@@ -220,7 +379,10 @@ export function setupScrollSync(): void {
 
     afterBar.addEventListener('scroll', () => {
       const sl = afterBar.scrollLeft
-      afterContents.forEach(el => {
+      const liveContents = Array.from(
+        fileContainer.querySelectorAll('.after .content')
+      ) as HTMLElement[]
+      liveContents.forEach(el => {
         const w = el.querySelector('.content-wrapper') as HTMLElement
         if (w) w.style.transform = `translateX(-${sl}px)`
       })

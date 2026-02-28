@@ -306,6 +306,12 @@ export class FolderCompareView extends React.Component<
                     )
                   })
                 })()}
+                <div style={{
+                  position: 'sticky',
+                  bottom: 0,
+                  paddingTop: '14px',
+                  backgroundColor: 'var(--box-alt-background-color)',
+                }}>
                 <label style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -313,9 +319,6 @@ export class FolderCompareView extends React.Component<
                   cursor: 'pointer',
                   padding: '8px',
                   borderRadius: '4px',
-                  marginTop: '6px',
-                  position: 'sticky',
-                  bottom: 0,
                   backgroundColor: this.state.selectedComponent === 'misc' ? 'var(--box-border-color)' : 'var(--background-color)'
                 }}>
                   <input
@@ -327,6 +330,7 @@ export class FolderCompareView extends React.Component<
                   />
                   <span style={{ fontSize: '13px' }}>Miscellaneous</span>
                 </label>
+                </div>
                 </div>
               </div>
               {/* Vertical resize handle between top and bottom of left panel */}
@@ -2109,9 +2113,7 @@ export class FolderCompareView extends React.Component<
     }
 
     this.clearSearchHighlight()
-    if (this.folderSearchIndex >= 0) {
-      this.highlightSearchMatch(this.folderSearchIndex)
-    }
+    this.highlightAllSearchMatches()
     this.updateSearchCountDisplay()
   }
 
@@ -2212,69 +2214,102 @@ export class FolderCompareView extends React.Component<
   }
 
   /**
-   * Highlight the Nth occurrence of the search query inside the content-wrapper
-   * on the given side by wrapping it in a <mark> element with an orange
-   * background.  Only the word itself is highlighted, not the whole line.
+   * Highlight ALL occurrences of the search query across all visible diff rows.
+   * Every match gets an orange background; the currently-selected match
+   * (folderSearchIndex) gets a light-blue background instead.
    */
-  private highlightSearchMatch(index: number): void {
-    const match = this.folderSearchMatches[index]
-    if (!match) return
-    const { row, side, occurrence } = match
-    this.scrollIntoViewIfNeeded(row, 'center')
-
-    const cw = row.querySelector(`.${side} .content-wrapper`) as HTMLElement
-    if (!cw) return
+  private highlightAllSearchMatches(): void {
+    if (this.folderSearchMatches.length === 0) return
 
     const query = this.folderSearchQuery.toLowerCase()
     const queryLen = this.folderSearchQuery.length
 
-    // Walk text nodes (same filter as getSearchableText) and find the
-    // Nth (occurrence) match of the query string.
-    const walker = document.createTreeWalker(
-      cw,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: (node) => {
-          const parent = node.parentElement
-          if (!parent) return NodeFilter.FILTER_REJECT
-          if (
-            parent.classList.contains('component-char-highlight') ||
-            parent.classList.contains('component-char-click-capture') ||
-            parent.classList.contains('component-hunk-separator')
-          ) {
-            return NodeFilter.FILTER_REJECT
-          }
-          return NodeFilter.FILTER_ACCEPT
-        },
+    // Group matches by (row + side) so we can walk each content-wrapper once.
+    const groups = new Map<string, { row: HTMLElement; side: 'before' | 'after'; occurrences: number[]; globalIndices: number[] }>()
+    this.folderSearchMatches.forEach((m, globalIdx) => {
+      const key = `${(m.row as any).__searchGroupId ?? (((m.row as any).__searchGroupId = Math.random()), (m.row as any).__searchGroupId)}-${m.side}`
+      let g = groups.get(key)
+      if (!g) {
+        g = { row: m.row, side: m.side, occurrences: [], globalIndices: [] }
+        groups.set(key, g)
       }
-    )
+      g.occurrences.push(m.occurrence)
+      g.globalIndices.push(globalIdx)
+    })
 
-    let seen = 0
-    let textNode: Text | null
-    while ((textNode = walker.nextNode() as Text | null)) {
-      const nodeText = textNode.textContent || ''
-      let searchFrom = 0
-      while (true) {
-        const idx = nodeText.toLowerCase().indexOf(query, searchFrom)
-        if (idx === -1) break
-        if (seen === occurrence) {
-          // Split the text node and wrap the match in a <mark>
-          const matchStart = textNode.splitText(idx)
-          const afterMatch = matchStart.splitText(queryLen)
-          void afterMatch // stays in DOM
+    // Scroll the current match into view
+    if (this.folderSearchIndex >= 0) {
+      const currentMatch = this.folderSearchMatches[this.folderSearchIndex]
+      if (currentMatch) {
+        this.scrollIntoViewIfNeeded(currentMatch.row, 'center')
+      }
+    }
 
-          const mark = document.createElement('mark')
-          mark.className = 'folder-search-mark'
-          mark.style.backgroundColor = 'rgba(255, 165, 0, 0.6)'
-          mark.style.color = 'inherit'
-          mark.style.borderRadius = '2px'
-          mark.style.padding = '0'
-          mark.textContent = matchStart.textContent
-          matchStart.parentNode!.replaceChild(mark, matchStart)
-          return
+    for (const group of groups.values()) {
+      const cw = group.row.querySelector(`.${group.side} .content-wrapper`) as HTMLElement
+      if (!cw) continue
+
+      // Collect all text-node ranges to wrap, ordered by document position.
+      // We process in reverse so earlier splits don't invalidate later offsets.
+      const toWrap: Array<{ textNode: Text; idx: number; globalIndex: number }> = []
+
+      const occurrenceSet = new Set(group.occurrences)
+      const occToGlobal = new Map<number, number>()
+      group.occurrences.forEach((occ, i) => occToGlobal.set(occ, group.globalIndices[i]))
+
+      const walker = document.createTreeWalker(
+        cw,
+        NodeFilter.SHOW_TEXT,
+        {
+          acceptNode: (node) => {
+            const parent = node.parentElement
+            if (!parent) return NodeFilter.FILTER_REJECT
+            if (
+              parent.classList.contains('component-char-highlight') ||
+              parent.classList.contains('component-char-click-capture') ||
+              parent.classList.contains('component-hunk-separator')
+            ) {
+              return NodeFilter.FILTER_REJECT
+            }
+            return NodeFilter.FILTER_ACCEPT
+          },
         }
-        seen++
-        searchFrom = idx + queryLen
+      )
+
+      let seen = 0
+      let textNode: Text | null
+      while ((textNode = walker.nextNode() as Text | null)) {
+        const nodeText = textNode.textContent || ''
+        let searchFrom = 0
+        while (true) {
+          const pos = nodeText.toLowerCase().indexOf(query, searchFrom)
+          if (pos === -1) break
+          if (occurrenceSet.has(seen)) {
+            toWrap.push({ textNode, idx: pos, globalIndex: occToGlobal.get(seen)! })
+          }
+          seen++
+          searchFrom = pos + queryLen
+        }
+      }
+
+      // Process in reverse to keep offsets stable
+      for (let i = toWrap.length - 1; i >= 0; i--) {
+        const { textNode: tn, idx, globalIndex } = toWrap[i]
+        const matchStart = tn.splitText(idx)
+        const afterMatch = matchStart.splitText(queryLen)
+        void afterMatch
+
+        const mark = document.createElement('mark')
+        mark.className = 'folder-search-mark'
+        const isCurrent = globalIndex === this.folderSearchIndex
+        mark.style.backgroundColor = isCurrent
+          ? 'rgba(100, 180, 255, 0.7)'
+          : 'rgba(255, 165, 0, 0.6)'
+        mark.style.color = 'inherit'
+        mark.style.borderRadius = '2px'
+        mark.style.padding = '0'
+        mark.textContent = matchStart.textContent
+        matchStart.parentNode!.replaceChild(mark, matchStart)
       }
     }
   }

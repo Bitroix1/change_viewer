@@ -303,6 +303,32 @@ export function computeComponentHunkRanges(
 // ---------------------------------------------------------------------------
 
 /**
+ * Convert a 0-based character column to a visual column, expanding tabs
+ * to the next tab-stop boundary.  Needed because JDT counts tabs as 1 char
+ * but the browser renders them at CSS `tab-size` width.
+ */
+function charColToVisualCol(
+  text: string,
+  charCol: number,
+  tabSize: number
+): number {
+  let visual = 0
+  const len = Math.min(charCol, text.length)
+  for (let i = 0; i < len; i++) {
+    if (text[i] === '\t') {
+      visual = Math.floor(visual / tabSize + 1) * tabSize
+    } else {
+      visual++
+    }
+  }
+  // If charCol extends beyond text length, add remainder 1:1
+  if (charCol > text.length) {
+    visual += charCol - text.length
+  }
+  return visual
+}
+
+/**
  * Add absolutely-positioned overlay spans on a `content-wrapper` element to
  * highlight specific character column ranges.  Uses monospace `ch` units.
  *
@@ -319,6 +345,11 @@ export function addCharHighlights(
   contentWrapper.style.position = 'relative'
   contentWrapper.style.zIndex = '0' // stacking context so z-index:-1 overlays sit below text
 
+  // Read actual line text + CSS tab-size for tab-aware overlay positioning.
+  const lineText = contentWrapper.textContent || ''
+  const computedTabSize =
+    parseInt(getComputedStyle(contentWrapper).tabSize, 10) || 8
+
   const highlightClass =
     side === 'before'
       ? 'component-char-highlight component-highlight-delete'
@@ -331,17 +362,21 @@ export function addCharHighlights(
     if (seen.has(key)) continue
     seen.add(key)
 
+    // Convert character columns to visual columns (tab expansion)
+    const visualStart = charColToVisualCol(lineText, range.startCol, computedTabSize)
+    const visualEnd = charColToVisualCol(lineText, range.endCol, computedTabSize)
+
     const overlay = document.createElement('span')
     overlay.className = highlightClass
-    overlay.style.left = `${range.startCol}ch`
-    overlay.style.width = `${range.endCol - range.startCol}ch`
+    overlay.style.left = `${visualStart}ch`
+    overlay.style.width = `${visualEnd - visualStart}ch`
     contentWrapper.appendChild(overlay)
 
     const clickCapture = document.createElement('span')
     clickCapture.className = 'component-char-click-capture'
     clickCapture.style.position = 'absolute'
-    clickCapture.style.left = `${range.startCol}ch`
-    clickCapture.style.width = `${range.endCol - range.startCol}ch`
+    clickCapture.style.left = `${visualStart}ch`
+    clickCapture.style.width = `${visualEnd - visualStart}ch`
     clickCapture.style.top = '0'
     clickCapture.style.bottom = '0'
     clickCapture.style.zIndex = '2'

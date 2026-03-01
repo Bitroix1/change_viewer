@@ -436,8 +436,17 @@ export class FolderCompareView extends React.Component<
                     borderTopLeftRadius: '6px',
                     borderTopRightRadius: '6px'
                   }}>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '14px', fontWeight: 600 }}>
-                      {file.path}
+                    <h3 style={{
+                      margin: '0 0 5px 0',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      direction: 'rtl',
+                      textAlign: 'left',
+                    }}>
+                      <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{file.path}</span>
                     </h3>
                     <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
                       {this.getStatusLabel(file.status.kind)}

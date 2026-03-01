@@ -5,6 +5,48 @@
  * Callers pass the necessary state slices as arguments.
  */
 
+/**
+ * Strip `cm-diff-delete-inner` / `cm-diff-add-inner` classes from all spans
+ * inside `container`, so that the SCSS rule
+ *   `.cm-s-default .cm-diff-delete-inner { color: ... !important }`
+ * no longer matches. A data attribute records the removed class so
+ * `restoreDiffInnerClasses` can put it back during cleanup.
+ */
+function stripDiffInnerClasses(container: HTMLElement): void {
+  container
+    .querySelectorAll('.cm-diff-delete-inner, .cm-diff-add-inner')
+    .forEach(el => {
+      const classes: string[] = []
+      if (el.classList.contains('cm-diff-delete-inner')) {
+        classes.push('cm-diff-delete-inner')
+        el.classList.remove('cm-diff-delete-inner')
+      }
+      if (el.classList.contains('cm-diff-add-inner')) {
+        classes.push('cm-diff-add-inner')
+        el.classList.remove('cm-diff-add-inner')
+      }
+      if (classes.length > 0) {
+        ;(el as HTMLElement).dataset.diffInnerSaved = classes.join(' ')
+      }
+    })
+}
+
+/**
+ * Restore `cm-diff-delete-inner` / `cm-diff-add-inner` classes that were
+ * removed by `stripDiffInnerClasses`.
+ */
+function restoreDiffInnerClasses(container: HTMLElement): void {
+  container
+    .querySelectorAll('[data-diff-inner-saved]')
+    .forEach(el => {
+      const saved = (el as HTMLElement).dataset.diffInnerSaved
+      if (saved) {
+        saved.split(' ').forEach(cls => el.classList.add(cls))
+        delete (el as HTMLElement).dataset.diffInnerSaved
+      }
+    })
+}
+
 import * as fs from 'fs'
 import * as Path from 'path'
 import { WorkingDirectoryFileChange } from '../../models/status'
@@ -263,6 +305,10 @@ export function computeComponentHunkRanges(
 /**
  * Add absolutely-positioned overlay spans on a `content-wrapper` element to
  * highlight specific character column ranges.  Uses monospace `ch` units.
+ *
+ * Also walks the inline text nodes / cm-* spans and wraps characters that
+ * fall within a highlight range with `<span class="component-char-white">`
+ * so they render in white on top of the bright overlay.
  */
 export function addCharHighlights(
   contentWrapper: HTMLElement,
@@ -306,6 +352,109 @@ export function addCharHighlights(
     clickCapture.addEventListener('mousedown', handleCharHighlightClick)
     contentWrapper.appendChild(clickCapture)
   }
+
+  // --- White-out text within highlight ranges ---
+  // Build a merged list of highlighted columns for quick lookup.
+  const highlightedCols = new Set<number>()
+  for (const range of ranges) {
+    for (let c = range.startCol; c < range.endCol; c++) {
+      highlightedCols.add(c)
+    }
+  }
+  if (highlightedCols.size === 0) return
+
+  // Walk only the original inline children (text nodes + cm-* spans).
+  // Skip the absolutely-positioned overlays / click-capture spans.
+  const inlineNodes: Node[] = []
+  for (const child of Array.from(contentWrapper.childNodes)) {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      const el = child as HTMLElement
+      if (
+        el.classList.contains('component-char-highlight') ||
+        el.classList.contains('component-char-click-capture')
+      ) {
+        continue
+      }
+    }
+    inlineNodes.push(child)
+  }
+
+  let charOffset = 0
+  for (const node of inlineNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      charOffset = whiteOutTextNode(
+        node as Text,
+        charOffset,
+        highlightedCols,
+        contentWrapper
+      )
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // cm-* span — process its child text nodes
+      const el = node as HTMLElement
+      const textChildren = Array.from(el.childNodes).filter(
+        c => c.nodeType === Node.TEXT_NODE
+      ) as Text[]
+      for (const textChild of textChildren) {
+        charOffset = whiteOutTextNode(
+          textChild,
+          charOffset,
+          highlightedCols,
+          el
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Split a text node so that characters within `highlightedCols` are wrapped
+ * in `<span class="component-char-white">`.  Returns the updated charOffset.
+ */
+function whiteOutTextNode(
+  textNode: Text,
+  startOffset: number,
+  highlightedCols: Set<number>,
+  parent: Node
+): number {
+  const text = textNode.textContent || ''
+  if (text.length === 0) return startOffset
+
+  // Build runs of consecutive highlighted / non-highlighted characters.
+  const runs: Array<{ start: number; end: number; highlighted: boolean }> = []
+  let runStart = 0
+  let runHighlighted = highlightedCols.has(startOffset)
+  for (let i = 0; i < text.length; i++) {
+    const col = startOffset + i
+    const isHL = highlightedCols.has(col)
+    if (isHL !== runHighlighted) {
+      runs.push({ start: runStart, end: i, highlighted: runHighlighted })
+      runStart = i
+      runHighlighted = isHL
+    }
+  }
+  runs.push({ start: runStart, end: text.length, highlighted: runHighlighted })
+
+  // If the entire text is non-highlighted, nothing to do.
+  if (runs.length === 1 && !runs[0].highlighted) {
+    return startOffset + text.length
+  }
+
+  // Replace the text node with a mix of plain text and white spans.
+  const frag = document.createDocumentFragment()
+  for (const run of runs) {
+    const slice = text.substring(run.start, run.end)
+    if (run.highlighted) {
+      const span = document.createElement('span')
+      span.className = 'component-char-white'
+      span.textContent = slice
+      frag.appendChild(span)
+    } else {
+      frag.appendChild(document.createTextNode(slice))
+    }
+  }
+  parent.replaceChild(frag, textNode)
+
+  return startOffset + text.length
 }
 
 // ---------------------------------------------------------------------------
@@ -326,6 +475,15 @@ export function applyComponentHighlightingForFile(
   // --- cleanup previous state ---
   fileContainer.querySelectorAll('.component-char-highlight').forEach(el => el.remove())
   fileContainer.querySelectorAll('.component-char-click-capture').forEach(el => el.remove())
+  // Unwrap white-text spans back to plain text nodes
+  fileContainer.querySelectorAll('.component-char-white').forEach(el => {
+    const parent = el.parentNode
+    if (parent) {
+      const text = document.createTextNode(el.textContent || '')
+      parent.replaceChild(text, el)
+      parent.normalize() // merge adjacent text nodes
+    }
+  })
   fileContainer.querySelectorAll('.component-hunk-separator').forEach(el => el.remove())
   fileContainer.querySelectorAll('.expanded-context-row').forEach(el => el.remove())
   fileContainer.querySelectorAll('.expand-boundary-bottom').forEach(el => el.remove())
@@ -359,6 +517,10 @@ export function applyComponentHighlightingForFile(
   fileContainer.querySelectorAll('.component-filtered-side').forEach(el =>
     el.classList.remove('component-filtered-side')
   )
+
+  // Restore cm-diff-delete-inner / cm-diff-add-inner classes that were
+  // stripped during component highlighting
+  restoreDiffInnerClasses(fileContainer as HTMLElement)
 
   // ── Miscellaneous mode: show changed rows NOT in any component ───────────
   if (selectedComponent === 'misc') {
@@ -552,9 +714,11 @@ export function applyComponentHighlightingForFile(
         beforeSide.classList.add('component-char-filtered')
         const cw = beforeSide.querySelector('.content-wrapper') as HTMLElement
         if (cw) addCharHighlights(cw, beforeRangesForLine, 'before', handleCharHighlightClick)
+        stripDiffInnerClasses(beforeSide)
       } else {
         beforeSide.classList.add('component-filtered-side')
         beforeSide.classList.remove('component-char-filtered')
+        stripDiffInnerClasses(beforeSide)
       }
     }
 
@@ -564,14 +728,17 @@ export function applyComponentHighlightingForFile(
         afterSide.classList.add('component-char-filtered')
         const cw = afterSide.querySelector('.content-wrapper') as HTMLElement
         if (cw) addCharHighlights(cw, afterRangesForLine, 'after', handleCharHighlightClick)
+        stripDiffInnerClasses(afterSide)
       } else {
         afterSide.classList.add('component-filtered-side')
         afterSide.classList.remove('component-char-filtered')
+        stripDiffInnerClasses(afterSide)
       }
     }
 
     if (!beforeRangesForLine && !afterRangesForLine) {
       htmlRow.classList.add('component-filtered')
+      stripDiffInnerClasses(htmlRow)
     } else {
       htmlRow.classList.remove('component-filtered')
     }
@@ -654,12 +821,25 @@ export function applyComponentHighlightingToAll(
       side.classList.remove('component-filtered-side')
       side.classList.remove('component-char-filtered')
     })
+    // Restore cm-diff-delete-inner / cm-diff-add-inner classes stripped
+    // during component highlighting (global cleanup path)
+    document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fc =>
+      restoreDiffInnerClasses(fc as HTMLElement)
+    )
     document.querySelectorAll('.folder-compare-view .component-char-highlight').forEach(el =>
       el.remove()
     )
     document.querySelectorAll('.folder-compare-view .component-char-click-capture').forEach(el =>
       el.remove()
     )
+    document.querySelectorAll('.folder-compare-view .component-char-white').forEach(el => {
+      const parent = el.parentNode
+      if (parent) {
+        const text = document.createTextNode(el.textContent || '')
+        parent.replaceChild(text, el)
+        parent.normalize()
+      }
+    })
     document.querySelectorAll('.folder-compare-view .component-hunk-separator').forEach(el =>
       el.remove()
     )
@@ -774,6 +954,42 @@ export function injectExpandButtonsIntoHunkInfoRows(): void {
       // Clear existing placeholder content and insert our button
       handle.innerHTML = ''
       handle.appendChild(btn)
+
+      // Replace the single React-rendered .content div with two .content
+      // divs (before-side @@ and after-side @@) matching the structure of
+      // component-hunk-separators and boundary expand buttons.
+      const existingContent = row.querySelector('.content')
+      if (existingContent) {
+        existingContent.remove()
+
+        const contentDiv = document.createElement('div')
+        contentDiv.className = 'content'
+        const prefix = document.createElement('div')
+        prefix.className = 'prefix'
+        prefix.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        const contentWrapper = document.createElement('div')
+        contentWrapper.className = 'content-wrapper'
+        contentWrapper.textContent = '@@'
+        contentDiv.appendChild(prefix)
+        contentDiv.appendChild(contentWrapper)
+
+        const contentDiv2 = document.createElement('div')
+        contentDiv2.className = 'content'
+        contentDiv2.style.display = 'flex'
+        const prefix2 = document.createElement('div')
+        prefix2.className = 'prefix'
+        prefix2.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        const contentWrapper2 = document.createElement('div')
+        contentWrapper2.className = 'content-wrapper'
+        contentWrapper2.textContent = '@@       '
+        contentWrapper2.style.flex = '1'
+        contentWrapper2.style.textAlign = 'right'
+        contentDiv2.appendChild(prefix2)
+        contentDiv2.appendChild(contentWrapper2)
+
+        row.appendChild(contentDiv)
+        row.appendChild(contentDiv2)
+      }
     })
 }
 

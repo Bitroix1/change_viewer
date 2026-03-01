@@ -11,6 +11,9 @@ import { Diff } from '../diff'
 import { Repository } from '../../models/repository'
 import { DiffSearchInput } from '../diff/diff-search-input'
 import { showContextualMenu } from '../../lib/menu-item'
+import { IFileContents } from '../diff/syntax-highlighting'
+import { highlight } from '../../lib/highlighter/worker'
+import { ITokens, ILineTokens } from '../../lib/highlighter/types'
 
 // -- Helper modules ----------------------------------------------------------
 import {
@@ -78,6 +81,7 @@ interface IFolderCompareViewState {
   readonly rightPanelWidth: number
   readonly leftTopFraction: number
   readonly isSearching: boolean
+  readonly fileContentsMap: Map<string, IFileContents>
 }
 
 export class FolderCompareView extends React.Component<
@@ -106,6 +110,7 @@ export class FolderCompareView extends React.Component<
       rightPanelWidth: DEFAULT_RIGHT_PANEL_WIDTH,
       leftTopFraction: DEFAULT_LEFT_TOP_FRACTION,
       isSearching: false,
+      fileContentsMap: new Map(),
     }
   }
 
@@ -501,7 +506,7 @@ export class FolderCompareView extends React.Component<
           readOnly={true}
           file={file}
           diff={diff}
-          fileContents={null}
+          fileContents={this.state.fileContentsMap.get(file.id) ?? null}
           imageDiffType={ImageDiffType.TwoUp}
           hideWhitespaceInDiff={false}
           showSideBySideDiff={true}
@@ -592,7 +597,7 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-filtered .cm-diff-add-inner,
           .folder-compare-view .component-filtered-side .cm-diff-delete-inner,
           .folder-compare-view .component-filtered-side .cm-diff-add-inner {
-            color: var(--diff-text-color) !important;
+            color: inherit !important;
           }
           
           .folder-compare-view .component-filtered .diff-line-gutter,
@@ -656,6 +661,10 @@ export class FolderCompareView extends React.Component<
           }
           .folder-compare-view .component-highlight-delete {
             background-color: var(--diff-delete-inner-background-color);
+          }
+          /* White text for characters sitting on top of a bright highlight */
+          .folder-compare-view .component-char-white {
+            color: #fff !important;
           }
 
           /* content-wrapper stacking context is created in addCharHighlights
@@ -756,6 +765,25 @@ export class FolderCompareView extends React.Component<
           }
 
           /* ── Expand-context button on hunk separators / hunk-info rows ── */
+          .folder-compare-view .hunk-expansion-handle {
+            /* Override SCSS button styles so the handle and button are the
+               same size and the entire area is clickable. */
+            height: 20px !important;
+            box-sizing: border-box !important;
+            padding: 0 !important;
+            cursor: pointer;
+          }
+          .folder-compare-view .hunk-expansion-handle button {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          /* Force hunk-info rows to exactly 20px so they match normal rows */
+          .folder-compare-view .hunk-info.row {
+            height: 20px !important;
+            line-height: 20px !important;
+          }
           .folder-compare-view .expand-context-btn {
             display: flex;
             align-items: center;
@@ -770,8 +798,10 @@ export class FolderCompareView extends React.Component<
             margin: 0;
           }
           .folder-compare-view .expand-context-btn:hover {
-            background: var(--diff-hover-background-color);
-            color: var(--diff-hover-text-color);
+            background: transparent;
+          }
+          .folder-compare-view .hunk-expansion-handle:hover {
+            background: rgba(27, 125, 237, 0.85) !important;
           }
           .folder-compare-view .expand-context-icon {
             pointer-events: none;
@@ -857,31 +887,13 @@ export class FolderCompareView extends React.Component<
             width: 100%;
           }
 
-          /* ── "Show All" hunk-info rows: replace full header text with @@  @@ ── */
-          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content-wrapper {
-            visibility: hidden;
-          }
+          /* ── "Show All" hunk-info rows: hide the original React-rendered
+               content-wrapper since injectExpandButtonsIntoHunkInfoRows
+               replaces it with two @@-content divs matching the separator
+               structure. For rows not yet injected, keep them invisible. ── */
           .folder-compare-view .hunk-info:not(.component-hunk-separator) .content {
             display: flex;
             align-items: center;
-          }
-          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content::before {
-            content: '@@';
-            visibility: visible;
-            flex: 1;
-            text-align: left;
-            color: var(--diff-hunk-text-color);
-            font-family: var(--font-family-monospace);
-            padding-left: 4px;
-          }
-          .folder-compare-view .hunk-info:not(.component-hunk-separator) .content::after {
-            content: '@@';
-            visibility: visible;
-            flex: 1;
-            text-align: right;
-            color: var(--diff-hunk-text-color);
-            font-family: var(--font-family-monospace);
-            padding-right: 40px;
           }
 
           /* Hide file containers that have no component changes.
@@ -1049,6 +1061,7 @@ export class FolderCompareView extends React.Component<
             (el.classList.contains('component-hunk-separator') ||
              el.classList.contains('component-char-highlight') ||
              el.classList.contains('component-char-click-capture') ||
+             el.classList.contains('component-char-white') ||
              el.classList.contains('folder-search-mark') ||
              el.classList.contains('expand-context-btn') ||
              el.classList.contains('expand-context-icon') ||
@@ -1192,7 +1205,7 @@ export class FolderCompareView extends React.Component<
           )
           if (fc) repackFile(fc)
         }
-        // Inject boundary expand buttons at bottom of each file (component mode)
+        // Inject boundary expand buttons at bottom of each file (component mode only)
         injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
       }
 
@@ -1750,6 +1763,17 @@ export class FolderCompareView extends React.Component<
         isLoadingDiffs: true,
       })
 
+      // Build file contents map FIRST so syntax highlighting tokens are
+      // available before any diff renders.  loadAllDiffs fires incremental
+      // setState calls via onProgress, and each of those triggers a render
+      // — if fileContentsMap isn't in state yet the diff appears unstyled.
+      const fileContentsMap = await this.buildFileContentsMap(
+        beforeFolder,
+        afterFolder,
+        fileChanges
+      )
+      this.setState({ fileContentsMap })
+
       await loadAllDiffs(
         beforeFolder,
         afterFolder,
@@ -1762,6 +1786,58 @@ export class FolderCompareView extends React.Component<
       console.error('Error comparing folders:', error)
       this.setState({ isLoading: false, isLoadingDiffs: false })
     }
+  }
+
+  /** Maximum bytes to read per file for syntax highlighting (256 KB). */
+  private static readonly MaxHighlightContentLength = 256 * 1024
+
+  /**
+   * Read old/new file contents from disk and build IFileContents entries
+   * so the Diff component can run its normal syntax-highlighting pipeline.
+   */
+  private async buildFileContentsMap(
+    beforeFolder: string,
+    afterFolder: string,
+    fileChanges: ReadonlyArray<WorkingDirectoryFileChange>
+  ): Promise<Map<string, IFileContents>> {
+    const max = FolderCompareView.MaxHighlightContentLength
+
+    const readFile = async (filePath: string): Promise<ReadonlyArray<string>> => {
+      try {
+        const buf = await FSPromises.readFile(filePath)
+        const text = buf.slice(0, max).toString('utf8')
+        return text.split(/\r?\n/)
+      } catch {
+        return []
+      }
+    }
+
+    const map = new Map<string, IFileContents>()
+
+    await Promise.all(
+      fileChanges.map(async file => {
+        const oldPath = Path.join(beforeFolder, file.path)
+        const newPath = Path.join(afterFolder, file.path)
+
+        const isNew = file.status.kind === AppFileStatusKind.New ||
+                      file.status.kind === AppFileStatusKind.Untracked
+        const isDeleted = file.status.kind === AppFileStatusKind.Deleted
+
+        const [oldContents, newContents] = await Promise.all([
+          isNew ? Promise.resolve([]) : readFile(oldPath),
+          isDeleted ? Promise.resolve([]) : readFile(newPath),
+        ])
+
+        map.set(file.id, {
+          file,
+          oldContents,
+          newContents,
+          canBeExpanded: false,
+        })
+      })
+    )
+
+    return map
   }
 
   private onComponentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -2625,10 +2701,9 @@ export class FolderCompareView extends React.Component<
       if (isBottomBoundary) {
         // Remove the bottom boundary expand button
         outerWrapper.remove()
-      } else if (isComponentSeparator) {
-        outerWrapper.remove()
       } else {
-        // Hide the entire hunk-info wrapper (not just the expand button)
+        // Hide the hunk header (component separator or Show All hunk-info)
+        // so collapseExpandedRows can restore it later.
         outerWrapper.classList.add('hunk-expanded')
         outerWrapper.style.top = '-99999px'
       }
@@ -2640,6 +2715,19 @@ export class FolderCompareView extends React.Component<
 
       // Sync expanded rows with current horizontal scroll position
       this.syncExpandedRowsScroll(fileContainer)
+
+      // Apply syntax highlighting to the newly inserted rows.
+      // We await so the observer is still disconnected during DOM changes.
+      await this.highlightExpandedRows(
+        fileContainer,
+        filePath,
+        beforeLines,
+        afterLines,
+        beforeMissStart,
+        beforeMissEnd,
+        afterMissStart,
+        afterMissEnd
+      ).catch(() => {})
     } finally {
       if (this.mutationObserver) {
         const container = document.querySelector('.folder-compare-view')
@@ -2768,6 +2856,125 @@ export class FolderCompareView extends React.Component<
         fileContainer.querySelectorAll('.expanded-context-row .after .content-wrapper').forEach(w => {
           ;(w as HTMLElement).style.transform = `translateX(-${sl}px)`
         })
+      }
+    }
+  }
+
+  /**
+   * Apply syntax highlighting tokens to a content-wrapper DOM element.
+   * Replaces the plain text node with a series of `<span class="cm-*">` elements.
+   */
+  private applyTokensToContentWrapper(
+    contentWrapper: HTMLElement,
+    lineTokens: ILineTokens
+  ): void {
+    const text = contentWrapper.textContent || ''
+    if (!text) return
+
+    // Build sorted list of token start positions
+    const positions = Object.keys(lineTokens)
+      .map(Number)
+      .sort((a, b) => a - b)
+
+    if (positions.length === 0) return
+
+    contentWrapper.textContent = ''
+    let cursor = 0
+
+    for (const pos of positions) {
+      const token = lineTokens[pos]
+      if (!token || token.length === 0) continue
+
+      // Plain text before this token
+      if (pos > cursor) {
+        contentWrapper.appendChild(
+          document.createTextNode(text.substring(cursor, pos))
+        )
+      }
+
+      // The token span
+      const end = Math.min(pos + token.length, text.length)
+      const span = document.createElement('span')
+      span.className = token.token
+        .split(' ')
+        .map(t => `cm-${t}`)
+        .join(' ')
+      span.textContent = text.substring(pos, end)
+      contentWrapper.appendChild(span)
+      cursor = end
+    }
+
+    // Trailing plain text
+    if (cursor < text.length) {
+      contentWrapper.appendChild(
+        document.createTextNode(text.substring(cursor))
+      )
+    }
+  }
+
+  /**
+   * Run syntax highlighting on expanded context rows for a specific file.
+   * Reads file contents from the fileContentsMap, calls the highlight worker,
+   * then applies tokens to each expanded row's content-wrappers.
+   */
+  private async highlightExpandedRows(
+    fileContainer: HTMLElement,
+    filePath: string,
+    beforeLines: string[],
+    afterLines: string[],
+    beforeMissStart: number,
+    beforeMissEnd: number,
+    afterMissStart: number,
+    afterMissEnd: number
+  ): Promise<void> {
+    const basename = Path.basename(filePath)
+    const extension = Path.extname(filePath)
+    const tabSize = 4
+
+    // Build line filters for the ranges we need
+    const beforeLineFilter: number[] = []
+    for (let i = beforeMissStart; i <= beforeMissEnd; i++) {
+      if (i > 0 && i <= beforeLines.length) beforeLineFilter.push(i - 1)
+    }
+    const afterLineFilter: number[] = []
+    for (let i = afterMissStart; i <= afterMissEnd; i++) {
+      if (i > 0 && i <= afterLines.length) afterLineFilter.push(i - 1)
+    }
+
+    // Run highlighting in parallel for both sides
+    const [beforeTokens, afterTokens] = await Promise.all([
+      beforeLineFilter.length > 0
+        ? highlight(beforeLines, basename, extension, tabSize, beforeLineFilter)
+            .catch(() => ({} as ITokens))
+        : Promise.resolve({} as ITokens),
+      afterLineFilter.length > 0
+        ? highlight(afterLines, basename, extension, tabSize, afterLineFilter)
+            .catch(() => ({} as ITokens))
+        : Promise.resolve({} as ITokens),
+    ])
+
+    // Apply tokens to each expanded-context-row in this file container
+    const expandedRows = fileContainer.querySelectorAll('.expanded-context-row')
+    for (const row of Array.from(expandedRows)) {
+      // Before side
+      const beforeLabel = row.querySelector('.before .line-number label')
+      if (beforeLabel) {
+        const forAttr = beforeLabel.getAttribute('for') || ''
+        const lineNum = parseInt(forAttr.split('-')[0], 10)
+        if (!isNaN(lineNum) && beforeTokens[lineNum - 1]) {
+          const cw = row.querySelector('.before .content-wrapper') as HTMLElement
+          if (cw) this.applyTokensToContentWrapper(cw, beforeTokens[lineNum - 1])
+        }
+      }
+      // After side
+      const afterLabel = row.querySelector('.after .line-number label')
+      if (afterLabel) {
+        const forAttr = afterLabel.getAttribute('for') || ''
+        const lineNum = parseInt(forAttr.split('-')[0], 10)
+        if (!isNaN(lineNum) && afterTokens[lineNum - 1]) {
+          const cw = row.querySelector('.after .content-wrapper') as HTMLElement
+          if (cw) this.applyTokensToContentWrapper(cw, afterTokens[lineNum - 1])
+        }
       }
     }
   }

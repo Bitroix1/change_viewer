@@ -1137,24 +1137,28 @@ export function injectBoundaryExpandButtons(
       // Content div (before side) with @@
       const contentDiv = document.createElement('div')
       contentDiv.className = 'content'
+      contentDiv.style.display = 'flex'
       const prefix = document.createElement('div')
       prefix.className = 'prefix'
       prefix.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
       const contentWrapper = document.createElement('div')
       contentWrapper.className = 'content-wrapper'
-      contentWrapper.textContent = '@@'
+      contentWrapper.style.cssText = 'flex: 1 1 0%;'
+      contentWrapper.textContent = '@@       '
       contentDiv.appendChild(prefix)
       contentDiv.appendChild(contentWrapper)
 
       // Content div (after side) with @@
       const contentDiv2 = document.createElement('div')
       contentDiv2.className = 'content'
+      contentDiv2.style.display = 'flex'
       const prefix2 = document.createElement('div')
       prefix2.className = 'prefix'
       prefix2.innerHTML = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
       const contentWrapper2 = document.createElement('div')
       contentWrapper2.className = 'content-wrapper'
-      contentWrapper2.textContent = '@@'
+      contentWrapper2.style.cssText = 'flex: 1 1 0%; text-align: right;'
+      contentWrapper2.textContent = '@@       '
       contentDiv2.appendChild(prefix2)
       contentDiv2.appendChild(contentWrapper2)
 

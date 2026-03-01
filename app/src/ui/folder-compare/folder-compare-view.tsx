@@ -380,7 +380,7 @@ export class FolderCompareView extends React.Component<
             </div>
 
             {this.state.isSearching && (
-              <div style={{
+              <div className="folder-search-bar-wrapper" style={{
                 padding: '6px 10px',
                 borderBottom: '1px solid var(--box-border-color)',
                 backgroundColor: 'var(--box-background-color)',
@@ -672,21 +672,92 @@ export class FolderCompareView extends React.Component<
              all normal-flow text—including bare text nodes—renders on top. */
 
           /* Content doesn't wrap; overflow hidden prevents per-line scrolling.
-             Programmatic scrollLeft still works with overflow:hidden. */
+             Programmatic scrollLeft still works with overflow:hidden.
+             IMPORTANT: .content must NOT be position:relative/z-index — that
+             would give it its own stacking context which can cover the
+             adjacent .line-number despite the latter having a higher z-index
+             (the two flex siblings don't overlap in layout, but sub-pixel
+             rendering and background painting can make the line-number text
+             look clipped at the boundary).  Keeping .content static lets
+             .line-number (positioned, z-index:5) always paint on top. */
           .folder-compare-view .content {
             white-space: pre !important;
             word-break: normal !important;
             overflow: hidden !important;
-            position: relative;
-            z-index: 1;
           }
           .folder-compare-view .content-wrapper {
             white-space: pre !important;
           }
-          /* Line numbers should appear above content */
+          /* Line numbers must paint above content — use high z-index with
+             !important so no SCSS or RV inline style can override it.
+             Remove border so every row's .line-number occupies the exact
+             same space regardless of row type (the SCSS applies a border
+             on selectable/changed rows but not context rows, causing a
+             2px width discrepancy when box-sizing is border-box). */
           .folder-compare-view .line-number {
-            position: relative;
-            z-index: 2;
+            position: relative !important;
+            z-index: 5 !important;
+            overflow: visible !important;
+            box-sizing: border-box !important;
+            border: none !important;
+          }
+          /* Selectable (changed) rows are ~2px narrower than context rows.
+             Paint a gutter-coloured strip at the outer edge using a
+             pseudo-element, and shift the number text to match context rows. */
+          .folder-compare-view .before .line-number.selectable::before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: inherit;
+          }
+          .folder-compare-view .after .line-number.selectable::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: inherit;
+          }
+          /* Nudge the number text to align with context rows */
+          .folder-compare-view .before .line-number.selectable label > span {
+            transform: translateX(-2px);
+          }
+          .folder-compare-view .after .line-number.selectable label > span {
+            transform: translateX(2px);
+          }
+          /* sr-only spans (" deleted", " added", "Line ") inside line-number
+             labels must be fully hidden from layout so they don't shift the
+             visible number text towards the center. */
+          .folder-compare-view .line-number .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(100%) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+          }
+
+          /* Search marks must be visible on top of ANY diff highlighting */
+          .folder-compare-view .folder-search-mark {
+            background-color: rgba(255, 166, 0, 0.5) !important;
+            color: #000 !important;
+            position: relative !important;
+            z-index: 10 !important;
+            border-radius: 2px;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+          }
+          .folder-compare-view .folder-search-current {
+            background-color: rgba(100, 180, 255, 0.7) !important;
           }
           /* Clip box-shadow from sticky scrollbar so it doesn't bleed
              into the gap between files.  overflow:clip does NOT create
@@ -925,6 +996,30 @@ export class FolderCompareView extends React.Component<
   private diffHeightsAdjusted = false
   private shrinkPollingRAF: number | null = null
 
+  // Observer suspension: nested suspend/resume pairs keep the observer
+  // disconnected until ALL callers have resumed.
+  private _observerSuspendCount = 0
+
+  private suspendObserver(): void {
+    if (this._observerSuspendCount === 0 && this.mutationObserver) {
+      this.mutationObserver.disconnect()
+    }
+    this._observerSuspendCount++
+  }
+
+  private resumeObserver(): void {
+    this._observerSuspendCount--
+    if (this._observerSuspendCount <= 0) {
+      this._observerSuspendCount = 0
+      if (this.mutationObserver) {
+        const container = document.querySelector('.folder-compare-view')
+        if (container) {
+          this.mutationObserver.observe(container, { childList: true, subtree: true })
+        }
+      }
+    }
+  }
+
   // -- Memoised Diff props (prevent unnecessary <Diff> re-renders) ----------
   private cachedRepository: Repository | null = null
   private cachedBeforeFolder = ''
@@ -1066,12 +1161,16 @@ export class FolderCompareView extends React.Component<
              el.classList.contains('expand-context-btn') ||
              el.classList.contains('expand-context-icon') ||
              el.classList.contains('expanded-context-row') ||
-             el.classList.contains('expand-boundary-bottom')))
+             el.classList.contains('expand-boundary-bottom') ||
+             el.classList.contains('folder-search-bar-wrapper')))
             return true
+          // Nodes inside the search bar wrapper are ours too
+          if ((n as Element).closest?.('.folder-search-bar-wrapper')) return true
           // Text nodes created/removed by search mark insertion/removal
+          // (may be inside cm-* syntax spans nested within content-wrapper)
           if (n.nodeType === Node.TEXT_NODE) {
             const p = n.parentElement
-            if (p && p.classList.contains('content-wrapper')) return true
+            if (p && (p.classList.contains('content-wrapper') || p.closest?.('.content-wrapper'))) return true
           }
           return false
         }
@@ -1295,9 +1394,14 @@ export class FolderCompareView extends React.Component<
     }
     const containerRect = scrollContainer.getBoundingClientRect()
     const elRect = el.getBoundingClientRect()
+    // Use clientHeight (excludes browser scrollbar) and also subtract the
+    // height of any sticky scroll-sync-bar that overlaps the last row(s).
+    const stickyBar = scrollContainer.querySelector('.scroll-sync-bar') as HTMLElement | null
+    const stickyHeight = stickyBar ? stickyBar.getBoundingClientRect().height : 0
+    const visibleBottom = containerRect.top + scrollContainer.clientHeight - stickyHeight
     const isVisible =
       elRect.top >= containerRect.top &&
-      elRect.bottom <= containerRect.bottom
+      elRect.bottom <= visibleBottom
     if (isVisible) return
 
     // Compute the desired scrollTop so only the outer container moves.
@@ -2158,39 +2262,55 @@ export class FolderCompareView extends React.Component<
   }
 
   private closeFolderSearch = () => {
-    this.clearSearchHighlight()
-    this.folderSearchMatches = []
-    this.folderSearchIndex = -1
-    this.folderSearchQuery = ''
-    this.setState({ isSearching: false })
-  }
-
-  private onFolderSearch = (query: string, direction: 'next' | 'previous') => {
-    if (!query || query.trim() === '') {
+    // Suspend observer for the entire close-search operation so that
+    // clearSearchHighlight + setState DOM updates don't trigger repack.
+    this.suspendObserver()
+    try {
       this.clearSearchHighlight()
       this.folderSearchMatches = []
       this.folderSearchIndex = -1
       this.folderSearchQuery = ''
+      this.setState({ isSearching: false })
+    } finally {
+      this.resumeObserver()
+    }
+  }
+
+  private onFolderSearch = (query: string, direction: 'next' | 'previous') => {
+    // Suspend observer for the ENTIRE search operation.  Individual helpers
+    // (clearSearchHighlight, highlightAllSearchMatches) also call
+    // suspend/resume, but the nested counter keeps the observer disconnected
+    // until THIS outermost resume runs — after updateSearchCountDisplay.
+    this.suspendObserver()
+    try {
+      if (!query || query.trim() === '') {
+        this.clearSearchHighlight()
+        this.folderSearchMatches = []
+        this.folderSearchIndex = -1
+        this.folderSearchQuery = ''
+        this.updateSearchCountDisplay()
+        return
+      }
+
+      if (query !== this.folderSearchQuery) {
+        // New search
+        this.folderSearchQuery = query
+        this.folderSearchMatches = this.findMatchingSides(query)
+        this.folderSearchIndex = this.folderSearchMatches.length > 0 ? 0 : -1
+      } else if (this.folderSearchMatches.length > 0) {
+        // Navigate within existing results
+        const delta = direction === 'next' ? 1 : -1
+        this.folderSearchIndex =
+          (this.folderSearchIndex + delta + this.folderSearchMatches.length) %
+          this.folderSearchMatches.length
+      }
+
+      this.clearSearchHighlight()
+      this.highlightAllSearchMatches()
       this.updateSearchCountDisplay()
-      return
+    } finally {
+      this.resumeObserver()
     }
-
-    if (query !== this.folderSearchQuery) {
-      // New search
-      this.folderSearchQuery = query
-      this.folderSearchMatches = this.findMatchingSides(query)
-      this.folderSearchIndex = this.folderSearchMatches.length > 0 ? 0 : -1
-    } else if (this.folderSearchMatches.length > 0) {
-      // Navigate within existing results
-      const delta = direction === 'next' ? 1 : -1
-      this.folderSearchIndex =
-        (this.folderSearchIndex + delta + this.folderSearchMatches.length) %
-        this.folderSearchMatches.length
-    }
-
-    this.clearSearchHighlight()
-    this.highlightAllSearchMatches()
-    this.updateSearchCountDisplay()
   }
 
   /**
@@ -2278,15 +2398,24 @@ export class FolderCompareView extends React.Component<
   }
 
   private clearSearchHighlight(): void {
-    document
-      .querySelectorAll('.folder-compare-view .folder-search-mark')
-      .forEach(mark => {
-        const parent = mark.parentNode
-        if (parent) {
-          parent.replaceChild(document.createTextNode(mark.textContent || ''), mark)
-          parent.normalize() // merge adjacent text nodes
-        }
-      })
+    // Suspend observer during search-mark removal to prevent
+    // normalize() from triggering applyAndRepackAll (which removes
+    // expanded rows).  Detached text nodes have parentElement===null
+    // so the isOurNode check cannot identify them.
+    this.suspendObserver()
+    try {
+      document
+        .querySelectorAll('.folder-compare-view .folder-search-mark')
+        .forEach(mark => {
+          const parent = mark.parentNode
+          if (parent) {
+            parent.replaceChild(document.createTextNode(mark.textContent || ''), mark)
+            parent.normalize() // merge adjacent text nodes
+          }
+        })
+    } finally {
+      this.resumeObserver()
+    }
   }
 
   /**
@@ -2296,6 +2425,10 @@ export class FolderCompareView extends React.Component<
    */
   private highlightAllSearchMatches(): void {
     if (this.folderSearchMatches.length === 0) return
+
+    // Suspend observer during mark insertion to prevent triggering
+    // applyAndRepackAll which would remove expanded rows.
+    this.suspendObserver()
 
     const query = this.folderSearchQuery.toLowerCase()
     const queryLen = this.folderSearchQuery.length
@@ -2378,16 +2511,14 @@ export class FolderCompareView extends React.Component<
         const mark = document.createElement('mark')
         mark.className = 'folder-search-mark'
         const isCurrent = globalIndex === this.folderSearchIndex
-        mark.style.backgroundColor = isCurrent
-          ? 'rgba(100, 180, 255, 0.7)'
-          : 'rgba(255, 165, 0, 0.6)'
-        mark.style.color = 'inherit'
-        mark.style.borderRadius = '2px'
-        mark.style.padding = '0'
+        if (isCurrent) mark.classList.add('folder-search-current')
         mark.textContent = matchStart.textContent
         matchStart.parentNode!.replaceChild(mark, matchStart)
       }
     }
+
+    // Resume observer after all marks are inserted
+    this.resumeObserver()
   }
 
   /**

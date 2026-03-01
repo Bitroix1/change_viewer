@@ -77,7 +77,11 @@ export function repackFile(fileContainer: Element): void {
   // and would poison its height cache if they were set to 0.
   let accTop = 0
   outerWrappers.forEach(el => {
-    if (el.classList.contains('component-hunk-separator')) {
+    // Check hunk-expanded BEFORE component-hunk-separator so that a hidden
+    // separator doesn't still occupy space in the layout.
+    if (el.classList.contains('hunk-expanded')) {
+      el.style.top = '-99999px' // off-screen — height untouched
+    } else if (el.classList.contains('component-hunk-separator')) {
       el.style.top = `${accTop}px`
       el.style.height = `${rowHeight}px`
       accTop += rowHeight
@@ -91,7 +95,7 @@ export function repackFile(fileContainer: Element): void {
       el.style.top = `${accTop}px`
       el.style.height = `${rowHeight}px`
       accTop += rowHeight
-    } else if (el.classList.contains('component-hidden') || el.classList.contains('hunk-expanded')) {
+    } else if (el.classList.contains('component-hidden')) {
       el.style.top = '-99999px' // off-screen — height untouched
     } else {
       el.style.top = `${accTop}px`

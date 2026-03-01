@@ -19,6 +19,7 @@ import { ITokens, ILineTokens } from '../../lib/highlighter/types'
 import {
   applyComponentHighlightingToAll,
   extractLineNumber,
+  getHighlightedLinesForComponent,
   injectExpandButtonsIntoHunkInfoRows,
   injectBoundaryExpandButtons,
 } from './folder-compare-highlight'
@@ -1535,6 +1536,8 @@ export class FolderCompareView extends React.Component<
     side: 'before' | 'after'
     reachable_by: number
     content: string
+    /** Highlight ranges within `content` (0-based offsets into the display string) */
+    contentHighlightRanges: Array<{ start: number; end: number }>
   }> {
     if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return []
     const componentIndex = this.state.selectedComponent as number
@@ -1604,24 +1607,80 @@ export class FolderCompareView extends React.Component<
       return bareFile
     }
 
+    // Pre-compute char-level highlight ranges per file so we can use
+    // the actual bright-highlight columns (from diff_components) instead
+    // of the broader node spans (from diff_nodes).
+    const highlightCache = new Map<string, import('./folder-compare-highlight').LineHighlight[]>()
+    const getHighlightsForFile = (file: string) => {
+      if (!highlightCache.has(file)) {
+        highlightCache.set(file, getHighlightedLinesForComponent(
+          this.state.diffComponents, componentIndex, file
+        ))
+      }
+      return highlightCache.get(file)!
+    }
+
     return entries.map(([key, entry]) => {
       // Get full line content (without diff prefix, since DiffLine.content strips it)
       const rawContent = getSourceLineContent(
         entry.file, entry.line, entry.side, this.state.fileDiffs
       )
-      // Strip leading whitespace first, then apply any remaining startCol
-      // offset (startCol typically equals the indentation level, so for most
-      // lines trimStart + a small remaining offset gives the code starting
-      // at the precise change position).
+
+      // Use the bright-highlight column ranges from diff_components (what
+      // the user actually sees highlighted) to determine where the display
+      // content should start.  Fall back to the node's startCol if no
+      // char-level highlight exists for this line.
+      const fileHighlights = getHighlightsForFile(entry.file)
+      const lineHighlight = fileHighlights.find(
+        h => h.line === entry.line && h.side === entry.side
+      )
+      const effectiveStartCol = lineHighlight && lineHighlight.ranges.length > 0
+        ? Math.min(...lineHighlight.ranges.map(r => r.startCol))
+        : entry.startCol
+
       const trimmed = rawContent.trimStart()
       const leadingWS = rawContent.length - trimmed.length
-      const remainingCol = Math.max(0, entry.startCol - leadingWS)
+      const remainingCol = Math.max(0, effectiveStartCol - leadingWS)
       const displayContent = trimmed.substring(remainingCol)
+
+      // Map the char-level highlight ranges into offsets within displayContent
+      // so the renderer can color them purple.
+      const displayOffset = leadingWS + remainingCol // columns consumed before displayContent
+      const contentHighlightRanges: Array<{ start: number; end: number }> = []
+      if (lineHighlight) {
+        for (const r of lineHighlight.ranges) {
+          const s = r.startCol - displayOffset
+          const e = r.endCol - displayOffset
+          if (e > 0 && s < displayContent.length) {
+            contentHighlightRanges.push({
+              start: Math.max(0, s),
+              end: Math.min(displayContent.length, e)
+            })
+          }
+        }
+        // Sort and merge overlapping / duplicate ranges
+        contentHighlightRanges.sort((a, b) => a.start - b.start)
+        let wi = 0
+        for (let ri = 0; ri < contentHighlightRanges.length; ri++) {
+          if (wi > 0 && contentHighlightRanges[ri].start <= contentHighlightRanges[wi - 1].end) {
+            // Overlaps or is adjacent — extend the previous range
+            contentHighlightRanges[wi - 1].end = Math.max(
+              contentHighlightRanges[wi - 1].end,
+              contentHighlightRanges[ri].end
+            )
+          } else {
+            contentHighlightRanges[wi++] = contentHighlightRanges[ri]
+          }
+        }
+        contentHighlightRanges.length = wi
+      }
+
       return {
         key,
         ...entry,
         fullPath: resolveFullPath(entry.file),
-        content: displayContent || '(empty)'
+        content: displayContent || '(empty)',
+        contentHighlightRanges
       }
     })
   }
@@ -1753,7 +1812,29 @@ export class FolderCompareView extends React.Component<
                   textOverflow: 'ellipsis',
                   fontSize: '12px'
                 }}>
-                  {entry.content}
+                  {entry.contentHighlightRanges.length > 0
+                    ? (() => {
+                        const parts: JSX.Element[] = []
+                        let cursor = 0
+                        for (let ri = 0; ri < entry.contentHighlightRanges.length; ri++) {
+                          const { start, end } = entry.contentHighlightRanges[ri]
+                          if (cursor < start) {
+                            parts.push(<span key={`t${ri}`}>{entry.content.slice(cursor, start)}</span>)
+                          }
+                          parts.push(
+                            <span key={`h${ri}`} style={{ color: '#c586c0', fontWeight: 600 }}>
+                              {entry.content.slice(start, end)}
+                            </span>
+                          )
+                          cursor = end
+                        }
+                        if (cursor < entry.content.length) {
+                          parts.push(<span key="tail">{entry.content.slice(cursor)}</span>)
+                        }
+                        return parts
+                      })()
+                    : entry.content
+                  }
                 </div>
               </div>
             )

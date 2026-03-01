@@ -525,10 +525,9 @@ export function applyComponentHighlightingForFile(
   // ── Miscellaneous mode: show changed rows NOT in any component ───────────
   if (selectedComponent === 'misc') {
     const claimedLines = getClaimedLineNumbers(diffComponents, filePath)
-    const CONTEXT = 3
     const rowsArray = Array.from(fileContainer.querySelectorAll('.row')) as HTMLElement[]
 
-    // Anchors = changed rows where neither side's line is claimed
+    // Anchors = changed rows where neither side's line is claimed by any component.
     const anchorIndices = new Set<number>()
     rowsArray.forEach((row, idx) => {
       if (row.classList.contains('hunk-info')) return
@@ -554,13 +553,8 @@ export function applyComponentHighlightingForFile(
     }
     fileContainer.classList.remove('component-file-hidden')
 
-    const visibleIndices = new Set<number>()
-    for (const anchorIdx of anchorIndices) {
-      for (let d = -CONTEXT; d <= CONTEXT; d++) {
-        const i = anchorIdx + d
-        if (i >= 0 && i < rowsArray.length) visibleIndices.add(i)
-      }
-    }
+    // Misc shows ONLY unclaimed changed rows — no unchanged context rows.
+    const visibleIndices = new Set<number>(anchorIndices)
 
     const sortedVisible = Array.from(visibleIndices).sort((a, b) => a - b)
     const needsSeparatorBefore = new Set<number>()

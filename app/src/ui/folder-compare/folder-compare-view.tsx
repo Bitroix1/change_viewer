@@ -1689,16 +1689,6 @@ export class FolderCompareView extends React.Component<
           }
         }
         contentHighlightRanges.length = wi
-
-        // If the merged highlights cover all of displayContent, treat it as
-        // a full-line change — no purple highlight, just the background color.
-        if (
-          contentHighlightRanges.length === 1 &&
-          contentHighlightRanges[0].start === 0 &&
-          contentHighlightRanges[0].end >= displayContent.trimEnd().length
-        ) {
-          contentHighlightRanges.length = 0
-        }
       }
 
       return {

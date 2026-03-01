@@ -1295,7 +1295,8 @@ export class FolderCompareView extends React.Component<
         this.state.fileChanges,
         this.state.diffComponents,
         this.state.selectedComponent,
-        this.handleCharHighlightClick
+        this.handleCharHighlightClick,
+        this.state.diffNodes
       )
 
       if (this.state.selectedComponent === 'all') {
@@ -1598,9 +1599,15 @@ export class FolderCompareView extends React.Component<
       }
     }
 
-    // Sort by reachable_by descending
+    // Sort by reachable_by descending, then file (lexicographic), then line number
     const entries = Array.from(lineMap.entries())
-      .sort((a, b) => b[1].reachable_by - a[1].reachable_by)
+      .sort((a, b) => {
+        const reachDiff = b[1].reachable_by - a[1].reachable_by
+        if (reachDiff !== 0) return reachDiff
+        const fileCmp = (a[1].file ?? '').localeCompare(b[1].file ?? '')
+        if (fileCmp !== 0) return fileCmp
+        return a[1].line - b[1].line
+      })
 
     // Build a lookup to resolve bare filenames to full relative paths
     const resolveFullPath = (bareFile: string): string => {
@@ -1616,14 +1623,13 @@ export class FolderCompareView extends React.Component<
       return bareFile
     }
 
-    // Pre-compute char-level highlight ranges per file so we can use
-    // the actual bright-highlight columns (from diff_components) instead
-    // of the broader node spans (from diff_nodes).
+    // Pre-compute char-level highlight ranges per file, merging both
+    // diff_components edge endpoints and diff_nodes node spans.
     const highlightCache = new Map<string, import('./folder-compare-highlight').LineHighlight[]>()
     const getHighlightsForFile = (file: string) => {
       if (!highlightCache.has(file)) {
         highlightCache.set(file, getHighlightedLinesForComponent(
-          this.state.diffComponents, componentIndex, file
+          this.state.diffComponents, componentIndex, file, this.state.diffNodes
         ))
       }
       return highlightCache.get(file)!
@@ -1635,10 +1641,13 @@ export class FolderCompareView extends React.Component<
         entry.file, entry.line, entry.side, this.state.fileDiffs
       )
 
-      // Use the bright-highlight column ranges from diff_components (what
-      // the user actually sees highlighted) to determine where the display
-      // content should start.  Fall back to the node's startCol if no
-      // char-level highlight exists for this line.
+      const trimmed = rawContent.trimStart()
+      const leadingWS = rawContent.length - trimmed.length
+
+      // Use the highlight column ranges (now merged from both diff_components
+      // edge endpoints AND diff_nodes node spans) to determine where the
+      // display content should start.  Fall back to the node's startCol if
+      // no char-level highlight exists for this line.
       const fileHighlights = getHighlightsForFile(entry.file)
       const lineHighlight = fileHighlights.find(
         h => h.line === entry.line && h.side === entry.side
@@ -1647,8 +1656,6 @@ export class FolderCompareView extends React.Component<
         ? Math.min(...lineHighlight.ranges.map(r => r.startCol))
         : entry.startCol
 
-      const trimmed = rawContent.trimStart()
-      const leadingWS = rawContent.length - trimmed.length
       const remainingCol = Math.max(0, effectiveStartCol - leadingWS)
       const displayContent = trimmed.substring(remainingCol)
 
@@ -1682,6 +1689,16 @@ export class FolderCompareView extends React.Component<
           }
         }
         contentHighlightRanges.length = wi
+
+        // If the merged highlights cover all of displayContent, treat it as
+        // a full-line change — no purple highlight, just the background color.
+        if (
+          contentHighlightRanges.length === 1 &&
+          contentHighlightRanges[0].start === 0 &&
+          contentHighlightRanges[0].end >= displayContent.trimEnd().length
+        ) {
+          contentHighlightRanges.length = 0
+        }
       }
 
       return {

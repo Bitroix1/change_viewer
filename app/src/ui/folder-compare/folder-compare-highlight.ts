@@ -230,7 +230,8 @@ export function addPositionToLineMap(
 export function getHighlightedLinesForComponent(
   diffComponents: any[],
   selectedComponent: number | 'all' | 'misc',
-  filePath: string
+  filePath: string,
+  diffNodes?: any[]
 ): LineHighlight[] {
   if (selectedComponent === 'all' || selectedComponent === 'misc') return []
   const component = diffComponents[selectedComponent as number]
@@ -245,6 +246,30 @@ export function getHighlightedLinesForComponent(
     }
     if (change.to && pathMatchesFile(change.to.file, filePath) && change.to.position) {
       addPositionToLineMap(lineMap, change.to.position, side)
+    }
+  }
+
+  // For "cause" nodes (reachable_by > 0) — declarations, imports, etc. that
+  // other nodes reference — expand the highlight to the full node span from
+  // diff_nodes.json.  E.g. FieldDeclaration at 91:1-41 contains the edge
+  // endpoint SimpleName at 91:23-40; the full declaration is the actual
+  // change and should be highlighted entirely.  Reference nodes
+  // (reachable_by === 0) keep only their narrow edge-endpoint highlights.
+  if (diffNodes) {
+    const nodeData = diffNodes.find(
+      (n: any) => n.component_id === component.component_id
+    )
+    if (nodeData?.nodes) {
+      for (const node of nodeData.nodes) {
+        if (
+          node.reachable_by > 0 &&
+          node.file && node.position &&
+          pathMatchesFile(node.file, filePath)
+        ) {
+          const side: HighlightSide = node.kind === 'Removal' ? 'before' : 'after'
+          addPositionToLineMap(lineMap, node.position, side)
+        }
+      }
     }
   }
 
@@ -336,6 +361,39 @@ function charColToVisualCol(
  * fall within a highlight range with `<span class="component-char-white">`
  * so they render in white on top of the bright overlay.
  */
+
+/**
+ * Return true when the merged highlight ranges cover all non-whitespace
+ * content on the line.  When this is the case the caller should skip the
+ * bright char-level overlay and just keep the normal diff background color
+ * (like "show all" mode).
+ */
+export function highlightCoversFullLine(
+  ranges: ReadonlyArray<{ startCol: number; endCol: number }>,
+  lineText: string
+): boolean {
+  if (ranges.length === 0 || lineText.length === 0) return false
+
+  const firstNonWS = lineText.search(/\S/)
+  if (firstNonWS === -1) return true // all whitespace — trivially covered
+
+  let lastNonWS = lineText.length - 1
+  while (lastNonWS >= 0 && /\s/.test(lineText[lastNonWS])) lastNonWS--
+
+  // Sort + merge
+  const sorted = [...ranges].sort((a, b) => a.startCol - b.startCol)
+  const merged: Array<{ startCol: number; endCol: number }> = []
+  for (const r of sorted) {
+    if (merged.length > 0 && r.startCol <= merged[merged.length - 1].endCol) {
+      merged[merged.length - 1].endCol = Math.max(merged[merged.length - 1].endCol, r.endCol)
+    } else {
+      merged.push({ startCol: r.startCol, endCol: r.endCol })
+    }
+  }
+
+  return merged.some(r => r.startCol <= firstNonWS && r.endCol > lastNonWS)
+}
+
 export function addCharHighlights(
   contentWrapper: HTMLElement,
   ranges: Array<{ startCol: number; endCol: number }>,
@@ -500,7 +558,8 @@ export function applyComponentHighlightingForFile(
   filePath: string,
   diffComponents: any[],
   selectedComponent: number | 'all' | 'misc',
-  handleCharHighlightClick: (e: Event) => void
+  handleCharHighlightClick: (e: Event) => void,
+  diffNodes?: any[]
 ): void {
   const fileContainer = document.querySelector(
     `.folder-compare-view [data-file-path="${filePath}"]`
@@ -625,7 +684,7 @@ export function applyComponentHighlightingForFile(
     return
   }
 
-  const highlights = getHighlightedLinesForComponent(diffComponents, selectedComponent, filePath)
+  const highlights = getHighlightedLinesForComponent(diffComponents, selectedComponent, filePath, diffNodes)
 
   if (highlights.length === 0) {
     fileContainer.classList.add('component-file-hidden')
@@ -739,11 +798,18 @@ export function applyComponentHighlightingForFile(
 
     if (beforeSide) {
       if (beforeRangesForLine && beforeRangesForLine.length > 0) {
-        beforeSide.classList.remove('component-filtered-side')
-        beforeSide.classList.add('component-char-filtered')
         const cw = beforeSide.querySelector('.content-wrapper') as HTMLElement
-        if (cw) addCharHighlights(cw, beforeRangesForLine, 'before', handleCharHighlightClick)
-        stripDiffInnerClasses(beforeSide)
+        const lineText = cw?.textContent || ''
+        if (cw && highlightCoversFullLine(beforeRangesForLine, lineText)) {
+          // Full-line change — keep the natural diff background (like "show all")
+          beforeSide.classList.remove('component-filtered-side')
+          beforeSide.classList.remove('component-char-filtered')
+        } else {
+          beforeSide.classList.remove('component-filtered-side')
+          beforeSide.classList.add('component-char-filtered')
+          if (cw) addCharHighlights(cw, beforeRangesForLine, 'before', handleCharHighlightClick)
+          stripDiffInnerClasses(beforeSide)
+        }
       } else {
         beforeSide.classList.add('component-filtered-side')
         beforeSide.classList.remove('component-char-filtered')
@@ -753,11 +819,18 @@ export function applyComponentHighlightingForFile(
 
     if (afterSide) {
       if (afterRangesForLine && afterRangesForLine.length > 0) {
-        afterSide.classList.remove('component-filtered-side')
-        afterSide.classList.add('component-char-filtered')
         const cw = afterSide.querySelector('.content-wrapper') as HTMLElement
-        if (cw) addCharHighlights(cw, afterRangesForLine, 'after', handleCharHighlightClick)
-        stripDiffInnerClasses(afterSide)
+        const lineText = cw?.textContent || ''
+        if (cw && highlightCoversFullLine(afterRangesForLine, lineText)) {
+          // Full-line change — keep the natural diff background (like "show all")
+          afterSide.classList.remove('component-filtered-side')
+          afterSide.classList.remove('component-char-filtered')
+        } else {
+          afterSide.classList.remove('component-filtered-side')
+          afterSide.classList.add('component-char-filtered')
+          if (cw) addCharHighlights(cw, afterRangesForLine, 'after', handleCharHighlightClick)
+          stripDiffInnerClasses(afterSide)
+        }
       } else {
         afterSide.classList.add('component-filtered-side')
         afterSide.classList.remove('component-char-filtered')
@@ -782,7 +855,8 @@ export function applyComponentHighlightingToAll(
   fileChanges: ReadonlyArray<WorkingDirectoryFileChange>,
   diffComponents: any[],
   selectedComponent: number | 'all' | 'misc',
-  handleCharHighlightClick: (e: Event) => void
+  handleCharHighlightClick: (e: Event) => void,
+  diffNodes?: any[]
 ): void {
   if (selectedComponent === 'all') {
     // Restore all rows
@@ -901,7 +975,8 @@ export function applyComponentHighlightingToAll(
       file.path,
       diffComponents,
       selectedComponent,
-      handleCharHighlightClick
+      handleCharHighlightClick,
+      diffNodes
     )
   }
 }

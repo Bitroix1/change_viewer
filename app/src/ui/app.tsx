@@ -198,6 +198,10 @@ import {
   BypassReasonType,
 } from './secret-scanning/bypass-push-protection-dialog'
 import { FolderCompareView } from './folder-compare/folder-compare-view'
+import { SettingsMenu } from './window/settings-menu'
+import { ApplicationTheme } from './lib/application-theme'
+
+const FONT_SIZE_OFFSET_KEY = 'diffmagic-font-size-offset'
 
 const MinuteInMilliseconds = 1000 * 60
 const HourInMilliseconds = MinuteInMilliseconds * 60
@@ -238,6 +242,9 @@ export const bannerTransitionTimeout = { enter: 500, exit: 400 }
 const ReadyDelay = 100
 export class App extends React.Component<IAppProps, IAppState> {
   private loading = true
+
+  /** Font size offset from default (persisted in localStorage) */
+  private fontSizeOffset: number = 0
 
   /**
    * Used on non-macOS platforms to support the Alt key behavior for
@@ -302,6 +309,13 @@ export class App extends React.Component<IAppProps, IAppState> {
     props.appStore.onDidUpdate(state => {
       this.setState(state)
     })
+
+    // Restore persisted font size offset
+    const savedOffset = localStorage.getItem(FONT_SIZE_OFFSET_KEY)
+    if (savedOffset !== null) {
+      this.fontSizeOffset = parseInt(savedOffset, 10) || 0
+      this.applyFontSizeOffset()
+    }
 
     props.appStore.onDidError(error => {
       props.dispatcher.postError(error)
@@ -1073,6 +1087,25 @@ export class App extends React.Component<IAppProps, IAppState> {
       return
     }
 
+    // Handle Ctrl+= / Ctrl+- for font size adjustment
+    if (event.ctrlKey && !event.shiftKey && !event.altKey) {
+      if (event.key === '=' || event.key === '+') {
+        event.preventDefault()
+        this.onFontSizeChange(1)
+        return
+      }
+      if (event.key === '-') {
+        event.preventDefault()
+        this.onFontSizeChange(-1)
+        return
+      }
+      if (event.key === '0') {
+        event.preventDefault()
+        this.onFontSizeChange(-this.fontSizeOffset)
+        return
+      }
+    }
+
     if (this.isShowingModal) {
       return
     }
@@ -1378,6 +1411,36 @@ export class App extends React.Component<IAppProps, IAppState> {
     this.props.dispatcher.setAppMenuState(menu => menu.withReset())
   }
 
+  private onFontSizeChange = (delta: number) => {
+    const newOffset = Math.max(-4, Math.min(12, this.fontSizeOffset + delta))
+    if (newOffset === this.fontSizeOffset) {
+      return
+    }
+    this.fontSizeOffset = newOffset
+    localStorage.setItem(FONT_SIZE_OFFSET_KEY, String(newOffset))
+    this.applyFontSizeOffset()
+    this.forceUpdate()
+  }
+
+  private applyFontSizeOffset() {
+    const root = document.documentElement
+    const base = 12
+    const newSize = base + this.fontSizeOffset
+    root.style.setProperty('--font-size', `${newSize}px`)
+    root.style.setProperty('--font-size-sm', `${newSize - 1}px`)
+    root.style.setProperty('--font-size-md', `${newSize + 2}px`)
+    root.style.setProperty('--font-size-lg', `${newSize + 16}px`)
+    root.style.setProperty('--font-size-xl', `${newSize + 20}px`)
+    root.style.setProperty('--font-size-xxl', `${newSize + 30}px`)
+    root.style.setProperty('--font-size-xs', `${Math.max(7, newSize - 3)}px`)
+  }
+
+  private onThemeToggle = () => {
+    const isDark = this.state.currentTheme === ApplicationTheme.Dark
+    const newTheme = isDark ? ApplicationTheme.Light : ApplicationTheme.Dark
+    this.props.dispatcher.setSelectedTheme(newTheme)
+  }
+
   private renderTitlebar() {
     const inFullScreen = this.state.windowState === 'full-screen'
 
@@ -1402,6 +1465,8 @@ export class App extends React.Component<IAppProps, IAppState> {
     const titleBarStyle =
       inWelcomeFlow || (__DARWIN__ && inNoRepositoriesView) ? 'light' : 'dark'
 
+    const isDarkMode = this.state.currentTheme === ApplicationTheme.Dark
+
     return (
       <TitleBar
         showAppIcon={showAppIcon}
@@ -1409,6 +1474,12 @@ export class App extends React.Component<IAppProps, IAppState> {
         windowState={this.state.windowState}
         windowZoomFactor={this.state.windowZoomFactor}
       >
+        <SettingsMenu
+          fontSizeOffset={this.fontSizeOffset}
+          isDarkMode={isDarkMode}
+          onFontSizeChange={this.onFontSizeChange}
+          onThemeToggle={this.onThemeToggle}
+        />
         <div className="title-bar-text">Diffmagic</div>
       </TitleBar>
     )

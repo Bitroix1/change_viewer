@@ -133,6 +133,47 @@
   }
 }
 
+// Light-mode title bar: very light gray background, black text
+body.platform-win32:not(.theme-dark) #desktop-app-title-bar {
+  background: #f0f0f0;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+body.platform-darwin:not(.theme-dark) #desktop-app-title-bar {
+  background: linear-gradient(to bottom, #f2f2f2 0%, #e8e8e8 100%);
+  border-bottom: 1px solid #d0d0d0;
+}
+
+body:not(.theme-dark) #desktop-app-title-bar {
+  --toolbar-text-color: #222;
+
+  .title-bar-text {
+    color: #222;
+  }
+
+  .window-controls button {
+    color: #333;
+
+    &:hover {
+      background-color: #ddd;
+      color: #000;
+
+      &:active {
+        background-color: #ccc;
+      }
+    }
+
+    &.close:hover {
+      background-color: #e81123;
+      color: #fff;
+
+      &:active {
+        background-color: #bf0f1d;
+      }
+    }
+  }
+}
+
 #desktop-app-title-bar.light-title-bar {
   @include darwin {
     background: transparent;
@@ -172,3 +213,5 @@
     }
   }
 }
+
+

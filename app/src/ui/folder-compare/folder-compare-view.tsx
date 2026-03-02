@@ -219,7 +219,7 @@ export class FolderCompareView extends React.Component<
               `}</style>
               {/* Scrollable top section: component list */}
               <div style={{ flex: `0 0 ${this.state.leftTopFraction * 100}%`, display: 'flex', flexDirection: 'column', padding: '15px', minHeight: `${MIN_LEFT_TOP_HEIGHT}px`, overflow: 'hidden' }}>
-              <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>Diff View Options</h3>
+              <h3 style={{ margin: '0 0 15px 0', fontSize: 'var(--font-size-md)', fontWeight: 600 }}>Diff View Options</h3>
                 <label style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -236,7 +236,7 @@ export class FolderCompareView extends React.Component<
                     checked={this.state.selectedComponent === 'all'}
                     onChange={this.onComponentChange}
                   />
-                  <span style={{ fontSize: '13px' }}>Show All<br></br></span>
+                  <span style={{ fontSize: 'var(--font-size)' }}>Show All<br></br></span>
                 </label>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginTop: '6px' }}>
                 <div style={{ flex: 1, overflow: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -275,15 +275,15 @@ export class FolderCompareView extends React.Component<
                             padding: '8px',
                             borderRadius: '4px',
                             backgroundColor: 'var(--box-border-color)',
-                            fontSize: '12px',
+                            fontSize: 'var(--font-size)',
                             fontWeight: 600,
                             userSelect: 'none',
                           }}
                           onClick={() => this.toggleKindCollapse(kind)}
                         >
-                          <span style={{ fontSize: '10px', display: 'inline-block', transition: 'transform 0.15s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
+                          <span style={{ fontSize: 'var(--font-size-xs)', display: 'inline-block', transition: 'transform 0.15s', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
                           <span>{label}</span>
-                          <span style={{ fontSize: '11px', color: 'var(--text-secondary-color)', marginLeft: 'auto' }}>({items.length})</span>
+                          <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary-color)', marginLeft: 'auto' }}>({items.length})</span>
                         </div>
                         {!isCollapsed && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px', marginLeft: '8px' }}>
@@ -307,7 +307,7 @@ export class FolderCompareView extends React.Component<
                                       checked={isSelected}
                                       onChange={this.onComponentChange}
                                     />
-                                    <span style={{ fontSize: '12px' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
+                                    <span style={{ fontSize: 'var(--font-size)' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
                                   </label>
                                 </div>
                               )
@@ -340,7 +340,7 @@ export class FolderCompareView extends React.Component<
                     checked={this.state.selectedComponent === 'misc'}
                     onChange={this.onComponentChange}
                   />
-                  <span style={{ fontSize: '13px' }}>Miscellaneous</span>
+                  <span style={{ fontSize: 'var(--font-size)' }}>Miscellaneous</span>
                 </label>
                 </div>
                 </div>
@@ -357,7 +357,7 @@ export class FolderCompareView extends React.Component<
                 minHeight: `${MIN_LEFT_BOTTOM_HEIGHT}px`,
                 overflow: 'auto'
               }}>
-                <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
+                <h3 style={{ margin: '0 0 15px 0', fontSize: 'var(--font-size-md)', fontWeight: 600 }}>
                   Files
                 </h3>
                 {this.renderFileTree(this.getRelevantFiles())}
@@ -379,7 +379,7 @@ export class FolderCompareView extends React.Component<
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 <Button onClick={this.onChangeFolders}>Change Folders</Button>
                 {this.state.fileChanges.length > 0 && (
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary-color)' }}>
+                  <span style={{ fontSize: 'var(--font-size)', color: 'var(--text-secondary-color)' }}>
                     {this.state.fileChanges.length} changed {this.state.fileChanges.length === 1 ? 'file' : 'files'}
                   </span>
                 )}
@@ -401,7 +401,7 @@ export class FolderCompareView extends React.Component<
                 />
                 <span
                   ref={this.searchCountRef}
-                  style={{ fontSize: '12px', color: 'var(--text-secondary-color)', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 'var(--font-size)', color: 'var(--text-secondary-color)', whiteSpace: 'nowrap' }}
                 />
               </div>
             )}
@@ -448,7 +448,7 @@ export class FolderCompareView extends React.Component<
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <h3 style={{
                         margin: '0 0 5px 0',
-                        fontSize: '14px',
+                        fontSize: 'var(--font-size-md)',
                         fontWeight: 600,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -458,7 +458,7 @@ export class FolderCompareView extends React.Component<
                       }}>
                         <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{file.path}</span>
                       </h3>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
+                      <div style={{ fontSize: 'var(--font-size)', color: 'var(--text-secondary-color)' }}>
                         {this.getStatusLabel(file.status.kind)}
                       </div>
                     </div>
@@ -684,9 +684,10 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .component-highlight-delete {
             background-color: var(--diff-delete-inner-background-color);
           }
-          /* White text for characters sitting on top of a bright highlight */
+          /* Text color for characters sitting on top of a bright highlight
+             – uses the theme-aware diff text variable so it works in both modes */
           .folder-compare-view .component-char-white {
-            color: #fff !important;
+            color: var(--diff-text-color) !important;
           }
 
           /* content-wrapper stacking context is created in addCharHighlights
@@ -1028,6 +1029,8 @@ export class FolderCompareView extends React.Component<
             padding: 0 !important;
             border: none !important;
           }
+
+
         `}</style>
       </div>
       </div>
@@ -1797,20 +1800,20 @@ export class FolderCompareView extends React.Component<
           backgroundColor: 'var(--box-border-color)',
           opacity: 0.85
         }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-secondary-color)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary-color)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {kindLabel}
           </div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-color)' }}>
+          <div style={{ fontSize: 'calc(var(--font-size) + 4px)', fontWeight: 700, color: 'var(--text-color)' }}>
             {componentName}
           </div>
         </div>
 
-        <h3 style={{ margin: '0 0 15px 0', fontSize: '14px', fontWeight: 600 }}>
+        <h3 style={{ margin: '0 0 15px 0', fontSize: 'var(--font-size-md)', fontWeight: 600 }}>
           Changed Lines ({entries.length})
         </h3>
 
         {entries.length === 0 && (
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)', fontStyle: 'italic' }}>
+          <div style={{ fontSize: 'var(--font-size)', color: 'var(--text-secondary-color)', fontStyle: 'italic' }}>
             No changed lines
           </div>
         )}
@@ -1830,7 +1833,7 @@ export class FolderCompareView extends React.Component<
             const isLikelySource = entry.key === likelySourceKey
             return (
               <div key={entry.key} className="right-panel-entry" style={{
-                fontSize: '11px',
+                fontSize: 'var(--font-size-sm)',
                 padding: '10px',
                 marginBottom: '6px',
                 backgroundColor: isSelected ? 'var(--box-border-color)' : 'var(--background-color)',
@@ -1845,7 +1848,7 @@ export class FolderCompareView extends React.Component<
               >
                 <div style={{
                   marginBottom: '4px',
-                  fontSize: '11px',
+                  fontSize: 'var(--font-size-sm)',
                   color: 'var(--text-secondary-color)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -1862,13 +1865,13 @@ export class FolderCompareView extends React.Component<
                     minWidth: 0,
                     flex: 1,
                   }}>
-                    <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{entry.fullPath}:{entry.line} <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '14px' }}>({entry.side === 'before' ? '-' : '+'})</span></span>
+                    <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{entry.fullPath}:{entry.line} <span style={{ color: 'var(--text-color)', fontWeight: 700, fontSize: 'var(--font-size-md)' }}>({entry.side === 'before' ? '-' : '+'})</span></span>
                   </span>
                   {isLikelySource && (
                     <span style={{
                       color: '#d4a017',
                       fontWeight: 700,
-                      fontSize: '10px',
+                      fontSize: 'var(--font-size-xs)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       flexShrink: 0,
@@ -1884,7 +1887,7 @@ export class FolderCompareView extends React.Component<
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  fontSize: '12px'
+                  fontSize: 'var(--font-size)'
                 }}>
                   {entry.contentHighlightRanges.length > 0
                     ? (() => {
@@ -2058,7 +2061,7 @@ export class FolderCompareView extends React.Component<
       <div style={{
         display: 'flex',
         gap: '8px',
-        fontSize: '14px',
+        fontSize: 'var(--font-size-md)',
         fontWeight: 700,
         fontFamily: 'monospace',
         flexShrink: 0,
@@ -2378,7 +2381,7 @@ export class FolderCompareView extends React.Component<
           style={{
             padding: '3px 6px',
             paddingLeft: `${6 + indent}px`,
-            fontSize: '12px',
+            fontSize: 'var(--font-size)',
             borderRadius: '3px',
             color: 'var(--text-color)',
             display: 'flex',
@@ -2393,7 +2396,7 @@ export class FolderCompareView extends React.Component<
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
           <span style={{
-            fontSize: '8px',
+            fontSize: 'var(--font-size-xs)',
             display: 'inline-block',
             transition: 'transform 0.15s',
             transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
@@ -2431,7 +2434,7 @@ export class FolderCompareView extends React.Component<
           style={{
             padding: '3px 6px',
             paddingLeft: `${6 + indent + 14}px`,
-            fontSize: '12px',
+            fontSize: 'var(--font-size)',
             borderRadius: '3px',
             color: 'var(--text-color)',
             display: 'flex',

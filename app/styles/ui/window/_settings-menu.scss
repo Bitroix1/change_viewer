@@ -1,0 +1,204 @@
+// Settings menu in the title bar
+
+.settings-menu {
+  -webkit-app-region: no-drag;
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  z-index: 100;
+
+  .settings-menu-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    color: var(--toolbar-text-color, #a0a0a0);
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    &[aria-expanded='true'] {
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .settings-menu-label {
+      letter-spacing: 0.3px;
+    }
+  }
+
+  .settings-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 220px;
+    background-color: var(--box-background-color, #1e2228);
+    border: 1px solid var(--box-border-color, #333);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 8px 0;
+    z-index: 1000;
+    animation: settings-dropdown-in 0.12s ease-out;
+  }
+
+  @keyframes settings-dropdown-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .settings-menu-section {
+    padding: 8px 14px;
+  }
+
+  .settings-menu-section-header {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary-color, #888);
+    margin-bottom: 8px;
+  }
+
+  .settings-menu-divider {
+    height: 1px;
+    background-color: var(--box-border-color, #333);
+    margin: 4px 0;
+  }
+
+  // Font size controls
+  .settings-menu-font-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .settings-menu-font-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--box-border-color, #444);
+    border-radius: 4px;
+    background-color: var(--secondary-button-background, #2d333b);
+    color: var(--text-color, #ccc);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.1s, border-color 0.1s;
+    padding: 0;
+
+    &:hover:not(:disabled) {
+      background-color: var(--button-background, #2e8fff);
+      border-color: var(--button-background, #2e8fff);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  .settings-menu-font-value {
+    min-width: 42px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-color, #ccc);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .settings-menu-font-reset {
+    margin-left: 6px;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    color: var(--link-button-color, #2e8fff);
+    font-size: 11px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: rgba(46, 143, 255, 0.15);
+    }
+  }
+
+  .settings-menu-font-shortcut {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-secondary-color, #888);
+  }
+
+  // Theme toggle
+  .settings-menu-theme-toggle {
+    display: flex;
+    gap: 6px;
+  }
+
+  .settings-menu-theme-btn {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--box-border-color, #444);
+    border-radius: 5px;
+    background-color: transparent;
+    color: var(--text-color, #ccc);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+    text-align: center;
+
+    &:hover:not(.active) {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &.active {
+      background-color: var(--button-background, #2e8fff);
+      border-color: var(--button-background, #2e8fff);
+      color: #fff;
+      cursor: default;
+      font-weight: 600;
+    }
+  }
+
+}
+
+// Light-mode: settings button on a light title bar
+body:not(.theme-dark) .settings-menu {
+  .settings-menu-button {
+    color: #333;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.07);
+    }
+
+    &:active {
+      background-color: rgba(0, 0, 0, 0.12);
+    }
+
+    &[aria-expanded='true'] {
+      background-color: rgba(0, 0, 0, 0.09);
+    }
+  }
+}
+
+

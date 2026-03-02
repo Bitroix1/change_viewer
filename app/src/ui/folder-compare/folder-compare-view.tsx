@@ -773,6 +773,28 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .folder-search-current {
             background-color: rgba(100, 180, 255, 0.7) !important;
           }
+          /* Wider vertical scrollbar for the middle (code) panel.
+             Must use !important to override the global win32/linux
+             ::-webkit-scrollbar rules in _scroll.scss. */
+          .folder-compare-content::-webkit-scrollbar {
+            width: 10px !important;
+            background: transparent !important;
+          }
+          .folder-compare-content::-webkit-scrollbar-thumb {
+            background-color: var(--scroll-bar-thumb-background-color) !important;
+            border-radius: 10px !important;
+            border: 2px solid transparent !important;
+            background-clip: padding-box !important;
+          }
+          .folder-compare-content::-webkit-scrollbar-thumb:hover,
+          .folder-compare-content::-webkit-scrollbar-thumb:active {
+            border-width: 1px !important;
+            background-color: var(--scroll-bar-thumb-background-color-active) !important;
+          }
+          .folder-compare-content::-webkit-scrollbar-track {
+            background: rgba(127, 127, 127, 0.12) !important;
+            border-radius: 10px !important;
+          }
           /* Clip box-shadow from sticky scrollbar so it doesn't bleed
              into the gap between files.  overflow:clip does NOT create
              a scroll container, so sticky positioning still works. */
@@ -1073,6 +1095,12 @@ export class FolderCompareView extends React.Component<
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
     // Apply highlighting when component selection changes
     if (prevState.selectedComponent !== this.state.selectedComponent) {
+      // Reset scroll positions of middle and right panels to the top
+      const middlePanel = document.querySelector('.folder-compare-content') as HTMLElement | null
+      if (middlePanel) middlePanel.scrollTop = 0
+      const rightPanel = document.querySelector('.right-panel') as HTMLElement | null
+      if (rightPanel) rightPanel.scrollTop = 0
+
       // Cancel any ongoing shrink-polling so it doesn't overwrite our
       // repacked heights.  Run one final shrinkWrappersToFit synchronously
       // to ensure clip-wrappers have correct baseline heights before we
@@ -1746,7 +1774,7 @@ export class FolderCompareView extends React.Component<
     const kindLabel = kindLabels[componentKind] || componentKind.charAt(0).toUpperCase() + componentKind.slice(1)
 
     return (
-      <div style={{
+      <div className="right-panel" style={{
         width: `${this.state.rightPanelWidth}px`,
         minWidth: `${MIN_RIGHT_PANEL_WIDTH}px`,
         backgroundColor: 'var(--box-alt-background-color)',

@@ -19,6 +19,7 @@ import { ITokens, ILineTokens } from '../../lib/highlighter/types'
 import {
   applyComponentHighlightingToAll,
   extractLineNumber,
+  getClaimedLineNumbers,
   getHighlightedLinesForComponent,
   injectExpandButtonsIntoHunkInfoRows,
   injectBoundaryExpandButtons,
@@ -461,7 +462,7 @@ export class FolderCompareView extends React.Component<
                         {this.getStatusLabel(file.status.kind)}
                       </div>
                     </div>
-                    {this.renderDiffStats(file.id)}
+                    {this.renderDiffStats(file.id, file.path)}
                   </div>
                   
                   <div className="diff-container" style={{ 
@@ -1996,18 +1997,58 @@ export class FolderCompareView extends React.Component<
 
   /**
    * Render the "+N / -N" addition/deletion stats badge for a file header.
+   * Counts update based on the current view:
+   * - "all": total additions/deletions in the file
+   * - component: only lines belonging to that component
+   * - "misc": only lines not claimed by any component
    * Only shows additions (green) if > 0, only shows deletions (red) if > 0.
    */
-  private renderDiffStats(fileId: string): JSX.Element | null {
+  private renderDiffStats(fileId: string, filePath: string): JSX.Element | null {
     const diff = this.state.fileDiffs.get(fileId)
     if (!diff) return null
 
     let additions = 0
     let deletions = 0
-    for (const hunk of diff.hunks) {
-      for (const line of hunk.lines) {
-        if (line.type === DiffLineType.Add) additions++
-        else if (line.type === DiffLineType.Delete) deletions++
+
+    if (this.state.selectedComponent === 'all') {
+      // Show all: count every addition/deletion
+      for (const hunk of diff.hunks) {
+        for (const line of hunk.lines) {
+          if (line.type === DiffLineType.Add) additions++
+          else if (line.type === DiffLineType.Delete) deletions++
+        }
+      }
+    } else if (this.state.selectedComponent === 'misc') {
+      // Misc: count only lines NOT claimed by any component
+      const claimedLines = getClaimedLineNumbers(this.state.diffComponents, filePath)
+      for (const hunk of diff.hunks) {
+        for (const line of hunk.lines) {
+          if (line.type === DiffLineType.Add) {
+            if (line.newLineNumber !== null && !claimedLines.has(line.newLineNumber)) additions++
+          } else if (line.type === DiffLineType.Delete) {
+            if (line.oldLineNumber !== null && !claimedLines.has(line.oldLineNumber)) deletions++
+          }
+        }
+      }
+    } else {
+      // Component view: count only lines highlighted by this component
+      const highlights = getHighlightedLinesForComponent(
+        this.state.diffComponents, this.state.selectedComponent, filePath, this.state.diffNodes
+      )
+      const beforeLines = new Set<number>()
+      const afterLines = new Set<number>()
+      for (const h of highlights) {
+        if (h.side === 'before') beforeLines.add(h.line)
+        else afterLines.add(h.line)
+      }
+      for (const hunk of diff.hunks) {
+        for (const line of hunk.lines) {
+          if (line.type === DiffLineType.Add) {
+            if (line.newLineNumber !== null && afterLines.has(line.newLineNumber)) additions++
+          } else if (line.type === DiffLineType.Delete) {
+            if (line.oldLineNumber !== null && beforeLines.has(line.oldLineNumber)) deletions++
+          }
+        }
       }
     }
 

@@ -27,6 +27,7 @@ import { repackFile, shrinkWrappersToFit, setupScrollSync } from './folder-compa
 import {
   loadDiffComponents,
   loadAllDiffs,
+  loadPrecomputedDiffs,
   compareDirectories,
   getSourceLineContent,
 } from './folder-compare-data'
@@ -2019,23 +2020,38 @@ export class FolderCompareView extends React.Component<
         isLoadingDiffs: true,
       })
 
-      // Build file contents map FIRST so syntax highlighting tokens are
-      // available before any diff renders.  loadAllDiffs fires incremental
-      // setState calls via onProgress, and each of those triggers a render
-      // — if fileContentsMap isn't in state yet the diff appears unstyled.
-      const fileContentsMap = await this.buildFileContentsMap(
+      // Run file-contents loading (for syntax highlighting) concurrently
+      // with diff loading.
+      const fileContentsPromise = this.buildFileContentsMap(
         beforeFolder,
         afterFolder,
         fileChanges
-      )
-      this.setState({ fileContentsMap })
+      ).then(fileContentsMap => {
+        this.setState({ fileContentsMap })
+      })
 
-      await loadAllDiffs(
-        beforeFolder,
-        afterFolder,
-        fileChanges,
-        diffs => this.setState({ fileDiffs: diffs })
-      )
+      // Try to load precomputed diffs from the diffmagic folder first.
+      // If found, skip the expensive per-file diff computation entirely.
+      let diffsPromise: Promise<unknown>
+
+      const precomputed = diffmagicFolder
+        ? await loadPrecomputedDiffs(diffmagicFolder)
+        : null
+
+      if (precomputed !== null) {
+        console.log('Using precomputed diffs — skipping in-process diff computation')
+        this.setState({ fileDiffs: precomputed })
+        diffsPromise = Promise.resolve()
+      } else {
+        diffsPromise = loadAllDiffs(
+          beforeFolder,
+          afterFolder,
+          fileChanges,
+          diffs => this.setState({ fileDiffs: diffs })
+        )
+      }
+
+      await Promise.all([fileContentsPromise, diffsPromise])
 
       this.setState({ isLoadingDiffs: false })
     } catch (error) {

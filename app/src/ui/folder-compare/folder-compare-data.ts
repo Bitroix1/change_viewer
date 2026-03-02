@@ -6,7 +6,13 @@ import * as Path from 'path'
 import * as FSPromises from 'fs/promises'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { AppFileStatusKind } from '../../models/status'
-import { ITextDiff, DiffSelection, DiffSelectionType } from '../../models/diff'
+import { ITextDiff, DiffType, DiffSelection, DiffSelectionType } from '../../models/diff'
+import {
+  DiffHunk,
+  DiffHunkHeader,
+  DiffHunkExpansionType,
+} from '../../models/diff/raw-diff'
+import { DiffLine, DiffLineType } from '../../models/diff/diff-line'
 import { computeDiff } from './diff-generator'
 
 // ---------------------------------------------------------------------------
@@ -68,31 +74,154 @@ export async function loadDiffComponents(
 }
 
 // ---------------------------------------------------------------------------
+// Precomputed diff loading
+// ---------------------------------------------------------------------------
+
+/** DiffLineType string ↔ enum mapping for JSON deserialization. */
+const lineTypeFromString: Record<string, DiffLineType> = {
+  Context: DiffLineType.Context,
+  Add: DiffLineType.Add,
+  Delete: DiffLineType.Delete,
+  Hunk: DiffLineType.Hunk,
+}
+
+/**
+ * Try to load `precomputed_diffs.json` from *diffmagicFolder* and return
+ * a ready-to-use map of file id → ITextDiff.  Returns `null` if the file
+ * doesn't exist or can't be parsed.
+ */
+export async function loadPrecomputedDiffs(
+  diffmagicFolder: string
+): Promise<Map<string, ITextDiff | null> | null> {
+  const filePath = Path.join(diffmagicFolder, 'precomputed_diffs.json')
+  try {
+    const raw = await FSPromises.readFile(filePath, 'utf-8')
+    const data: Record<string, any> = JSON.parse(raw)
+    const result = new Map<string, ITextDiff | null>()
+
+    for (const [fileId, entry] of Object.entries(data)) {
+      if (entry === null) {
+        result.set(fileId, null)
+        continue
+      }
+
+      const hunks: DiffHunk[] = (entry.hunks ?? []).map((h: any) => {
+        const header = new DiffHunkHeader(
+          h.header.oldStartLine,
+          h.header.oldLineCount,
+          h.header.newStartLine,
+          h.header.newLineCount
+        )
+
+        const lines: DiffLine[] = (h.lines ?? []).map(
+          (l: any) =>
+            new DiffLine(
+              l.text,
+              lineTypeFromString[l.type] ?? DiffLineType.Context,
+              l.originalLineNumber ?? null,
+              l.oldLineNumber ?? null,
+              l.newLineNumber ?? null,
+              l.noTrailingNewLine ?? false
+            )
+        )
+
+        const expansionType =
+          (h.expansionType as DiffHunkExpansionType) ??
+          DiffHunkExpansionType.None
+
+        return new DiffHunk(
+          header,
+          lines,
+          h.unifiedDiffStart ?? 0,
+          h.unifiedDiffEnd ?? 0,
+          expansionType
+        )
+      })
+
+      const textDiff: ITextDiff = {
+        kind: DiffType.Text,
+        text: entry.text ?? '',
+        hunks,
+        maxLineNumber: entry.maxLineNumber ?? 0,
+        hasHiddenBidiChars: entry.hasHiddenBidiChars ?? false,
+      }
+
+      result.set(fileId, textDiff)
+    }
+
+    console.log(
+      `Loaded ${result.size} precomputed diff(s) from ${filePath}`
+    )
+    return result
+  } catch {
+    // File doesn't exist or is invalid – fall through to on-the-fly computation.
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Diff loading
 // ---------------------------------------------------------------------------
 
 /**
- * Load diffs for all files, calling `onProgress` after each file so the UI
- * updates incrementally.
+ * Load diffs for all files in parallel (up to `concurrency` at a time),
+ * calling `onProgress` in batches so the UI updates incrementally without
+ * triggering a React re-render for every single file.
  */
 export async function loadAllDiffs(
   beforeFolder: string,
   afterFolder: string,
   files: ReadonlyArray<WorkingDirectoryFileChange>,
-  onProgress: (diffs: Map<string, ITextDiff | null>) => void
+  onProgress: (diffs: Map<string, ITextDiff | null>) => void,
+  concurrency: number = 10
 ): Promise<Map<string, ITextDiff | null>> {
   const newDiffs = new Map<string, ITextDiff | null>()
 
-  for (const file of files) {
-    try {
-      const diff = await computeDiff(beforeFolder, afterFolder, file)
-      newDiffs.set(file.id, diff)
-    } catch (error) {
-      console.error(`Error loading diff for ${file.path}:`, error)
-      newDiffs.set(file.id, null)
+  // Throttle onProgress so we emit at most once per animation frame.
+  let progressDirty = false
+  let rafId: ReturnType<typeof requestAnimationFrame> | null = null
+
+  function scheduleProgress() {
+    progressDirty = true
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        if (progressDirty) {
+          progressDirty = false
+          onProgress(new Map(newDiffs))
+        }
+      })
     }
-    onProgress(new Map(newDiffs))
   }
+
+  let index = 0
+
+  async function worker() {
+    while (index < files.length) {
+      const i = index++
+      const file = files[i]
+      try {
+        const diff = await computeDiff(beforeFolder, afterFolder, file)
+        newDiffs.set(file.id, diff)
+      } catch (error) {
+        console.error(`Error loading diff for ${file.path}:`, error)
+        newDiffs.set(file.id, null)
+      }
+      scheduleProgress()
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, files.length) },
+    () => worker()
+  )
+  await Promise.all(workers)
+
+  // Final flush to make sure the last batch is emitted.
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+  }
+  onProgress(new Map(newDiffs))
 
   return newDiffs
 }
@@ -158,16 +287,31 @@ export async function compareDirectories(
     }
   }
 
-  for (const bf of beforeFiles) {
-    if (afterFileSet.has(bf.relativePath)) {
-      const af = afterFiles.find(f => f.relativePath === bf.relativePath)!
+  // Build a lookup map for afterFiles so the modified-file check is O(1).
+  const afterFileMap = new Map<string, FileEntry>()
+  for (const af of afterFiles) {
+    afterFileMap.set(af.relativePath, af)
+  }
+
+  // Check for modified files in parallel.
+  const commonFiles = beforeFiles.filter(bf => afterFileSet.has(bf.relativePath))
+  const modifiedResults = await Promise.all(
+    commonFiles.map(async bf => {
+      const af = afterFileMap.get(bf.relativePath)!
       const [beforeContent, afterContent] = await Promise.all([
         FSPromises.readFile(bf.fullPath, 'utf-8').catch(() => null),
         FSPromises.readFile(af.fullPath, 'utf-8').catch(() => null),
       ])
       if (beforeContent !== null && afterContent !== null && beforeContent !== afterContent) {
-        changes.push(createFileChange(bf.relativePath, AppFileStatusKind.Modified))
+        return bf.relativePath
       }
+      return null
+    })
+  )
+
+  for (const relPath of modifiedResults) {
+    if (relPath !== null) {
+      changes.push(createFileChange(relPath, AppFileStatusKind.Modified))
     }
   }
 

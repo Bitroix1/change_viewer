@@ -2826,6 +2826,31 @@ export class FolderCompareView extends React.Component<
         }
         if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
       }
+      // Fallback: when one side has no line number (e.g. misc mode with
+      // only-addition or only-deletion hunks and no context rows shown),
+      // also scan hidden rows to find the correct line reference from
+      // context rows that have both before and after line numbers.
+      if ((lastBeforeLine === 0) !== (lastAfterLine === 0)) {
+        for (let i = children.length - 1; i >= 0; i--) {
+          const el = children[i]
+          if (el.classList.contains('expand-boundary-bottom')) continue
+          if (el.classList.contains('expanded-context-row')) continue
+          if (el.classList.contains('component-hunk-separator')) continue
+          const row = (el.querySelector('.row') as HTMLElement) ?? el
+          if (row.classList.contains('hunk-info')) continue
+          if (lastBeforeLine === 0) {
+            const n = row.querySelector('.before .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastBeforeLine = v
+          }
+          if (lastAfterLine === 0) {
+            const n = row.querySelector('.after .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastAfterLine = v
+          }
+          if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
+        }
+      }
       beforeMissStart = lastBeforeLine + 1
       beforeMissEnd = beforeLines.length
       afterMissStart = lastAfterLine + 1
@@ -2859,6 +2884,32 @@ export class FolderCompareView extends React.Component<
         if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
       }
 
+      // Fallback: when one side has no line number (e.g. misc mode with
+      // only-addition or only-deletion hunks and no context rows shown),
+      // also scan hidden rows to find the correct line reference from
+      // context rows that have both before and after line numbers.
+      if ((lastBeforeLine === 0) !== (lastAfterLine === 0)) {
+        for (let i = separatorIdx - 1; i >= 0; i--) {
+          const el = children[i]
+          if (el.classList.contains('component-hunk-separator')) break
+          if (el.classList.contains('expanded-context-row')) continue
+          if (el.classList.contains('expand-boundary-bottom')) continue
+          const row = (el.querySelector('.row') as HTMLElement) ?? el
+          if (row.classList.contains('hunk-info')) continue
+          if (lastBeforeLine === 0) {
+            const n = row.querySelector('.before .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastBeforeLine = v
+          }
+          if (lastAfterLine === 0) {
+            const n = row.querySelector('.after .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) lastAfterLine = v
+          }
+          if (lastBeforeLine !== 0 && lastAfterLine !== 0) break
+        }
+      }
+
       // Walk forwards to find the first visible before/after line numbers
       let firstBeforeLine = Infinity
       let firstAfterLine = Infinity
@@ -2880,6 +2931,30 @@ export class FolderCompareView extends React.Component<
           if (v !== null) firstAfterLine = v
         }
         if (firstBeforeLine !== Infinity && firstAfterLine !== Infinity) break
+      }
+
+      // Fallback: scan hidden rows when one side is missing (see backward
+      // fallback above for rationale).
+      if ((firstBeforeLine === Infinity) !== (firstAfterLine === Infinity)) {
+        for (let i = separatorIdx + 1; i < children.length; i++) {
+          const el = children[i]
+          if (el.classList.contains('component-hunk-separator')) break
+          if (el.classList.contains('expanded-context-row')) continue
+          if (el.classList.contains('expand-boundary-bottom')) continue
+          const row = (el.querySelector('.row') as HTMLElement) ?? el
+          if (row.classList.contains('hunk-info')) continue
+          if (firstBeforeLine === Infinity) {
+            const n = row.querySelector('.before .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) firstBeforeLine = v
+          }
+          if (firstAfterLine === Infinity) {
+            const n = row.querySelector('.after .line-number')
+            const v = n ? extractLineNumber(n) : null
+            if (v !== null) firstAfterLine = v
+          }
+          if (firstBeforeLine !== Infinity && firstAfterLine !== Infinity) break
+        }
       }
 
       beforeMissStart = lastBeforeLine + 1

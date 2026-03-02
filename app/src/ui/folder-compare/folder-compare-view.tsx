@@ -233,7 +233,8 @@ export class FolderCompareView extends React.Component<
                   />
                   <span style={{ fontSize: '13px' }}>Show All<br></br></span>
                 </label>
-                <div style={{ flex: 1, overflow: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginTop: '6px' }}>
+                <div style={{ flex: 1, overflow: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {(() => {
                   // Group components by component_kind
                   const kindGroups = new Map<string, Array<{comp: any, index: number}>>()
@@ -312,9 +313,9 @@ export class FolderCompareView extends React.Component<
                     )
                   })
                 })()}
+                </div>
                 <div style={{
-                  position: 'sticky',
-                  bottom: 0,
+                  flexShrink: 0,
                   paddingTop: '14px',
                   backgroundColor: 'var(--box-alt-background-color)',
                 }}>
@@ -1410,8 +1411,26 @@ export class FolderCompareView extends React.Component<
     const stickyBar = scrollContainer.querySelector('.scroll-sync-bar') as HTMLElement | null
     const stickyHeight = stickyBar ? stickyBar.getBoundingClientRect().height : 0
     const visibleBottom = containerRect.top + scrollContainer.clientHeight - stickyHeight
+
+    // Account for sticky file headers that cover the top of the viewport.
+    // Each file container has a sticky header (first child) that sticks at
+    // the top when the user scrolls through that file.  An element behind
+    // the header is technically in the container bounds but not visible.
+    let stickyHeaderOffset = 0
+    const fileContainer = el.closest('[data-file-path]') as HTMLElement | null
+    if (fileContainer) {
+      const header = fileContainer.children[0] as HTMLElement | null
+      if (header) {
+        const hRect = header.getBoundingClientRect()
+        if (hRect.bottom > containerRect.top) {
+          stickyHeaderOffset = Math.max(0, hRect.bottom - containerRect.top)
+        }
+      }
+    }
+    const visibleTop = containerRect.top + stickyHeaderOffset
+
     const isVisible =
-      elRect.top >= containerRect.top &&
+      elRect.top >= visibleTop &&
       elRect.bottom <= visibleBottom
     if (isVisible) return
 
@@ -1804,7 +1823,7 @@ export class FolderCompareView extends React.Component<
                     minWidth: 0,
                     flex: 1,
                   }}>
-                    <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{entry.fullPath}:{entry.line} ({entry.side === 'before' ? '-' : '+'})</span>
+                    <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{entry.fullPath}:{entry.line} <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '14px' }}>({entry.side === 'before' ? '-' : '+'})</span></span>
                   </span>
                   {isLikelySource && (
                     <span style={{
@@ -2551,58 +2570,99 @@ export class FolderCompareView extends React.Component<
       }
     }
 
+    // Shared text-node filter (same criteria as getSearchableText).
+    const acceptSearchNode = (node: Node): number => {
+      const parent = node.parentElement
+      if (!parent) return NodeFilter.FILTER_REJECT
+      if (
+        parent.classList.contains('component-char-highlight') ||
+        parent.classList.contains('component-char-click-capture') ||
+        parent.classList.contains('component-hunk-separator')
+      ) {
+        return NodeFilter.FILTER_REJECT
+      }
+      return NodeFilter.FILTER_ACCEPT
+    }
+
     for (const group of groups.values()) {
       const cw = group.row.querySelector(`.${group.side} .content-wrapper`) as HTMLElement
       if (!cw) continue
-
-      // Collect all text-node ranges to wrap, ordered by document position.
-      // We process in reverse so earlier splits don't invalidate later offsets.
-      const toWrap: Array<{ textNode: Text; idx: number; globalIndex: number }> = []
 
       const occurrenceSet = new Set(group.occurrences)
       const occToGlobal = new Map<number, number>()
       group.occurrences.forEach((occ, i) => occToGlobal.set(occ, group.globalIndices[i]))
 
+      // Build a list of accepted text nodes and a concatenated text string
+      // (identical to what getSearchableText produces).  This ensures
+      // occurrence counting matches findMatchingSides even when a query
+      // spans across text-node boundaries (created by syntax highlighting
+      // or component-char-white spans).
+      const textNodes: Array<{ node: Text; start: number }> = []
+      let concatenated = ''
       const walker = document.createTreeWalker(
         cw,
         NodeFilter.SHOW_TEXT,
-        {
-          acceptNode: (node) => {
-            const parent = node.parentElement
-            if (!parent) return NodeFilter.FILTER_REJECT
-            if (
-              parent.classList.contains('component-char-highlight') ||
-              parent.classList.contains('component-char-click-capture') ||
-              parent.classList.contains('component-hunk-separator')
-            ) {
-              return NodeFilter.FILTER_REJECT
-            }
-            return NodeFilter.FILTER_ACCEPT
-          },
-        }
+        { acceptNode: acceptSearchNode }
       )
+      let tn: Text | null
+      while ((tn = walker.nextNode() as Text | null)) {
+        textNodes.push({ node: tn, start: concatenated.length })
+        concatenated += tn.textContent || ''
+      }
 
+      const lowerConcat = concatenated.toLowerCase()
+
+      // Find all occurrences in the concatenated text and collect the ones
+      // that belong to this group's occurrence set.
+      type MatchSegment = {
+        textNode: Text
+        /** Offset within the text node */
+        idx: number
+        /** Number of characters to highlight within this text node */
+        len: number
+        globalIndex: number
+      }
+      const toWrap: MatchSegment[] = []
+
+      let searchFrom = 0
       let seen = 0
-      let textNode: Text | null
-      while ((textNode = walker.nextNode() as Text | null)) {
-        const nodeText = textNode.textContent || ''
-        let searchFrom = 0
-        while (true) {
-          const pos = nodeText.toLowerCase().indexOf(query, searchFrom)
-          if (pos === -1) break
-          if (occurrenceSet.has(seen)) {
-            toWrap.push({ textNode, idx: pos, globalIndex: occToGlobal.get(seen)! })
+      while (true) {
+        const pos = lowerConcat.indexOf(query, searchFrom)
+        if (pos === -1) break
+        if (occurrenceSet.has(seen)) {
+          const globalIndex = occToGlobal.get(seen)!
+          const matchEnd = pos + queryLen
+          // Map [pos, matchEnd) back to individual text nodes.
+          for (const entry of textNodes) {
+            const nodeEnd = entry.start + (entry.node.textContent || '').length
+            if (nodeEnd <= pos) continue   // entirely before the match
+            if (entry.start >= matchEnd) break  // past the match
+            const segStart = Math.max(0, pos - entry.start)
+            const segEnd = Math.min((entry.node.textContent || '').length, matchEnd - entry.start)
+            toWrap.push({ textNode: entry.node, idx: segStart, len: segEnd - segStart, globalIndex })
           }
-          seen++
-          searchFrom = pos + queryLen
         }
+        seen++
+        searchFrom = pos + queryLen
+      }
+
+      // Pre-compute how many segments each match has and the forward-order
+      // position of each segment so we can style multi-segment matches
+      // as a single continuous highlight.
+      const segCountByMatch = new Map<number, number>()
+      const segPosByIndex = new Map<number, number>()
+      for (let i = 0; i < toWrap.length; i++) {
+        const gi = toWrap[i].globalIndex
+        const pos = segCountByMatch.get(gi) || 0
+        segPosByIndex.set(i, pos)
+        segCountByMatch.set(gi, pos + 1)
       }
 
       // Process in reverse to keep offsets stable
       for (let i = toWrap.length - 1; i >= 0; i--) {
-        const { textNode: tn, idx, globalIndex } = toWrap[i]
-        const matchStart = tn.splitText(idx)
-        const afterMatch = matchStart.splitText(queryLen)
+        const { textNode: wtn, idx, len, globalIndex } = toWrap[i]
+        const matchStart = wtn.splitText(idx)
+        const afterMatch = matchStart.splitText(len)
         void afterMatch
 
         const mark = document.createElement('mark')
@@ -2610,6 +2670,28 @@ export class FolderCompareView extends React.Component<
         const isCurrent = globalIndex === this.folderSearchIndex
         if (isCurrent) mark.classList.add('folder-search-current')
         mark.textContent = matchStart.textContent
+
+        // For matches that span multiple text nodes (e.g. across syntax
+        // spans), remove inner border-radius and box-shadow so the
+        // segments visually merge into a single highlight.
+        const total = segCountByMatch.get(globalIndex)!
+        if (total > 1) {
+          const segPos = segPosByIndex.get(i)!
+          if (segPos === 0) {
+            // First segment: rounded left, flat right
+            mark.style.borderRadius = '2px 0 0 2px'
+            mark.style.boxShadow = '-1px 0 0 0 rgba(0,0,0,0.3), 0 -1px 0 0 rgba(0,0,0,0.3), 0 1px 0 0 rgba(0,0,0,0.3)'
+          } else if (segPos === total - 1) {
+            // Last segment: flat left, rounded right
+            mark.style.borderRadius = '0 2px 2px 0'
+            mark.style.boxShadow = '1px 0 0 0 rgba(0,0,0,0.3), 0 -1px 0 0 rgba(0,0,0,0.3), 0 1px 0 0 rgba(0,0,0,0.3)'
+          } else {
+            // Middle segment: flat both sides
+            mark.style.borderRadius = '0'
+            mark.style.boxShadow = '0 -1px 0 0 rgba(0,0,0,0.3), 0 1px 0 0 rgba(0,0,0,0.3)'
+          }
+        }
+
         matchStart.parentNode!.replaceChild(mark, matchStart)
       }
     }

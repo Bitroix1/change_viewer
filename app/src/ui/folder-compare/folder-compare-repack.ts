@@ -378,6 +378,8 @@ export function setupScrollSync(): void {
       liveContents.forEach(el => {
         const w = el.querySelector('.content-wrapper') as HTMLElement
         if (w) w.style.transform = `translateX(-${sl}px)`
+        const p = el.querySelector('.prefix') as HTMLElement
+        if (p) p.style.transform = `translateX(-${sl}px)`
       })
     })
 
@@ -389,6 +391,8 @@ export function setupScrollSync(): void {
       liveContents.forEach(el => {
         const w = el.querySelector('.content-wrapper') as HTMLElement
         if (w) w.style.transform = `translateX(-${sl}px)`
+        const p = el.querySelector('.prefix') as HTMLElement
+        if (p) p.style.transform = `translateX(-${sl}px)`
       })
     })
   })

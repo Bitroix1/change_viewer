@@ -1927,23 +1927,49 @@ function getModifiedRows(
     }
   }
 
-  let indexModifiedRow = 0
+  // Bottom-align: pair deleted/added lines from the bottom so that excess
+  // deletions appear first and excess additions appear first, keeping the
+  // semantically related modified lines aligned visually.  For example,
+  // when a Javadoc comment is removed above a method both the comment
+  // deletions and the renamed method line are in the same hunk — pairing
+  // from the bottom ensures the method lines stay aligned.
+  const numPairs = showSideBySideDiff
+    ? Math.min(addedLines.length, deletedLines.length)
+    : 0
+  const deletedOffset = deletedLines.length - numPairs
+  const addedOffset = addedLines.length - numPairs
 
-  while (
-    showSideBySideDiff &&
-    indexModifiedRow < addedLines.length &&
-    indexModifiedRow < deletedLines.length
-  ) {
-    const addedLine = forceUnwrap(
-      'Unexpected null line',
-      addedLines[indexModifiedRow]
-    )
+  // 1) Excess deleted lines (top of the block)
+  for (let i = 0; i < deletedOffset; i++) {
+    const line = forceUnwrap('Unexpected null line', deletedLines[i])
+    output.push({
+      type: DiffRowType.Deleted,
+      data: getDataFromLine(line, 'oldLineNumber', undefined),
+      hunkStartLine,
+    })
+  }
+
+  // 2) Excess added lines (top of the block)
+  for (let i = 0; i < addedOffset; i++) {
+    const line = forceUnwrap('Unexpected null line', addedLines[i])
+    output.push({
+      type: DiffRowType.Added,
+      data: getDataFromLine(line, 'newLineNumber', undefined),
+      hunkStartLine,
+    })
+  }
+
+  // 3) Modified pairs (bottom-aligned)
+  for (let i = 0; i < numPairs; i++) {
     const deletedLine = forceUnwrap(
       'Unexpected null line',
-      deletedLines[indexModifiedRow]
+      deletedLines[deletedOffset + i]
+    )
+    const addedLine = forceUnwrap(
+      'Unexpected null line',
+      addedLines[addedOffset + i]
     )
 
-    // Modified lines
     output.push({
       type: DiffRowType.Modified,
       beforeData: getDataFromLine(
@@ -1958,29 +1984,27 @@ function getModifiedRows(
       ),
       hunkStartLine,
     })
-
-    indexModifiedRow++
   }
 
-  for (let i = indexModifiedRow; i < deletedLines.length; i++) {
-    const line = forceUnwrap('Unexpected null line', deletedLines[i])
+  // When not showing side-by-side, just output remaining lines as-is
+  if (!showSideBySideDiff) {
+    for (let i = 0; i < deletedLines.length; i++) {
+      const line = forceUnwrap('Unexpected null line', deletedLines[i])
+      output.push({
+        type: DiffRowType.Deleted,
+        data: getDataFromLine(line, 'oldLineNumber', diffTokensBefore.shift()),
+        hunkStartLine,
+      })
+    }
 
-    output.push({
-      type: DiffRowType.Deleted,
-      data: getDataFromLine(line, 'oldLineNumber', diffTokensBefore.shift()),
-      hunkStartLine,
-    })
-  }
-
-  for (let i = indexModifiedRow; i < addedLines.length; i++) {
-    const line = forceUnwrap('Unexpected null line', addedLines[i])
-
-    // Added line
-    output.push({
-      type: DiffRowType.Added,
-      data: getDataFromLine(line, 'newLineNumber', diffTokensAfter.shift()),
-      hunkStartLine,
-    })
+    for (let i = 0; i < addedLines.length; i++) {
+      const line = forceUnwrap('Unexpected null line', addedLines[i])
+      output.push({
+        type: DiffRowType.Added,
+        data: getDataFromLine(line, 'newLineNumber', diffTokensAfter.shift()),
+        hunkStartLine,
+      })
+    }
   }
 
   return output

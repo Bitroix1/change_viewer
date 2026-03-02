@@ -6,7 +6,7 @@ import { Dispatcher } from '../dispatcher'
 import { FolderSelector } from './folder-selector'
 import { WorkingDirectoryFileChange } from '../../models/status'
 import { AppFileStatusKind } from '../../models/status'
-import { ITextDiff, ImageDiffType } from '../../models/diff'
+import { ITextDiff, ImageDiffType, DiffLineType } from '../../models/diff'
 import { Diff } from '../diff'
 import { Repository } from '../../models/repository'
 import { DiffSearchInput } from '../diff/diff-search-input'
@@ -439,23 +439,29 @@ export class FolderCompareView extends React.Component<
                     top: -20,
                     zIndex: 10,
                     borderTopLeftRadius: '6px',
-                    borderTopRightRadius: '6px'
+                    borderTopRightRadius: '6px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                   }}>
-                    <h3 style={{
-                      margin: '0 0 5px 0',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      direction: 'rtl',
-                      textAlign: 'left',
-                    }}>
-                      <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{file.path}</span>
-                    </h3>
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
-                      {this.getStatusLabel(file.status.kind)}
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h3 style={{
+                        margin: '0 0 5px 0',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        direction: 'rtl',
+                        textAlign: 'left',
+                      }}>
+                        <span style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{file.path}</span>
+                      </h3>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary-color)' }}>
+                        {this.getStatusLabel(file.status.kind)}
+                      </div>
                     </div>
+                    {this.renderDiffStats(file.id)}
                   </div>
                   
                   <div className="diff-container" style={{ 
@@ -533,7 +539,7 @@ export class FolderCompareView extends React.Component<
         <style>{`
           /* CSS Variables for filtered line opacity - adjust these to change faintness */
           :root {
-            --filtered-line-opacity: 0.05;
+            --filtered-line-opacity: 0.04;
           }
           
           /* === Fully filtered rows/sides (not in component at all) === */
@@ -1986,6 +1992,45 @@ export class FolderCompareView extends React.Component<
       default:
         return 'Unknown'
     }
+  }
+
+  /**
+   * Render the "+N / -N" addition/deletion stats badge for a file header.
+   * Only shows additions (green) if > 0, only shows deletions (red) if > 0.
+   */
+  private renderDiffStats(fileId: string): JSX.Element | null {
+    const diff = this.state.fileDiffs.get(fileId)
+    if (!diff) return null
+
+    let additions = 0
+    let deletions = 0
+    for (const hunk of diff.hunks) {
+      for (const line of hunk.lines) {
+        if (line.type === DiffLineType.Add) additions++
+        else if (line.type === DiffLineType.Delete) deletions++
+      }
+    }
+
+    if (additions === 0 && deletions === 0) return null
+
+    return (
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        fontSize: '14px',
+        fontWeight: 700,
+        fontFamily: 'monospace',
+        flexShrink: 0,
+        marginLeft: '12px',
+      }}>
+        {additions > 0 && (
+          <span style={{ color: '#28a745' }}>+{additions}</span>
+        )}
+        {deletions > 0 && (
+          <span style={{ color: '#d73a49' }}>-{deletions}</span>
+        )}
+      </div>
+    )
   }
 
   private onFolderSelectorDismissed = () => {

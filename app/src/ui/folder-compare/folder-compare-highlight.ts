@@ -647,8 +647,18 @@ export function applyComponentHighlightingForFile(
     }
     fileContainer.classList.remove('component-file-hidden')
 
-    // Misc shows ONLY unclaimed changed rows — no unchanged context rows.
-    const visibleIndices = new Set<number>(anchorIndices)
+    // Expand ±3 context rows around each unclaimed changed row, matching
+    // the component view behaviour.
+    const MISC_CONTEXT = 3
+    const visibleIndices = new Set<number>()
+    for (const anchorIdx of anchorIndices) {
+      for (let d = -MISC_CONTEXT; d <= MISC_CONTEXT; d++) {
+        const i = anchorIdx + d
+        if (i >= 0 && i < rowsArray.length && !rowsArray[i].classList.contains('hunk-info')) {
+          visibleIndices.add(i)
+        }
+      }
+    }
 
     const sortedVisible = Array.from(visibleIndices).sort((a, b) => a - b)
     const needsSeparatorBefore = new Set<number>()
@@ -679,7 +689,27 @@ export function applyComponentHighlightingForFile(
         htmlRow.classList.remove('component-hunk-start')
       }
       isFirstVisibleRow = false
-      // No char highlights or filtering for misc — show rows as-is
+
+      // Changed rows that are NOT unclaimed anchors (i.e. they belong to a
+      // component, not to misc) should appear with faint background to
+      // distinguish them from the actual miscellaneous changes.
+      const isChanged =
+        htmlRow.classList.contains('modified') ||
+        htmlRow.classList.contains('added') ||
+        htmlRow.classList.contains('deleted')
+      if (isChanged && !anchorIndices.has(idx)) {
+        htmlRow.classList.add('component-filtered')
+        const beforeSide = htmlRow.querySelector('.before') as HTMLElement
+        const afterSide = htmlRow.querySelector('.after') as HTMLElement
+        if (beforeSide) {
+          beforeSide.classList.add('component-filtered-side')
+          stripDiffInnerClasses(beforeSide)
+        }
+        if (afterSide) {
+          afterSide.classList.add('component-filtered-side')
+          stripDiffInnerClasses(afterSide)
+        }
+      }
     })
     return
   }

@@ -1,0 +1,2043 @@
+{
+  "diff_components": [
+    {
+      "component_id": 1,
+      "component_name": "Variable cmd removed in list",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1997366722,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "385:19-41",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 829668707,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "385:8-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:cmd@14684",
+          "edge_label_full": "FragmentToStmt:Fragment:cmd@14684 -> FragmentToStmt:Statement:VariableDeclarationStatement@14673",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1834939886,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "387:46-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1997366722,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "385:19-41",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@14755",
+          "edge_label_full": "NameRes:SimpleName:cmd@14755 -> NameRes::BaseNode:VariableDeclarationFragment@14684",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1834939886,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "387:46-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1152175709,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "385:19-22",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@14755",
+          "edge_label_full": "NameRes:SimpleName:cmd@14755 -> NameRes:SimpleName:cmd@14684",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 2,
+      "component_name": "Variable cmd removed in info",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 610511340,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "394:19-41",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 378817532,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "394:8-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:cmd@15021",
+          "edge_label_full": "FragmentToStmt:Fragment:cmd@15021 -> FragmentToStmt:Statement:VariableDeclarationStatement@15010",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 59531691,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "396:46-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 610511340,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "394:19-41",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15092",
+          "edge_label_full": "NameRes:SimpleName:cmd@15092 -> NameRes::BaseNode:VariableDeclarationFragment@15021",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 59531691,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "396:46-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 596872183,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "394:19-22",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15092",
+          "edge_label_full": "NameRes:SimpleName:cmd@15092 -> NameRes:SimpleName:cmd@15021",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 3,
+      "component_name": "Variable cmd removed in blame",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 129503875,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "404:19-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 265783610,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "404:8-43",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:cmd@15347",
+          "edge_label_full": "FragmentToStmt:Fragment:cmd@15347 -> FragmentToStmt:Statement:VariableDeclarationStatement@15336",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 61195378,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "406:47-50",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 129503875,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "404:19-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15420",
+          "edge_label_full": "NameRes:SimpleName:cmd@15420 -> NameRes::BaseNode:VariableDeclarationFragment@15347",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 61195378,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "406:47-50",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1586191997,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "404:19-22",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15420",
+          "edge_label_full": "NameRes:SimpleName:cmd@15420 -> NameRes:SimpleName:cmd@15347",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 4,
+      "component_name": "Variable cmd removed in mkdir",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1268166845,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "416:19-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 477699092,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "416:8-43",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:cmd@15726",
+          "edge_label_full": "FragmentToStmt:Fragment:cmd@15726 -> FragmentToStmt:Statement:VariableDeclarationStatement@15715",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 580214514,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "418:47-50",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1268166845,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "416:19-42",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15799",
+          "edge_label_full": "NameRes:SimpleName:cmd@15799 -> NameRes::BaseNode:VariableDeclarationFragment@15726",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 580214514,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "418:47-50",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 76005115,
+            "type": "SimpleName (atom)",
+            "content": "cmd",
+            "position": "416:19-22",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "edge_label": "NameRes:SimpleName:cmd@15799",
+          "edge_label_full": "NameRes:SimpleName:cmd@15799 -> NameRes:SimpleName:cmd@15726",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 5,
+      "component_name": "Type parameter T added in GitCommand",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 783353950,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "157:34-46",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:AddScmResult@5976",
+          "edge_label_full": "GenericArgToParam:Expression:AddScmResult@5976 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1332918747,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "165:34-49",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BranchScmResult@6301",
+          "edge_label_full": "GenericArgToParam:Expression:BranchScmResult@6301 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1259975387,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "173:34-52",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ChangeLogScmResult@6644",
+          "edge_label_full": "GenericArgToParam:Expression:ChangeLogScmResult@6644 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 816357995,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "181:34-50",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckInScmResult@7000",
+          "edge_label_full": "GenericArgToParam:Expression:CheckInScmResult@7000 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 930830379,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "195:34-51",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckOutScmResult@7613",
+          "edge_label_full": "GenericArgToParam:Expression:CheckOutScmResult@7613 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 947166618,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "203:34-47",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:DiffScmResult@7964",
+          "edge_label_full": "GenericArgToParam:Expression:DiffScmResult@7964 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 850955274,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "211:34-49",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ExportScmResult@8294",
+          "edge_label_full": "GenericArgToParam:Expression:ExportScmResult@8294 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2076206490,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "219:34-49",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoveScmResult@8637",
+          "edge_label_full": "GenericArgToParam:Expression:RemoveScmResult@8637 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 917306623,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "227:34-49",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:StatusScmResult@8977",
+          "edge_label_full": "GenericArgToParam:Expression:StatusScmResult@8977 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 667640475,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "235:34-46",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:TagScmResult@9317",
+          "edge_label_full": "GenericArgToParam:Expression:TagScmResult@9317 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1561341228,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "243:34-48",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UntagScmResult@9642",
+          "edge_label_full": "GenericArgToParam:Expression:UntagScmResult@9642 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1510816873,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "251:34-49",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UpdateScmResult@9993",
+          "edge_label_full": "GenericArgToParam:Expression:UpdateScmResult@9993 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1066128561,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "260:23-24",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:T@10376",
+          "edge_label_full": "GenericArgToParam:Expression:T@10376 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 897408128,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "265:34-47",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@10612",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@10612 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 957979970,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "269:19-32",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@10813",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@10813 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 343484316,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "277:19-33",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BlameScmResult@11126",
+          "edge_label_full": "GenericArgToParam:Expression:BlameScmResult@11126 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1410857068,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "282:34-48",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BlameScmResult@11278",
+          "edge_label_full": "GenericArgToParam:Expression:BlameScmResult@11278 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 839508958,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "287:19-38",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoteInfoScmResult@11519",
+          "edge_label_full": "GenericArgToParam:Expression:RemoteInfoScmResult@11519 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1447669508,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "292:34-53",
+            "file": "AbstractGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoteInfoScmResult@11681",
+          "edge_label_full": "GenericArgToParam:Expression:RemoteInfoScmResult@11681 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "to": {
+            "java_id": 117419875,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "30:28-47",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1149",
+          "edge_label_full": "NameRes:SimpleName:T@1149 -> NameRes::BaseNode:TypeParameter@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 632194946,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "91:25-37",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:AddScmResult@4222",
+          "edge_label_full": "GenericArgToParam:Expression:AddScmResult@4222 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 861922221,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "99:25-40",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BranchScmResult@4374",
+          "edge_label_full": "GenericArgToParam:Expression:BranchScmResult@4374 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 849051351,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "107:25-43",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ChangeLogScmResult@4535",
+          "edge_label_full": "GenericArgToParam:Expression:ChangeLogScmResult@4535 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1869185053,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "115:25-41",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckInScmResult@4705",
+          "edge_label_full": "GenericArgToParam:Expression:CheckInScmResult@4705 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 509424749,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "123:25-42",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckOutScmResult@4869",
+          "edge_label_full": "GenericArgToParam:Expression:CheckOutScmResult@4869 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 849540019,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "131:25-38",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:DiffScmResult@5036",
+          "edge_label_full": "GenericArgToParam:Expression:DiffScmResult@5036 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1211259665,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "139:25-40",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ExportScmResult@5191",
+          "edge_label_full": "GenericArgToParam:Expression:ExportScmResult@5191 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1149849559,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "147:25-40",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoveScmResult@5381",
+          "edge_label_full": "GenericArgToParam:Expression:RemoveScmResult@5381 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 386432497,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "155:25-40",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:StatusScmResult@5542",
+          "edge_label_full": "GenericArgToParam:Expression:StatusScmResult@5542 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1211333787,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "163:25-37",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:TagScmResult@5703",
+          "edge_label_full": "GenericArgToParam:Expression:TagScmResult@5703 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1171446748,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "171:25-39",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UntagScmResult@5855",
+          "edge_label_full": "GenericArgToParam:Expression:UntagScmResult@5855 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 273138972,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "179:25-40",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UpdateScmResult@6013",
+          "edge_label_full": "GenericArgToParam:Expression:UpdateScmResult@6013 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 528044602,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "186:25-38",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ListScmResult@6189",
+          "edge_label_full": "GenericArgToParam:Expression:ListScmResult@6189 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 318579276,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "194:22-35",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@6341",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@6341 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1676948814,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "220:25-39",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BlameScmResult@7189",
+          "edge_label_full": "GenericArgToParam:Expression:BlameScmResult@7189 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 861784959,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "228:25-44",
+            "file": "JGitScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoteInfoScmResult@7347",
+          "edge_label_full": "GenericArgToParam:Expression:RemoteInfoScmResult@7347 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1541571852,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "90:25-41",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckInScmResult@4007",
+          "edge_label_full": "GenericArgToParam:Expression:CheckInScmResult@4007 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1499213695,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "99:25-42",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckOutScmResult@4310",
+          "edge_label_full": "GenericArgToParam:Expression:CheckOutScmResult@4310 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2023738392,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "108:25-44",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoteInfoScmResult@4620",
+          "edge_label_full": "GenericArgToParam:Expression:RemoteInfoScmResult@4620 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1825970129,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "117:25-40",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BranchScmResult@4944",
+          "edge_label_full": "GenericArgToParam:Expression:BranchScmResult@4944 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 549459981,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "126:25-37",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:TagScmResult@5240",
+          "edge_label_full": "GenericArgToParam:Expression:TagScmResult@5240 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 839229363,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "135:25-39",
+            "file": "JGitTestScmProvider.java"
+          },
+          "to": {
+            "java_id": 272203717,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "30:28-29",
+            "file": "GitCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UntagScmResult@5515",
+          "edge_label_full": "GenericArgToParam:Expression:UntagScmResult@5515 -> GenericArgToParam:Param:T@1149",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 6,
+      "component_name": "Type parameter T added in AbstractCommand",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "to": {
+            "java_id": 23755370,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "35:38-57",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1337",
+          "edge_label_full": "NameRes:SimpleName:T@1337 -> NameRes::BaseNode:TypeParameter@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1363497260,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "38:23-24",
+            "file": "AbstractCommand.java"
+          },
+          "to": {
+            "java_id": 23755370,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "35:38-57",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1473",
+          "edge_label_full": "NameRes:SimpleName:T@1473 -> NameRes::BaseNode:TypeParameter@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1363497260,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "38:23-24",
+            "file": "AbstractCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1473",
+          "edge_label_full": "NameRes:SimpleName:T@1473 -> NameRes:SimpleName:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 68788847,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "42:17-18",
+            "file": "AbstractCommand.java"
+          },
+          "to": {
+            "java_id": 23755370,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "35:38-57",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1651",
+          "edge_label_full": "NameRes:SimpleName:T@1651 -> NameRes::BaseNode:TypeParameter@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 68788847,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "42:17-18",
+            "file": "AbstractCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1651",
+          "edge_label_full": "NameRes:SimpleName:T@1651 -> NameRes:SimpleName:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 3391153,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "32:65-77",
+            "file": "AbstractAddCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:AddScmResult@1288",
+          "edge_label_full": "GenericArgToParam:Expression:AddScmResult@1288 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1581433656,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "32:67-81",
+            "file": "AbstractBlameCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BlameScmResult@1259",
+          "edge_label_full": "GenericArgToParam:Expression:BlameScmResult@1259 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 374817457,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "35:68-83",
+            "file": "AbstractBranchCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BranchScmResult@1457",
+          "edge_label_full": "GenericArgToParam:Expression:BranchScmResult@1457 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 176877731,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "37:71-89",
+            "file": "AbstractChangeLogCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ChangeLogScmResult@1427",
+          "edge_label_full": "GenericArgToParam:Expression:ChangeLogScmResult@1427 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 689905739,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "35:69-85",
+            "file": "AbstractCheckInCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckInScmResult@1429",
+          "edge_label_full": "GenericArgToParam:Expression:CheckInScmResult@1429 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2139275181,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "35:70-87",
+            "file": "AbstractCheckOutCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckOutScmResult@1431",
+          "edge_label_full": "GenericArgToParam:Expression:CheckOutScmResult@1431 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 925686013,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "39:66-79",
+            "file": "AbstractDiffCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:DiffScmResult@1701",
+          "edge_label_full": "GenericArgToParam:Expression:DiffScmResult@1701 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1800581716,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "30:66-79",
+            "file": "AbstractEditCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:EditScmResult@1172",
+          "edge_label_full": "GenericArgToParam:Expression:EditScmResult@1172 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2096585547,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "33:68-83",
+            "file": "AbstractExportCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ExportScmResult@1331",
+          "edge_label_full": "GenericArgToParam:Expression:ExportScmResult@1331 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1460146719,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "35:70-79",
+            "file": "AbstractFileInfoCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ScmResult@1453",
+          "edge_label_full": "GenericArgToParam:Expression:ScmResult@1453 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 625020031,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "33:66-79",
+            "file": "AbstractListCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ListScmResult@1323",
+          "edge_label_full": "GenericArgToParam:Expression:ListScmResult@1323 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 290672305,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "31:67-81",
+            "file": "AbstractLoginCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:LoginScmResult@1243",
+          "edge_label_full": "GenericArgToParam:Expression:LoginScmResult@1243 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 491202857,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "32:67-81",
+            "file": "AbstractMkdirCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:MkdirScmResult@1287",
+          "edge_label_full": "GenericArgToParam:Expression:MkdirScmResult@1287 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 721234952,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "31:72-91",
+            "file": "AbstractRemoteInfoCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoteInfoScmResult@1219",
+          "edge_label_full": "GenericArgToParam:Expression:RemoteInfoScmResult@1219 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 779315020,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "33:68-83",
+            "file": "AbstractRemoveCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoveScmResult@1363",
+          "edge_label_full": "GenericArgToParam:Expression:RemoveScmResult@1363 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1461111257,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "31:68-83",
+            "file": "AbstractStatusCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:StatusScmResult@1238",
+          "edge_label_full": "GenericArgToParam:Expression:StatusScmResult@1238 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1936728619,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "34:65-77",
+            "file": "AbstractTagCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:TagScmResult@1403",
+          "edge_label_full": "GenericArgToParam:Expression:TagScmResult@1403 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 722973854,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "30:68-83",
+            "file": "AbstractUnEditCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UnEditScmResult@1176",
+          "edge_label_full": "GenericArgToParam:Expression:UnEditScmResult@1176 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1830960306,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "30:67-81",
+            "file": "AbstractUntagCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UntagScmResult@1278",
+          "edge_label_full": "GenericArgToParam:Expression:UntagScmResult@1278 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 921549721,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "43:68-83",
+            "file": "AbstractUpdateCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UpdateScmResult@1745",
+          "edge_label_full": "GenericArgToParam:Expression:UpdateScmResult@1745 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1306447637,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "35:51-64",
+            "file": "HgInfoCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@1416",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@1416 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 296702509,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "44:52-65",
+            "file": "GitInfoCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@1817",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@1817 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 695185976,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "52:53-66",
+            "file": "JGitInfoCommand.java"
+          },
+          "to": {
+            "java_id": 1017298527,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "35:38-39",
+            "file": "AbstractCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@2084",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@2084 -> GenericArgToParam:Param:T@1337",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 7,
+      "component_name": "Type parameter T added in SvnCommand",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 2009423046,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "250:34-46",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:AddScmResult@9924",
+          "edge_label_full": "GenericArgToParam:Expression:AddScmResult@9924 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 283931794,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "260:34-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BranchScmResult@10261",
+          "edge_label_full": "GenericArgToParam:Expression:BranchScmResult@10261 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1566336610,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "270:34-52",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ChangeLogScmResult@10616",
+          "edge_label_full": "GenericArgToParam:Expression:ChangeLogScmResult@10616 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1899840791,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "280:34-50",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckInScmResult@10984",
+          "edge_label_full": "GenericArgToParam:Expression:CheckInScmResult@10984 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1395950669,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "290:34-51",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:CheckOutScmResult@11341",
+          "edge_label_full": "GenericArgToParam:Expression:CheckOutScmResult@11341 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 985478457,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "300:34-47",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:DiffScmResult@11704",
+          "edge_label_full": "GenericArgToParam:Expression:DiffScmResult@11704 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 873284069,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "310:34-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ExportScmResult@12046",
+          "edge_label_full": "GenericArgToParam:Expression:ExportScmResult@12046 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 373811974,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "320:34-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:RemoveScmResult@12401",
+          "edge_label_full": "GenericArgToParam:Expression:RemoveScmResult@12401 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 31861617,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "330:34-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:StatusScmResult@12753",
+          "edge_label_full": "GenericArgToParam:Expression:StatusScmResult@12753 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2044304418,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "340:34-46",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:TagScmResult@13105",
+          "edge_label_full": "GenericArgToParam:Expression:TagScmResult@13105 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1506153644,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "350:34-48",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UntagScmResult@13442",
+          "edge_label_full": "GenericArgToParam:Expression:UntagScmResult@13442 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1862047455,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "361:34-49",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:UpdateScmResult@13819",
+          "edge_label_full": "GenericArgToParam:Expression:UpdateScmResult@13819 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 245472280,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "372:23-24",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:T@14214",
+          "edge_label_full": "GenericArgToParam:Expression:T@14214 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1604082824,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "377:34-47",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:ListScmResult@14450",
+          "edge_label_full": "GenericArgToParam:Expression:ListScmResult@14450 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 258425622,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "387:34-47",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:InfoScmResult@14792",
+          "edge_label_full": "GenericArgToParam:Expression:InfoScmResult@14792 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 64929873,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "402:34-48",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:BlameScmResult@15377",
+          "edge_label_full": "GenericArgToParam:Expression:BlameScmResult@15377 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1599777166,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "412:34-48",
+            "file": "AbstractSvnScmProvider.java"
+          },
+          "to": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "GenericArgToParam:Expression:MkdirScmResult@15724",
+          "edge_label_full": "GenericArgToParam:Expression:MkdirScmResult@15724 -> GenericArgToParam:Param:T@1118",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1479740305,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:28-29",
+            "file": "SvnCommand.java"
+          },
+          "to": {
+            "java_id": 387482453,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "29:28-47",
+            "file": "SvnCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1118",
+          "edge_label_full": "NameRes:SimpleName:T@1118 -> NameRes::BaseNode:TypeParameter@1118",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 8,
+      "component_name": "Type parameter T added in Command",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1706232905,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "32:25-26",
+            "file": "Command.java"
+          },
+          "to": {
+            "java_id": 716238420,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "32:25-44",
+            "file": "Command.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1308",
+          "edge_label_full": "NameRes:SimpleName:T@1308 -> NameRes::BaseNode:TypeParameter@1308",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 831537626,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "43:4-5",
+            "file": "Command.java"
+          },
+          "to": {
+            "java_id": 716238420,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "32:25-44",
+            "file": "Command.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1599",
+          "edge_label_full": "NameRes:SimpleName:T@1599 -> NameRes::BaseNode:TypeParameter@1308",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 831537626,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "43:4-5",
+            "file": "Command.java"
+          },
+          "to": {
+            "java_id": 1706232905,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "32:25-26",
+            "file": "Command.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1599",
+          "edge_label_full": "NameRes:SimpleName:T@1599 -> NameRes:SimpleName:T@1308",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 9,
+      "component_name": "Type parameter T added in LocalCommand",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1559846245,
+            "type": "SimpleName (atom)",
+            "content": "T",
+            "position": "29:30-31",
+            "file": "LocalCommand.java"
+          },
+          "to": {
+            "java_id": 2111690068,
+            "type": "TypeParameter (list)",
+            "content": "",
+            "position": "29:30-49",
+            "file": "LocalCommand.java"
+          },
+          "edge_label": "NameRes:SimpleName:T@1122",
+          "edge_label_full": "NameRes:SimpleName:T@1122 -> NameRes::BaseNode:TypeParameter@1122",
+          "kind": "Addition"
+        }
+      ]
+    }
+  ]
+}

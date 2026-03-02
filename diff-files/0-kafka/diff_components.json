@@ -1,0 +1,658 @@
+{
+  "diff_components": [
+    {
+      "component_id": 1,
+      "component_name": "Field logManager removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1315038402,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "156:29-39",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 251666609,
+            "type": "FieldDeclaration (list)",
+            "content": "",
+            "position": "156:4-40",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "FragmentToField:Fragment:logManager@7885",
+          "edge_label_full": "FragmentToField:Fragment:logManager@7885 -> FragmentToField:Field:FieldDeclaration@7860",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 92575452,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "183:13-23",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1315038402,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "156:29-39",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:logManager@8940",
+          "edge_label_full": "NameRes:SimpleName:logManager@8940 -> NameRes::BaseNode:VariableDeclarationFragment@7885",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 92575452,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "183:13-23",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 380494131,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "156:29-39",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:logManager@8940",
+          "edge_label_full": "NameRes:SimpleName:logManager@8940 -> NameRes:SimpleName:logManager@7885",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 2,
+      "component_name": "Field scheduler removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 438873841,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "157:28-37",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1447678234,
+            "type": "FieldDeclaration (list)",
+            "content": "",
+            "position": "157:4-38",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "FragmentToField:Fragment:scheduler@7925",
+          "edge_label_full": "FragmentToField:Fragment:scheduler@7925 -> FragmentToField:Field:FieldDeclaration@7901",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 2052814491,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "184:13-22",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 438873841,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "157:28-37",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:scheduler@8978",
+          "edge_label_full": "NameRes:SimpleName:scheduler@8978 -> NameRes::BaseNode:VariableDeclarationFragment@7925",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 2052814491,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "184:13-22",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1372668833,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "157:28-37",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:scheduler@8978",
+          "edge_label_full": "NameRes:SimpleName:scheduler@8978 -> NameRes:SimpleName:scheduler@7925",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 3,
+      "component_name": "Parameter logManager removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 813780803,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "167:19-29",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 534662976,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "167:8-29",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:logManager@8313",
+          "edge_label_full": "NameRes:SimpleName:logManager@8313 -> NameRes::BaseNode:SingleVariableDeclaration@8302",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 354268551,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "183:26-36",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 534662976,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "167:8-29",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:logManager@8953",
+          "edge_label_full": "NameRes:SimpleName:logManager@8953 -> NameRes::BaseNode:SingleVariableDeclaration@8302",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 354268551,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "183:26-36",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 813780803,
+            "type": "SimpleName (atom)",
+            "content": "logManager",
+            "position": "167:19-29",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:logManager@8953",
+          "edge_label_full": "NameRes:SimpleName:logManager@8953 -> NameRes:SimpleName:logManager@8313",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 4,
+      "component_name": "Parameter scheduler removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1234329919,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "168:18-27",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1876259196,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "168:8-27",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:scheduler@8343",
+          "edge_label_full": "NameRes:SimpleName:scheduler@8343 -> NameRes::BaseNode:SingleVariableDeclaration@8333",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 256642638,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "184:25-34",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1876259196,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "168:8-27",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:scheduler@8990",
+          "edge_label_full": "NameRes:SimpleName:scheduler@8990 -> NameRes::BaseNode:SingleVariableDeclaration@8333",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 256642638,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "184:25-34",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1234329919,
+            "type": "SimpleName (atom)",
+            "content": "scheduler",
+            "position": "168:18-27",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:scheduler@8990",
+          "edge_label_full": "NameRes:SimpleName:scheduler@8990 -> NameRes:SimpleName:scheduler@8343",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 5,
+      "component_name": "Method renamed from partitionFor to partitionIndexForKey",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1552221437,
+            "type": "SimpleName (atom)",
+            "content": "partitionFor",
+            "position": "135:85-97",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 437630857,
+            "type": "SimpleName (atom)",
+            "content": "partitionFor",
+            "position": "374:15-27",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:partitionFor@5786",
+          "edge_label_full": "NameRes:SimpleName:partitionFor@5786 -> NameRes:SimpleName:partitionFor@17914",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1531182070,
+            "type": "SimpleName (atom)",
+            "content": "partitionFor",
+            "position": "172:85-97",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 437630857,
+            "type": "SimpleName (atom)",
+            "content": "partitionFor",
+            "position": "374:15-27",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:partitionFor@7716",
+          "edge_label_full": "NameRes:SimpleName:partitionFor@7716 -> NameRes:SimpleName:partitionFor@17914",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1520921298,
+            "type": "SimpleName (atom)",
+            "content": "partitionIndexForKey",
+            "position": "147:85-105",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 1818009782,
+            "type": "SimpleName (atom)",
+            "content": "partitionIndexForKey",
+            "position": "410:15-35",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:partitionIndexForKey@6352",
+          "edge_label_full": "NameRes:SimpleName:partitionIndexForKey@6352 -> NameRes:SimpleName:partitionIndexForKey@19638",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1983472905,
+            "type": "SimpleName (atom)",
+            "content": "partitionIndexForKey",
+            "position": "190:85-105",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 1818009782,
+            "type": "SimpleName (atom)",
+            "content": "partitionIndexForKey",
+            "position": "410:15-35",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:partitionIndexForKey@8625",
+          "edge_label_full": "NameRes:SimpleName:partitionIndexForKey@8625 -> NameRes:SimpleName:partitionIndexForKey@19638",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 6,
+      "component_name": "Variable renamed from checkpoints to offsets",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1334405552,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "255:16-27",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 1850874910,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "248:40-51",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:checkpoints@12366",
+          "edge_label_full": "NameRes:SimpleName:checkpoints@12366 -> NameRes:SimpleName:checkpoints@11808",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 247515192,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "260:15-26",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 1850874910,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "248:40-51",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:checkpoints@12563",
+          "edge_label_full": "NameRes:SimpleName:checkpoints@12563 -> NameRes:SimpleName:checkpoints@11808",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 746327606,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "271:16-23",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 946448101,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "264:40-47",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:offsets@13272",
+          "edge_label_full": "NameRes:SimpleName:offsets@13272 -> NameRes:SimpleName:offsets@12718",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 421446035,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "276:15-22",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 946448101,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "264:40-47",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:offsets@13465",
+          "edge_label_full": "NameRes:SimpleName:offsets@13465 -> NameRes:SimpleName:offsets@12718",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 7,
+      "component_name": "Variable renamed from checkpoints to offsets",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1177072083,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "321:98-109",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 1593368350,
+            "type": "SimpleName (atom)",
+            "content": "checkpoints",
+            "position": "320:64-75",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:checkpoints@16300",
+          "edge_label_full": "NameRes:SimpleName:checkpoints@16300 -> NameRes:SimpleName:checkpoints@16142",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1411675719,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "337:98-105",
+            "file": "MirrorCoordinator.java"
+          },
+          "to": {
+            "java_id": 516459169,
+            "type": "SimpleName (atom)",
+            "content": "offsets",
+            "position": "336:64-71",
+            "file": "MirrorCoordinator.java"
+          },
+          "edge_label": "NameRes:SimpleName:offsets@17194",
+          "edge_label_full": "NameRes:SimpleName:offsets@17194 -> NameRes:SimpleName:offsets@17040",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 8,
+      "component_name": " logManager removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 2049121789,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "167:8-18",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 235195640,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "156:18-28",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "FieldAssignment:RightVarType:LogManager@8302",
+          "edge_label_full": "FieldAssignment:RightVarType:LogManager@8302 -> FieldAssignment:LeftFieldType:LogManager@7874",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 9,
+      "component_name": " scheduler removed in MirrorMetadataManager",
+      "component_kind": "delete",
+      "changes": [
+        {
+          "from": {
+            "java_id": 2095702106,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "168:8-17",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1788545647,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "157:18-27",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "FieldAssignment:RightVarType:Scheduler@8333",
+          "edge_label_full": "FieldAssignment:RightVarType:Scheduler@8333 -> FieldAssignment:LeftFieldType:Scheduler@7915",
+          "kind": "Removal"
+        }
+      ]
+    },
+    {
+      "component_id": 10,
+      "component_name": "Parameter of method updateLastMirroredOffsetsCache renamed from removedCheckpointOffsets to removedOffsets",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 872592585,
+            "type": "SimpleName (atom)",
+            "content": "removedCheckpointOffsets",
+            "position": "257:8-32",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1201614274,
+            "type": "SimpleName (atom)",
+            "content": "removedCheckpointOffsets",
+            "position": "255:98-122",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:removedCheckpointOffsets@12523",
+          "edge_label_full": "NameRes:SimpleName:removedCheckpointOffsets@12523 -> NameRes:SimpleName:removedCheckpointOffsets@12368",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1912308481,
+            "type": "SimpleName (atom)",
+            "content": "removedOffsets",
+            "position": "288:8-22",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1090749131,
+            "type": "SimpleName (atom)",
+            "content": "removedOffsets",
+            "position": "286:98-112",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:removedOffsets@13870",
+          "edge_label_full": "NameRes:SimpleName:removedOffsets@13870 -> NameRes:SimpleName:removedOffsets@13725",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 11,
+      "component_name": "Parameter of method updateLastMirroredOffsetsCache renamed from addedCheckpointOffsets to addedOffsets",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1566269351,
+            "type": "SimpleName (atom)",
+            "content": "addedCheckpointOffsets",
+            "position": "262:8-30",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 199041063,
+            "type": "SimpleName (atom)",
+            "content": "addedCheckpointOffsets",
+            "position": "254:98-120",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:addedCheckpointOffsets@12767",
+          "edge_label_full": "NameRes:SimpleName:addedCheckpointOffsets@12767 -> NameRes:SimpleName:addedCheckpointOffsets@12246",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 1819326403,
+            "type": "SimpleName (atom)",
+            "content": "addedOffsets",
+            "position": "293:8-20",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1137940831,
+            "type": "SimpleName (atom)",
+            "content": "addedOffsets",
+            "position": "285:98-110",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:addedOffsets@14104",
+          "edge_label_full": "NameRes:SimpleName:addedOffsets@14104 -> NameRes:SimpleName:addedOffsets@13613",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 12,
+      "component_name": "Method renamed from updateRemoteClusterNodes to updateRemoteClusterNodesCache",
+      "component_kind": "rename",
+      "changes": [
+        {
+          "from": {
+            "java_id": 296974277,
+            "type": "SimpleName (atom)",
+            "content": "updateRemoteClusterNodes",
+            "position": "343:12-36",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 1481206935,
+            "type": "SimpleName (atom)",
+            "content": "updateRemoteClusterNodes",
+            "position": "378:17-41",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:updateRemoteClusterNodes@16387",
+          "edge_label_full": "NameRes:SimpleName:updateRemoteClusterNodes@16387 -> NameRes:SimpleName:updateRemoteClusterNodes@18110",
+          "kind": "Removal"
+        },
+        {
+          "from": {
+            "java_id": 671963778,
+            "type": "SimpleName (atom)",
+            "content": "updateRemoteClusterNodesCache",
+            "position": "367:12-41",
+            "file": "MirrorMetadataManager.java"
+          },
+          "to": {
+            "java_id": 337648272,
+            "type": "SimpleName (atom)",
+            "content": "updateRemoteClusterNodesCache",
+            "position": "396:17-46",
+            "file": "MirrorMetadataManager.java"
+          },
+          "edge_label": "NameRes:SimpleName:updateRemoteClusterNodesCache@17502",
+          "edge_label_full": "NameRes:SimpleName:updateRemoteClusterNodesCache@17502 -> NameRes:SimpleName:updateRemoteClusterNodesCache@19054",
+          "kind": "Addition"
+        }
+      ]
+    }
+  ]
+}

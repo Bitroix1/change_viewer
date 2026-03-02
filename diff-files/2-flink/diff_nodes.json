@@ -1,0 +1,499 @@
+{
+  "diff_components": [
+    {
+      "nodes": [
+        {
+          "java_id": 723161117,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "91:1-41",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 4,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 288887829,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseErrors",
+          "position": "199:58-75",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 342834466,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "99:2-45",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1485129132,
+          "type": "MethodInvocation (list)",
+          "content": "(",
+          "position": "194:3-4",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1880332929,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "119:2-45",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 1
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1817288263,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "62:1-40",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 4,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1128856117,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "111:2-43",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1192787792,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseError",
+          "position": "159:46-62",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1883144272,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseError",
+          "position": "125:7-23",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1968861720,
+          "type": "MethodInvocation (list)",
+          "content": "(",
+          "position": "154:4-5",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 2
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1929649021,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "97:3-28",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 342834466,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "99:2-45",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1843324431,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseErrors",
+          "position": "109:3-20",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 3
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 234344916,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "70:2-69",
+          "file": "RegistryAvroFormatFactory.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1733520096,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseErrors",
+          "position": "86:6-23",
+          "file": "RegistryAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 4
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 21063905,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "116:3-28",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1880332929,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "119:2-45",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 5
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 269016862,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "63:2-69",
+          "file": "DebeziumAvroFormatFactory.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 157849544,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseErrors",
+          "position": "77:5-22",
+          "file": "DebeziumAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 6
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 116512665,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "60:2-75",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 165687172,
+          "type": "SimpleName (atom)",
+          "content": "ignoreParseErrors",
+          "position": "74:5-22",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 7
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1890881203,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "107:3-27",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1128856117,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "111:2-43",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 8
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1174641185,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "51:0-79",
+          "file": "RegistryAvroFormatFactory.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 234344916,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "70:2-69",
+          "file": "RegistryAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1031376502,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "147:2-35",
+          "file": "RegistryAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 9
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 723161117,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "91:1-41",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 21063905,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "116:3-28",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1929649021,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "97:3-28",
+          "file": "DebeziumAvroDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 10
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 64614565,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "47:0-79",
+          "file": "DebeziumAvroFormatFactory.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 269016862,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "63:2-69",
+          "file": "DebeziumAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 590486503,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "147:2-35",
+          "file": "DebeziumAvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 11
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1092591822,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "43:0-79",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 116512665,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "60:2-75",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 677007331,
+          "type": "SimpleName (atom)",
+          "content": "IGNORE_PARSE_ERRORS",
+          "position": "118:31-50",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 12
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 942714988,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "26:0-67",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1940311161,
+          "type": "MethodInvocation (list)",
+          "content": "(",
+          "position": "71:5-6",
+          "file": "AvroFormatFactory.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 13
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 2053425932,
+          "type": "MethodDeclaration (list)",
+          "content": "",
+          "position": "87:1-2",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 14
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1817288263,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "62:1-40",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1890881203,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "107:3-27",
+          "file": "AvroRowDataDeserializationSchema.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 15
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1356763258,
+          "type": "MethodDeclaration (list)",
+          "content": "",
+          "position": "211:1-2",
+          "file": "AvroRowDataDeSerializationSchemaTest.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 16
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1086811994,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-50",
+          "file": "AvroRowDataDeSerializationSchemaTest.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1356763258,
+          "type": "MethodDeclaration (list)",
+          "content": "",
+          "position": "211:1-2",
+          "file": "AvroRowDataDeSerializationSchemaTest.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 17
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 853343978,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "72:0-42",
+          "file": "AvroRowDataDeSerializationSchemaTest.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1356763258,
+          "type": "MethodDeclaration (list)",
+          "content": "",
+          "position": "211:1-2",
+          "file": "AvroRowDataDeSerializationSchemaTest.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 18
+    }
+  ]
+}

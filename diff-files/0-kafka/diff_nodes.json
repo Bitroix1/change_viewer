@@ -1,0 +1,424 @@
+{
+  "diff_components": [
+    {
+      "nodes": [
+        {
+          "java_id": 251666609,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "156:4-40",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2049620066,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "183:8-37",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 1
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1447678234,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "157:4-38",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 857245202,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "184:8-35",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 2
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 534662976,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "167:8-29",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2049620066,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "183:8-37",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 3
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1876259196,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "168:8-27",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 857245202,
+          "type": "ExpressionStatement (list)",
+          "content": "",
+          "position": "184:8-35",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 4
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 437630857,
+          "type": "SimpleName (atom)",
+          "content": "partitionFor",
+          "position": "374:15-27",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1531182070,
+          "type": "SimpleName (atom)",
+          "content": "partitionFor",
+          "position": "172:85-97",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1552221437,
+          "type": "SimpleName (atom)",
+          "content": "partitionFor",
+          "position": "135:85-97",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1818009782,
+          "type": "SimpleName (atom)",
+          "content": "partitionIndexForKey",
+          "position": "410:15-35",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1520921298,
+          "type": "SimpleName (atom)",
+          "content": "partitionIndexForKey",
+          "position": "147:85-105",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1983472905,
+          "type": "SimpleName (atom)",
+          "content": "partitionIndexForKey",
+          "position": "190:85-105",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 5
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1850874910,
+          "type": "SimpleName (atom)",
+          "content": "checkpoints",
+          "position": "248:40-51",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 247515192,
+          "type": "SimpleName (atom)",
+          "content": "checkpoints",
+          "position": "260:15-26",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1334405552,
+          "type": "SimpleName (atom)",
+          "content": "checkpoints",
+          "position": "255:16-27",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 946448101,
+          "type": "SimpleName (atom)",
+          "content": "offsets",
+          "position": "264:40-47",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 2,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 421446035,
+          "type": "SimpleName (atom)",
+          "content": "offsets",
+          "position": "276:15-22",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 746327606,
+          "type": "SimpleName (atom)",
+          "content": "offsets",
+          "position": "271:16-23",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 6
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1593368350,
+          "type": "SimpleName (atom)",
+          "content": "checkpoints",
+          "position": "320:64-75",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1177072083,
+          "type": "SimpleName (atom)",
+          "content": "checkpoints",
+          "position": "321:98-109",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 516459169,
+          "type": "SimpleName (atom)",
+          "content": "offsets",
+          "position": "336:64-71",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1411675719,
+          "type": "SimpleName (atom)",
+          "content": "offsets",
+          "position": "337:98-105",
+          "file": "MirrorCoordinator.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 7
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 251666609,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "156:4-40",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 534662976,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "167:8-29",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 8
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1447678234,
+          "type": "FieldDeclaration (list)",
+          "content": "",
+          "position": "157:4-38",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1876259196,
+          "type": "SingleVariableDeclaration (list)",
+          "content": "",
+          "position": "168:8-27",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 9
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1201614274,
+          "type": "SimpleName (atom)",
+          "content": "removedCheckpointOffsets",
+          "position": "255:98-122",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 872592585,
+          "type": "SimpleName (atom)",
+          "content": "removedCheckpointOffsets",
+          "position": "257:8-32",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1090749131,
+          "type": "SimpleName (atom)",
+          "content": "removedOffsets",
+          "position": "286:98-112",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1912308481,
+          "type": "SimpleName (atom)",
+          "content": "removedOffsets",
+          "position": "288:8-22",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 10
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 199041063,
+          "type": "SimpleName (atom)",
+          "content": "addedCheckpointOffsets",
+          "position": "254:98-120",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1566269351,
+          "type": "SimpleName (atom)",
+          "content": "addedCheckpointOffsets",
+          "position": "262:8-30",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1137940831,
+          "type": "SimpleName (atom)",
+          "content": "addedOffsets",
+          "position": "285:98-110",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1819326403,
+          "type": "SimpleName (atom)",
+          "content": "addedOffsets",
+          "position": "293:8-20",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 11
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1481206935,
+          "type": "SimpleName (atom)",
+          "content": "updateRemoteClusterNodes",
+          "position": "378:17-41",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 296974277,
+          "type": "SimpleName (atom)",
+          "content": "updateRemoteClusterNodes",
+          "position": "343:12-36",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 337648272,
+          "type": "SimpleName (atom)",
+          "content": "updateRemoteClusterNodesCache",
+          "position": "396:17-46",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 671963778,
+          "type": "SimpleName (atom)",
+          "content": "updateRemoteClusterNodesCache",
+          "position": "367:12-41",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        }
+      ],
+      "component_id": 12
+    }
+  ]
+}

@@ -28,18 +28,22 @@ export interface FileEntry {
 // ---------------------------------------------------------------------------
 
 /**
- * Load `diff_components.json` and `diff_nodes.json` from the fixed paths
- * relative to the webpack bundle.
+ * Load `diff_components.json` and `diff_nodes.json` from the given
+ * `diffmagicFolder` directory.  Falls back to the fixed path relative to the
+ * webpack bundle when no folder is provided.
  */
-export async function loadDiffComponents(): Promise<DiffComponentsResult> {
+export async function loadDiffComponents(
+  diffmagicFolder?: string
+): Promise<DiffComponentsResult> {
   let diffComponents: any[] = []
   let diffNodes: any[] = []
 
+  const baseDir = diffmagicFolder
+    ? diffmagicFolder
+    : Path.resolve(__dirname, '../../../../../difftastic/Files')
+
   try {
-    const diffComponentsPath = Path.resolve(
-      __dirname,
-      '../../../../../difftastic/Files/diff_components.json'
-    )
+    const diffComponentsPath = Path.join(baseDir, 'diff_components.json')
     const content = await FSPromises.readFile(diffComponentsPath, 'utf-8')
     const data = JSON.parse(content)
     if (data.diff_components && Array.isArray(data.diff_components)) {
@@ -50,10 +54,7 @@ export async function loadDiffComponents(): Promise<DiffComponentsResult> {
   }
 
   try {
-    const diffNodesPath = Path.resolve(
-      __dirname,
-      '../../../../../difftastic/Files/diff_nodes.json'
-    )
+    const diffNodesPath = Path.join(baseDir, 'diff_nodes.json')
     const nodesContent = await FSPromises.readFile(diffNodesPath, 'utf-8')
     const nodesData = JSON.parse(nodesContent)
     if (nodesData.diff_components && Array.isArray(nodesData.diff_components)) {

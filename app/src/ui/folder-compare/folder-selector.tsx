@@ -1,17 +1,26 @@
 import * as React from 'react'
+import * as Path from 'path'
 import { Button } from '../lib/button'
 import { showOpenDialog } from '../main-process-proxy'
 
 interface IFolderSelectorProps {
   readonly beforeFolder: string
   readonly afterFolder: string
+  readonly diffmagicFolder: string
   readonly onDismissed: () => void
-  readonly onCompareFolders: (beforeFolder: string, afterFolder: string) => void
+  readonly onCompareFolders: (
+    beforeFolder: string,
+    afterFolder: string,
+    diffmagicFolder: string
+  ) => void
 }
 
 interface IFolderSelectorState {
   readonly beforeFolder: string
   readonly afterFolder: string
+  readonly diffmagicFolder: string
+  /** True once the user has manually edited the Diffmagic Files field. */
+  readonly diffmagicFolderUserEdited: boolean
 }
 
 export class FolderSelector extends React.Component<
@@ -23,6 +32,8 @@ export class FolderSelector extends React.Component<
     this.state = {
       beforeFolder: props.beforeFolder,
       afterFolder: props.afterFolder,
+      diffmagicFolder: props.diffmagicFolder,
+      diffmagicFolderUserEdited: props.diffmagicFolder.length > 0,
     }
   }
 
@@ -77,6 +88,22 @@ export class FolderSelector extends React.Component<
               <Button onClick={this.onSelectAfterFolder}>Browse...</Button>
             </div>
           </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              Diffmagic Files
+            </label>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                value={this.state.diffmagicFolder}
+                onChange={(e) => this.onDiffmagicFolderChanged(e.target.value)}
+                placeholder="Enter path to diff jsons"
+                style={{ flex: 1, padding: '8px' }}
+              />
+              <Button onClick={this.onSelectDiffmagicFolder}>Browse...</Button>
+            </div>
+          </div>
           
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button onClick={this.onSubmit} disabled={!this.canCompare()}>
@@ -93,11 +120,19 @@ export class FolderSelector extends React.Component<
   }
 
   private onBeforeFolderChanged = (value: string) => {
-    this.setState({ beforeFolder: value })
+    this.setState(prevState =>
+      !prevState.diffmagicFolderUserEdited && value.length > 0
+        ? { beforeFolder: value, diffmagicFolder: Path.dirname(value) }
+        : { beforeFolder: value, diffmagicFolder: prevState.diffmagicFolder }
+    )
   }
 
   private onAfterFolderChanged = (value: string) => {
     this.setState({ afterFolder: value })
+  }
+
+  private onDiffmagicFolderChanged = (value: string) => {
+    this.setState({ diffmagicFolder: value, diffmagicFolderUserEdited: true })
   }
 
   private onSelectBeforeFolder = async () => {
@@ -105,7 +140,11 @@ export class FolderSelector extends React.Component<
       properties: ['openDirectory'],
     })
     if (path !== null) {
-      this.setState({ beforeFolder: path })
+      this.setState(prevState =>
+        !prevState.diffmagicFolderUserEdited
+          ? { beforeFolder: path, diffmagicFolder: Path.dirname(path) }
+          : { beforeFolder: path, diffmagicFolder: prevState.diffmagicFolder }
+      )
     }
   }
 
@@ -118,9 +157,22 @@ export class FolderSelector extends React.Component<
     }
   }
 
+  private onSelectDiffmagicFolder = async () => {
+    const path = await showOpenDialog({
+      properties: ['openDirectory'],
+    })
+    if (path !== null) {
+      this.setState({ diffmagicFolder: path, diffmagicFolderUserEdited: true })
+    }
+  }
+
   private onSubmit = () => {
     if (this.canCompare()) {
-      this.props.onCompareFolders(this.state.beforeFolder, this.state.afterFolder)
+      this.props.onCompareFolders(
+        this.state.beforeFolder,
+        this.state.afterFolder,
+        this.state.diffmagicFolder
+      )
     }
   }
 }

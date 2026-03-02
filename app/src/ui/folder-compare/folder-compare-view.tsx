@@ -49,7 +49,7 @@ const MIN_LEFT_BOTTOM_HEIGHT = 100
 const DEFAULT_LEFT_PANEL_WIDTH = 350
 const DEFAULT_RIGHT_PANEL_WIDTH = 350
 /** Fraction of the left panel occupied by the top (options) section */
-const DEFAULT_LEFT_TOP_FRACTION = 0.55
+const DEFAULT_LEFT_TOP_FRACTION = 0.68
 
 interface IFolderCompareViewProps {
   readonly dispatcher: Dispatcher
@@ -59,6 +59,7 @@ interface IFolderCompareViewState {
   readonly showFolderSelector: boolean
   readonly beforeFolder: string
   readonly afterFolder: string
+  readonly diffmagicFolder: string
   readonly fileChanges: ReadonlyArray<WorkingDirectoryFileChange>
   readonly fileDiffs: Map<string, ITextDiff | null>
   readonly isLoading: boolean
@@ -95,6 +96,7 @@ export class FolderCompareView extends React.Component<
       showFolderSelector: true,
       beforeFolder: '',
       afterFolder: '',
+      diffmagicFolder: '',
       fileChanges: [],
       fileDiffs: new Map(),
       isLoading: false,
@@ -121,6 +123,7 @@ export class FolderCompareView extends React.Component<
         <FolderSelector
           beforeFolder={this.state.beforeFolder}
           afterFolder={this.state.afterFolder}
+          diffmagicFolder={this.state.diffmagicFolder}
           onDismissed={this.onFolderSelectorDismissed}
           onCompareFolders={this.onCompareFolders}
         />
@@ -1961,18 +1964,23 @@ export class FolderCompareView extends React.Component<
     // For now, just keep it open
   }
 
-  private onCompareFolders = async (beforeFolder: string, afterFolder: string) => {
+  private onCompareFolders = async (
+    beforeFolder: string,
+    afterFolder: string,
+    diffmagicFolder: string
+  ) => {
     this.setState({
       showFolderSelector: false,
       beforeFolder,
       afterFolder,
+      diffmagicFolder,
       isLoading: true,
     })
 
     try {
       const [fileChanges, { diffComponents, diffNodes }] = await Promise.all([
         compareDirectories(beforeFolder, afterFolder),
-        loadDiffComponents(),
+        loadDiffComponents(diffmagicFolder || undefined),
       ])
 
       this.setState({

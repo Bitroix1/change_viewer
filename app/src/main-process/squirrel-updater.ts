@@ -1,9 +1,7 @@
 import * as Path from 'path'
-import * as Os from 'os'
 
 import { mkdir, writeFile } from 'fs/promises'
 import { spawn, getPathSegments, setPathSegments } from '../lib/process/win32'
-import { pathExists } from '../ui/lib/path-exists'
 
 const appFolder = Path.resolve(process.execPath, '..')
 const rootAppDir = Path.resolve(appFolder, '..')
@@ -37,13 +35,11 @@ export function handleSquirrelEvent(eventName: string): Promise<void> | null {
 }
 
 async function handleInstalled(): Promise<void> {
-  await createShortcut(['StartMenu', 'Desktop'])
-  await installWindowsCLI()
+  // DiffMagic: no shortcuts or CLI installation on setup
 }
 
 async function handleUpdated(): Promise<void> {
-  await updateShortcut()
-  await installWindowsCLI()
+  // DiffMagic: no shortcuts or CLI update on update
 }
 
 export async function installWindowsCLI(): Promise<void> {
@@ -103,7 +99,7 @@ function writeBatchScriptCLITrampoline(binPath: string): Promise<void> {
   )
 
   const trampoline = `@echo off\n"%~dp0\\${versionedPath}" %*`
-  const trampolinePath = Path.join(binPath, 'github.bat')
+  const trampolinePath = Path.join(binPath, 'diffmagic.bat')
 
   return writeFile(trampolinePath, trampoline)
 }
@@ -121,7 +117,7 @@ function writeShellScriptCLITrampoline(binPath: string): Promise<void> {
   const trampoline = `#!/usr/bin/env bash
   DIR="$( cd "$( dirname "\$\{BASH_SOURCE[0]\}" )" && pwd )"
   sh "$DIR/${versionedPath}" "$@"`
-  const trampolinePath = Path.join(binPath, 'github')
+  const trampolinePath = Path.join(binPath, 'diffmagic')
 
   return writeFile(trampolinePath, trampoline, { encoding: 'utf8', mode: 755 })
 }
@@ -133,17 +129,6 @@ async function spawnSquirrelUpdate(
   await spawn(updateDotExe, commands)
 }
 
-type ShortcutLocations = ReadonlyArray<'StartMenu' | 'Desktop'>
-
-function createShortcut(locations: ShortcutLocations): Promise<void> {
-  return spawnSquirrelUpdate([
-    '--createShortcut',
-    exeName,
-    '-l',
-    locations.join(','),
-  ])
-}
-
 async function handleUninstall(): Promise<void> {
   await removeShortcut()
   return uninstallWindowsCLI()
@@ -151,22 +136,4 @@ async function handleUninstall(): Promise<void> {
 
 function removeShortcut(): Promise<void> {
   return spawnSquirrelUpdate(['--removeShortcut', exeName])
-}
-
-async function updateShortcut(): Promise<void> {
-  const homeDirectory = Os.homedir()
-  if (homeDirectory) {
-    const desktopShortcutPath = Path.join(
-      homeDirectory,
-      'Desktop',
-      'GitHub Desktop.lnk'
-    )
-    const exists = await pathExists(desktopShortcutPath)
-    const locations: ShortcutLocations = exists
-      ? ['StartMenu', 'Desktop']
-      : ['StartMenu']
-    return createShortcut(locations)
-  } else {
-    return createShortcut(['StartMenu', 'Desktop'])
-  }
 }

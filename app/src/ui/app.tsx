@@ -1461,9 +1461,11 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     // The light title bar style should only be used while we're in
     // the welcome flow as well as the no-repositories blank slate
-    // on macOS.
+    // on macOS. On Windows the title bar is always dark/visible.
     const titleBarStyle =
-      inWelcomeFlow || (__DARWIN__ && inNoRepositoriesView) ? 'light' : 'dark'
+      !__WIN32__ && (inWelcomeFlow || (__DARWIN__ && inNoRepositoriesView))
+        ? 'light'
+        : 'dark'
 
     const isDarkMode = this.state.currentTheme === ApplicationTheme.Dark
 

@@ -92,7 +92,7 @@ export async function getChangeLog(
   limit?: number
 ): Promise<ReadonlyArray<ReleaseMetadata>> {
   const changelogURL = new URL(
-    'https://central.github.com/deployments/desktop/desktop/changelog.json'
+    ''
   )
 
   if (__RELEASE_CHANNEL__ === 'beta' || __RELEASE_CHANNEL__ === 'test') {

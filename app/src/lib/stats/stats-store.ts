@@ -56,7 +56,7 @@ type PullRequestReviewStatFieldSuffix =
 type PullRequestReviewStatField =
   `pullRequestReview${PullRequestReviewStatFieldInfix}${PullRequestReviewStatFieldSuffix}`
 
-const StatsEndpoint = 'https://central.github.com/api/usage/desktop'
+const StatsEndpoint = ''
 
 /** The URL to the stats samples page. */
 export const SamplesURL = 'https://desktop.github.com/usage-data/'

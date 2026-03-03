@@ -65,10 +65,10 @@ export function buildDefaultMenu({
 
   if (__DARWIN__) {
     template.push({
-      label: 'GitHub Desktop',
+      label: 'DiffMagic',
       submenu: [
         {
-          label: 'About GitHub Desktop',
+          label: 'About DiffMagic',
           click: emit('show-about'),
           id: 'about',
         },
@@ -580,7 +580,7 @@ export function buildDefaultMenu({
         ...helpItems,
         separator,
         {
-          label: '&About GitHub Desktop',
+          label: '&About DiffMagic',
           click: emit('show-about'),
           id: 'about',
         },

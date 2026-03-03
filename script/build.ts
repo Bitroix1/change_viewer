@@ -178,7 +178,7 @@ function packageApp() {
       new RegExp('/\\.git($|/)'),
       new RegExp('/node_modules/\\.bin($|/)'),
     ],
-    appCopyright: `Copyright © ${new Date().getFullYear()} GitHub, Inc.`,
+    appCopyright: `Copyright © ${new Date().getFullYear()} DiffMagic`,
 
     // macOS
     appBundleId: getBundleID(),
@@ -203,10 +203,9 @@ function packageApp() {
         name: getBundleID(),
         schemes: [
           !isDevelopmentBuild
-            ? 'x-github-desktop-auth'
-            : 'x-github-desktop-dev-auth',
-          'x-github-client',
-          'github-mac',
+            ? 'x-diffmagic-auth'
+            : 'x-diffmagic-dev-auth',
+          'x-diffmagic-client',
         ],
       },
     ],

@@ -1,8 +1,8 @@
 {
-  "name": "desktop",
-  "productName": "GitHub Desktop",
-  "bundleID": "com.github.GitHubClient",
-  "companyName": "GitHub, Inc.",
+  "name": "diffmagic",
+  "productName": "DiffMagic",
+  "bundleID": "com.diffmagic.DiffMagic",
+  "companyName": "DiffMagic",
   "version": "3.5.4",
   "main": "./main.js",
   "repository": {

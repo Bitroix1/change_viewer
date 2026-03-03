@@ -9,7 +9,6 @@ import {
   getOSXZipPath,
   getWindowsIdentifierName,
   getWindowsStandaloneName,
-  getWindowsInstallerName,
   shouldMakeDelta,
   getUpdatesURL,
   getIconFileName,
@@ -101,7 +100,7 @@ function packageWindows() {
     exe: `${nugetPkgName}.exe`,
     title: productName,
     setupExe: getWindowsStandaloneName(),
-    setupMsi: getWindowsInstallerName(),
+    noMsi: true,
   }
 
   if (shouldMakeDelta()) {

@@ -2,9 +2,8 @@ import { app, net } from 'electron'
 import { getArchitecture } from '../lib/get-architecture'
 import { getMainGUID } from '../lib/get-main-guid'
 
-const ErrorEndpoint = 'https://central.github.com/api/desktop/exception'
-const NonFatalErrorEndpoint =
-  'https://central.github.com/api/desktop-non-fatal/exception'
+const ErrorEndpoint = ''
+const NonFatalErrorEndpoint = ''
 
 let hasSentFatalError = false
 

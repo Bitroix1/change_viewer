@@ -267,6 +267,11 @@ export function shrinkWrappersToFit(): void {
     Array.from(inner.children).forEach(child => {
       const row = child as HTMLElement
 
+      // Skip rows hidden by component highlighting — they should be
+      // at -99999px but ReactVirtualized may have overwritten their
+      // inline top back to the original value during a re-render.
+      if (row.classList.contains('component-hidden')) return
+
       // Determine the authoritative top position
       let top: number
       if (row.classList.contains('component-packed')) {

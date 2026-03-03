@@ -1154,8 +1154,25 @@ export class FolderCompareView extends React.Component<
 
     // When the search bar opens or closes the content area height changes;
     // re-shrink wrappers so no extra space appears.
+    // In component/misc mode we must re-run repackFile instead of just
+    // shrinkWrappersToFit, because ReactVirtualized may re-render in
+    // response to a width change (e.g. scrollbar appearing) and overwrite
+    // the packed inline `top` values we set on hidden rows.
     if (prevState.isSearching !== this.state.isSearching) {
-      requestAnimationFrame(() => shrinkWrappersToFit())
+      requestAnimationFrame(() => {
+        if (this.state.selectedComponent !== 'all') {
+          for (const file of this.state.fileChanges) {
+            const fc = document.querySelector(
+              `.folder-compare-view [data-file-path="${file.path}"]`
+            )
+            if (fc && !fc.classList.contains('component-file-hidden')) {
+              repackFile(fc)
+            }
+          }
+        } else {
+          shrinkWrappersToFit()
+        }
+      })
     }
 
     // After all diffs finish loading, shrink wrappers to fit content

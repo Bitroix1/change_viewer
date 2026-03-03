@@ -24,7 +24,7 @@ import {
   injectExpandButtonsIntoHunkInfoRows,
   injectBoundaryExpandButtons,
 } from './folder-compare-highlight'
-import { repackFile, shrinkWrappersToFit, setupScrollSync } from './folder-compare-repack'
+import { repackFile, shrinkWrappersToFit, setupScrollSync, scrollHorizontallyToElement } from './folder-compare-repack'
 import {
   loadDiffComponents,
   loadAllDiffs,
@@ -1514,6 +1514,24 @@ export class FolderCompareView extends React.Component<
         // Brief flash highlight
         row.style.outline = '2px solid var(--diff-selected-border-color)'
         setTimeout(() => { row.style.outline = '' }, 1500)
+
+        // Horizontal scroll: bring highlighted content on this line into view
+        const fc = row.closest('[data-file-path]')
+        if (fc) {
+          const sideEl = row.querySelector(`.${side}`)
+          // Prefer scrolling to the component highlight; fall back to content start
+          const highlight = sideEl?.querySelector(
+            '.component-char-highlight, .component-char-click-capture'
+          ) as HTMLElement
+          if (highlight) {
+            scrollHorizontallyToElement(fc, side, highlight)
+          } else {
+            const cw = sideEl?.querySelector('.content-wrapper') as HTMLElement
+            if (cw) {
+              scrollHorizontallyToElement(fc, side, cw)
+            }
+          }
+        }
         return
       }
     }
@@ -2834,6 +2852,20 @@ export class FolderCompareView extends React.Component<
         }
 
         matchStart.parentNode!.replaceChild(mark, matchStart)
+      }
+    }
+
+    // Horizontal scroll: bring the current search match into view
+    if (this.folderSearchIndex >= 0) {
+      const currentMark = document.querySelector(
+        '.folder-search-current'
+      ) as HTMLElement
+      if (currentMark) {
+        const fc = currentMark.closest('[data-file-path]')
+        const currentMatch = this.folderSearchMatches[this.folderSearchIndex]
+        if (fc && currentMatch) {
+          scrollHorizontallyToElement(fc, currentMatch.side, currentMark)
+        }
       }
     }
 

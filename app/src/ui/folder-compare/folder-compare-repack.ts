@@ -397,3 +397,53 @@ export function setupScrollSync(): void {
     })
   })
 }
+
+// ---------------------------------------------------------------------------
+// scrollHorizontallyToElement
+// ---------------------------------------------------------------------------
+
+/**
+ * Scroll the horizontal scroll-sync bar so that `targetEl` is visible within
+ * the `.content` area on the given side of the file diff.  No-op if there is
+ * no sync bar (content does not overflow) or if the target is already visible.
+ */
+export function scrollHorizontallyToElement(
+  fileContainer: Element,
+  side: 'before' | 'after',
+  targetEl: HTMLElement
+): void {
+  const diffContainer = fileContainer.querySelector('.diff-container')
+  if (!diffContainer) return
+  const syncBar = diffContainer.querySelector('.scroll-sync-bar')
+  if (!syncBar) return
+
+  const bar = (side === 'before'
+    ? syncBar.children[0]
+    : syncBar.children[1]) as HTMLElement
+  if (!bar) return
+
+  const contentEl = targetEl.closest('.content') as HTMLElement
+  if (!contentEl) return
+
+  const contentRect = contentEl.getBoundingClientRect()
+  const targetRect = targetEl.getBoundingClientRect()
+  const padding = 40 // extra margin to keep target comfortably visible
+
+  // Already fully visible — nothing to do
+  if (
+    targetRect.left >= contentRect.left + padding &&
+    targetRect.right <= contentRect.right - padding
+  ) {
+    return
+  }
+
+  if (targetRect.left < contentRect.left + padding) {
+    // Target is to the left of the visible area — scroll left
+    const delta = contentRect.left + padding - targetRect.left
+    bar.scrollLeft = Math.max(0, bar.scrollLeft - delta)
+  } else {
+    // Target is to the right of the visible area — scroll right
+    const delta = targetRect.right - (contentRect.right - padding)
+    bar.scrollLeft = bar.scrollLeft + delta
+  }
+}

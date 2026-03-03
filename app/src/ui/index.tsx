@@ -58,7 +58,6 @@ import { PullRequestCoordinator } from '../lib/stores/pull-request-coordinator'
 
 import { sendNonFatalException } from '../lib/helpers/non-fatal-exception'
 import { enableUnhandledRejectionReporting } from '../lib/feature-flag'
-import { AheadBehindStore } from '../lib/stores/ahead-behind-store'
 import {
   ApplicationTheme,
   supportsSystemThemeChanges,
@@ -70,7 +69,6 @@ import * as ipcRenderer from '../lib/ipc-renderer'
 import { migrateRendererGUID } from '../lib/get-renderer-guid'
 import { initializeRendererNotificationHandler } from '../lib/notifications/notification-handler'
 import { Grid } from 'react-virtualized'
-import { NotificationsDebugStore } from '../lib/stores/notifications-debug-store'
 import { trampolineServer } from '../lib/trampoline/trampoline-server'
 import { TrampolineCommandIdentifier } from '../lib/trampoline/trampoline-command'
 import { createAskpassTrampolineHandler } from '../lib/trampoline/trampoline-askpass-handler'
@@ -287,7 +285,6 @@ const repositoryStateManager = new RepositoryStateCache(statsStore)
 const apiRepositoriesStore = new ApiRepositoriesStore(accountsStore)
 
 const commitStatusStore = new CommitStatusStore(accountsStore)
-const aheadBehindStore = new AheadBehindStore()
 
 const aliveStore = new AliveStore(accountsStore)
 
@@ -296,12 +293,6 @@ const notificationsStore = new NotificationsStore(
   aliveStore,
   pullRequestCoordinator,
   statsStore
-)
-
-const notificationsDebugStore = new NotificationsDebugStore(
-  accountsStore,
-  notificationsStore,
-  pullRequestCoordinator
 )
 
 const appStore = new AppStore(
@@ -417,11 +408,6 @@ ReactDOM.render(
   <App
     dispatcher={dispatcher}
     appStore={appStore}
-    repositoryStateManager={repositoryStateManager}
-    issuesStore={issuesStore}
-    gitHubUserStore={gitHubUserStore}
-    aheadBehindStore={aheadBehindStore}
-    notificationsDebugStore={notificationsDebugStore}
     startTime={startTime}
   />,
   document.getElementById('desktop-app-container')!

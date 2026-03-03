@@ -23,10 +23,20 @@ import { hasWritePermission } from '../../models/github-repository'
 import { RetryActionType } from '../../models/retry-actions'
 import { parseFilesToBeOverwritten } from '../lib/parse-files-to-be-overwritten'
 import { pathExists } from '../lib/path-exists'
-import {
-  ISecretLocation,
-  ISecretScanResult,
-} from '../secret-scanning/push-protection-error-dialog'
+/** Stub interface for secret scanning location (unused in folder-compare mode) */
+interface ISecretLocation {
+  readonly commitSha: string
+  readonly path: string
+  readonly lineNumber: number
+}
+
+/** Stub interface for secret scanning result (unused in folder-compare mode) */
+interface ISecretScanResult {
+  readonly description: string
+  readonly locations: ReadonlyArray<ISecretLocation>
+  readonly bypassURL: string
+  readonly [key: string]: any
+}
 
 /** An error which also has a code property. */
 interface IErrorWithCode extends Error {

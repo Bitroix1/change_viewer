@@ -9,7 +9,9 @@ import {
 import { compare } from '../compare'
 import { BaseStore } from './base-store'
 import { getStealthEmailForUser, getLegacyStealthEmailForUser } from '../email'
-import { DefaultMaxHits } from '../../ui/autocompletion/common'
+
+/** Default max hits for autocompletion queries */
+const DefaultMaxHits = 100
 
 /** Don't fetch mentionables more often than every 10 minutes */
 const MaxFetchFrequency = 10 * 60 * 1000

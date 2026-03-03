@@ -68,8 +68,8 @@ rmSync(getDistRoot(), { recursive: true, force: true })
 console.log('Copying dependencies…')
 copyDependencies()
 
-console.log('Packaging emoji…')
-copyEmoji()
+// Emoji packaging skipped (gemoji removed in cleanup)
+// copyEmoji()
 
 console.log('Copying static resources…')
 copyStaticResources()
@@ -220,25 +220,6 @@ function packageApp() {
       InternalName: getProductName(),
     },
   })
-}
-
-function removeAndCopy(source: string, destination: string) {
-  rmSync(destination, { recursive: true, force: true })
-  copySync(source, destination)
-}
-
-function copyEmoji() {
-  const emojiImages = path.join(projectRoot, 'gemoji', 'images', 'emoji')
-  const emojiImagesDestination = path.join(outRoot, 'emoji')
-  removeAndCopy(emojiImages, emojiImagesDestination)
-
-  // Remove unicode-based emoji images (use the unicode emojis instead)
-  const emojiImagesUnicode = path.join(emojiImagesDestination, 'unicode')
-  rmSync(emojiImagesUnicode, { recursive: true, force: true })
-
-  const emojiJSON = path.join(projectRoot, 'gemoji', 'db', 'emoji.json')
-  const emojiJSONDestination = path.join(outRoot, 'emoji.json')
-  removeAndCopy(emojiJSON, emojiJSONDestination)
 }
 
 function copyStaticResources() {

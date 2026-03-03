@@ -24,7 +24,9 @@ import {
 } from './suppress-certificate-error'
 import { HttpStatusCode } from './http-status-code'
 import { CopilotError } from './copilot-error'
-import { BypassReasonType } from '../ui/secret-scanning/bypass-push-protection-dialog'
+
+/** Stub type - push protection bypass reasons (unused in folder-compare mode) */
+export type BypassReasonType = string
 
 const envEndpoint = process.env['DESKTOP_GITHUB_DOTCOM_API_ENDPOINT']
 const envHTMLURL = process.env['DESKTOP_GITHUB_DOTCOM_HTML_URL']

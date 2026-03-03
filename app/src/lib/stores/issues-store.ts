@@ -3,7 +3,9 @@ import { API, IAPIIssue } from '../api'
 import { Account } from '../../models/account'
 import { GitHubRepository } from '../../models/github-repository'
 import { compare, compareDescending } from '../compare'
-import { DefaultMaxHits } from '../../ui/autocompletion/common'
+
+/** Default max hits for autocompletion queries */
+const DefaultMaxHits = 100
 
 /** An autocompletion hit for an issue. */
 export interface IIssueHit {

@@ -348,7 +348,7 @@ import {
   migratedCustomIntegration,
 } from '../custom-integration'
 import { updateStore } from '../../ui/lib/update-store'
-import { BypassReasonType } from '../../ui/secret-scanning/bypass-push-protection-dialog'
+import { BypassReasonType } from '../../lib/api'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 

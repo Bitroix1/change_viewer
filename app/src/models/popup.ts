@@ -15,16 +15,21 @@ import { IStashEntry } from './stash-entry'
 import { Account } from '../models/account'
 import { Progress } from './progress'
 import { ITextDiff, DiffSelection, ImageDiffType } from './diff'
-import { RepositorySettingsTab } from '../ui/repository-settings/repository-settings'
 import { ICommitMessage } from './commit-message'
 import { Author, UnknownAuthor } from './author'
 import { IRefCheck } from '../lib/ci-checks/ci-checks'
 import { GitHubRepository } from './github-repository'
 import { ValidNotificationPullRequestReview } from '../lib/valid-notification-pull-request-review'
-import { UnreachableCommitsTab } from '../ui/history/unreachable-commits-dialog'
-import { IAPIComment } from '../lib/api'
-import { ISecretScanResult } from '../ui/secret-scanning/push-protection-error-dialog'
-import { BypassReasonType } from '../ui/secret-scanning/bypass-push-protection-dialog'
+import { IAPIComment, BypassReasonType } from '../lib/api'
+
+/** Stub types for removed UI components */
+export type RepositorySettingsTab = string
+export type UnreachableCommitsTab = string
+export interface ISecretScanResult {
+  readonly description: string
+  readonly locations: ReadonlyArray<any>
+  readonly bypassURL: string
+}
 
 export enum PopupType {
   RenameBranch = 'RenameBranch',

@@ -119,13 +119,13 @@ import {
 import { getMultiCommitOperationChooseBranchStep } from '../../lib/multi-commit-operation'
 import { ICombinedRefCheck, IRefCheck } from '../../lib/ci-checks/ci-checks'
 import { ValidNotificationPullRequestReviewState } from '../../lib/valid-notification-pull-request-review'
-import { UnreachableCommitsTab } from '../history/unreachable-commits-dialog'
+import { UnreachableCommitsTab } from '../../models/popup'
 import { sendNonFatalException } from '../../lib/helpers/non-fatal-exception'
 import { SignInResult } from '../../lib/stores/sign-in-store'
 import { ICustomIntegration } from '../../lib/custom-integration'
 import { isAbsolute } from 'path'
 import { CLIAction } from '../../lib/cli-action'
-import { BypassReasonType } from '../secret-scanning/bypass-push-protection-dialog'
+import { BypassReasonType } from '../../lib/api'
 
 /**
  * An error handler function.

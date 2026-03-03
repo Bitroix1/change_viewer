@@ -10,7 +10,11 @@ import {
   isRepositoryWithGitHubRepository,
 } from '../../models/repository'
 import { ForkContributionTarget } from '../../models/workflow-preferences'
-import { getVerbForPullRequestReview } from '../../ui/notifications/pull-request-review-helpers'
+
+/** Stub - returns a verb for a pull request review state (unused in folder-compare mode) */
+function getVerbForPullRequestReview(_review: any): string {
+  return 'reviewed'
+}
 import { API, APICheckConclusion, IAPIComment } from '../api'
 import {
   IRefCheck,

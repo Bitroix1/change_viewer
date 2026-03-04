@@ -878,6 +878,267 @@ export function applyComponentHighlightingForFile(
 }
 
 // ---------------------------------------------------------------------------
+// Rename hover overlays ("Show All" view)
+// ---------------------------------------------------------------------------
+
+/**
+ * Remove all previously injected rename hover overlays and their tooltips.
+ * Idempotent — safe to call even when none exist.
+ */
+export function removeRenameHoverOverlays(): void {
+  document
+    .querySelectorAll('.folder-compare-view .rename-hover-overlay')
+    .forEach(el => el.remove())
+  // Tooltips are appended to document.body, so query from there
+  document
+    .querySelectorAll('.rename-hover-tooltip')
+    .forEach(el => el.remove())
+}
+
+/**
+ * For every rename component, inject invisible hover-capture overlays on
+ * the exact character ranges of renamed identifiers — on BOTH the before
+ * (Removal) and after (Addition) sides.  Hovering over the text shows a
+ * tooltip with the component name + a "Go to component" link.
+ *
+ * Both `change.from` (usage) and `change.to` (declaration / source) positions
+ * are covered so that the highest-reachable_by nodes are also hoverable.
+ * Additionally, if `diffNodes` is provided, nodes with `reachable_by > 0` are
+ * included — these are the "source" declaration sites.
+ *
+ * Call this after the "Show All" view has been rendered / restored.
+ * Idempotent — existing overlays are removed first.
+ */
+export function injectRenameHoverOverlays(
+  diffComponents: any[],
+  diffNodes?: any[]
+): void {
+  removeRenameHoverOverlays()
+
+  // Gather rename components with their indices
+  const renameComps: Array<{ comp: any; index: number }> = []
+  diffComponents.forEach((comp, index) => {
+    if (comp.component_kind === 'rename') {
+      renameComps.push({ comp, index })
+    }
+  })
+  if (renameComps.length === 0) return
+
+  const allContainers = Array.from(
+    document.querySelectorAll('.folder-compare-view [data-file-path]')
+  ) as HTMLElement[]
+
+  for (const { comp, index } of renameComps) {
+    if (!comp.changes) continue
+
+    // Build a map: file → [{line, startCol, endCol, side}]
+    // Deduplicate by "line:startCol-endCol:side" to avoid double overlays.
+    const fileTargets = new Map<string, Array<{
+      line: number
+      startCol: number
+      endCol: number
+      side: 'before' | 'after'
+    }>>()
+    const seen = new Set<string>()
+
+    const addTarget = (
+      file: string,
+      position: string,
+      side: 'before' | 'after'
+    ) => {
+      const parts = position.split(':')
+      if (parts.length < 2) return
+      const line = parseInt(parts[0], 10)
+      const colParts = parts[1].split('-')
+      if (colParts.length < 2) return
+      const startCol = parseInt(colParts[0], 10)
+      const endCol = parseInt(colParts[1], 10)
+      if (isNaN(line) || isNaN(startCol) || isNaN(endCol) || endCol <= startCol) return
+      const key = `${file}:${line}:${startCol}-${endCol}:${side}`
+      if (seen.has(key)) return
+      seen.add(key)
+      const target = { line, startCol, endCol, side }
+      const existing = fileTargets.get(file)
+      if (existing) {
+        existing.push(target)
+      } else {
+        fileTargets.set(file, [target])
+      }
+    }
+
+    // Process change edges: `from` is the edge endpoint in the diff,
+    // `to` is the source/declaration node it points to.
+    for (const change of comp.changes) {
+      const side: 'before' | 'after' =
+        change.kind === 'Removal' ? 'before' : 'after'
+      // from = usage site
+      if (change.from?.file && change.from?.position) {
+        addTarget(change.from.file, change.from.position, side)
+      }
+      // to = declaration / source site (same side as the edge)
+      if (change.to?.file && change.to?.position) {
+        addTarget(change.to.file, change.to.position, side)
+      }
+    }
+
+    // Also include high-reachable_by nodes from diff_nodes.json if available.
+    // These are the "source" nodes (declarations) that may not be covered by
+    // the edge endpoints above.
+    if (diffNodes) {
+      const nodeData = diffNodes.find(
+        (n: any) => n.component_id === comp.component_id
+      )
+      if (nodeData?.nodes) {
+        for (const node of nodeData.nodes) {
+          if (node.file && node.position) {
+            const side: 'before' | 'after' =
+              node.kind === 'Removal' ? 'before' : 'after'
+            addTarget(node.file, node.position, side)
+          }
+        }
+      }
+    }
+
+    for (const [file, targets] of fileTargets) {
+      const fileContainer = allContainers.find(fc => {
+        const fp = fc.dataset.filePath || ''
+        return pathMatchesFile(file, fp)
+      })
+      if (!fileContainer) continue
+
+      const rows = Array.from(fileContainer.querySelectorAll('.row')) as HTMLElement[]
+      for (const row of rows) {
+        if (row.classList.contains('hunk-info')) continue
+
+        for (const target of targets) {
+          const sideSelector = target.side === 'before' ? '.before' : '.after'
+          const lineNumberDiv = row.querySelector(`${sideSelector} .line-number`)
+          if (!lineNumberDiv) continue
+          const lineNum = extractLineNumber(lineNumberDiv)
+          if (lineNum !== target.line) continue
+
+          const contentWrapper = row.querySelector(
+            `${sideSelector} .content-wrapper`
+          ) as HTMLElement
+          if (!contentWrapper) continue
+
+          // Ensure position:relative for absolute overlay children
+          contentWrapper.style.position = 'relative'
+          if (!contentWrapper.style.zIndex) {
+            contentWrapper.style.zIndex = '0'
+          }
+
+          // Tab-aware visual positioning
+          const lineText = contentWrapper.textContent || ''
+          const computedTabSize =
+            parseInt(getComputedStyle(contentWrapper).tabSize, 10) || 4
+          const visualStart = charColToVisualCol(
+            lineText,
+            target.startCol,
+            computedTabSize
+          )
+          const visualEnd = charColToVisualCol(
+            lineText,
+            target.endCol,
+            computedTabSize
+          )
+
+          // Create hover capture overlay (transparent, positioned over text)
+          const overlay = document.createElement('span')
+          overlay.className = 'rename-hover-overlay'
+          overlay.style.position = 'absolute'
+          overlay.style.left = `${visualStart}ch`
+          overlay.style.width = `${visualEnd - visualStart}ch`
+          overlay.style.top = '0'
+          overlay.style.bottom = '0'
+          overlay.style.zIndex = '3'
+          overlay.style.cursor = 'default'
+          overlay.style.pointerEvents = 'auto'
+          overlay.dataset.componentIndex = String(index)
+
+          // Create tooltip (appended to body for stacking context safety)
+          const tooltip = document.createElement('div')
+          tooltip.className = 'rename-hover-tooltip'
+          tooltip.style.display = 'none'
+
+          const tooltipName = document.createElement('div')
+          tooltipName.className = 'rename-hover-tooltip-name'
+          tooltipName.textContent =
+            comp.component_name || `Component ${comp.component_id}`
+
+          const tooltipLink = document.createElement('div')
+          tooltipLink.className = 'rename-hover-tooltip-link'
+          tooltipLink.textContent = 'Go to component'
+          tooltipLink.dataset.componentIndex = String(index)
+          tooltipLink.addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            const ci = parseInt(
+              (e.currentTarget as HTMLElement).dataset.componentIndex || '0',
+              10
+            )
+            document.dispatchEvent(
+              new CustomEvent('select-rename-component', {
+                bubbles: true,
+                detail: { componentIndex: ci },
+              })
+            )
+          })
+
+          tooltip.appendChild(tooltipName)
+          tooltip.appendChild(tooltipLink)
+
+          // Show/hide tooltip on hover of overlay
+          let hideTimeout: ReturnType<typeof setTimeout> | null = null
+          const scheduleHide = () => {
+            hideTimeout = setTimeout(() => {
+              tooltip.style.display = 'none'
+            }, 250)
+          }
+          const cancelHide = () => {
+            if (hideTimeout !== null) {
+              clearTimeout(hideTimeout)
+              hideTimeout = null
+            }
+          }
+
+          overlay.addEventListener('mouseenter', () => {
+            cancelHide()
+            tooltip.style.display = 'block'
+            const overlayRect = overlay.getBoundingClientRect()
+            const tooltipWidth = 220
+            tooltip.style.position = 'fixed'
+            // Centre horizontally on the overlay, clamped to viewport
+            let left = overlayRect.left + overlayRect.width / 2 - tooltipWidth / 2
+            left = Math.max(4, Math.min(left, window.innerWidth - tooltipWidth - 4))
+            tooltip.style.left = `${left}px`
+            tooltip.style.top = ''
+            tooltip.style.bottom = ''
+            tooltip.style.transform = ''
+            // Prefer showing above; fall back to below
+            if (overlayRect.top >= 80) {
+              tooltip.style.top = `${overlayRect.top - 6}px`
+              tooltip.style.transform = 'translateY(-100%)'
+            } else {
+              tooltip.style.top = `${overlayRect.bottom + 6}px`
+            }
+          })
+          overlay.addEventListener('mouseleave', scheduleHide)
+
+          tooltip.addEventListener('mouseenter', cancelHide)
+          tooltip.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none'
+          })
+
+          contentWrapper.appendChild(overlay)
+          document.body.appendChild(tooltip)
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // All-files highlighting
 // ---------------------------------------------------------------------------
 
@@ -997,6 +1258,8 @@ export function applyComponentHighlightingToAll(
     document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(el =>
       el.classList.remove('component-file-hidden')
     )
+    // Remove any existing rename hover overlays — caller will re-inject them
+    removeRenameHoverOverlays()
     return
   }
 

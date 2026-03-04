@@ -318,13 +318,16 @@ export function shrinkWrappersToFit(): void {
 }
 
 // ---------------------------------------------------------------------------
-// setupScrollSync
+// setupScrollSync / refreshScrollSync
 // ---------------------------------------------------------------------------
 
 /**
  * Add a sticky horizontal scrollbar per side (before/after) at the bottom of
  * each file's diff container.  All `.content` elements on the same side scroll
  * together via `translateX` so every line moves by the same amount.
+ *
+ * Also installs `wheel` event handlers on the diff container so that
+ * two-finger trackpad horizontal swipes are forwarded to the scroll bars.
  */
 export function setupScrollSync(): void {
   document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fileContainer => {
@@ -369,9 +372,30 @@ export function setupScrollSync(): void {
     diffContainer.appendChild(syncBar)
 
     requestAnimationFrame(() => {
-      const maxSW = Math.max(maxBeforeSW, maxAfterSW)
-      beforeInner.style.width = `${maxSW}px`
-      afterInner.style.width = `${maxSW}px`
+      // Re-measure scrollWidth inside rAF — layout may have shifted when the
+      // sync bar was appended.
+      const freshBeforeSW = Math.max(0, ...beforeContents.map(el => el.scrollWidth))
+      const freshAfterSW = Math.max(0, ...afterContents.map(el => el.scrollWidth))
+      const maxSW = Math.max(freshBeforeSW, freshAfterSW)
+
+      // The scroll bar covers the full side width (50%) which INCLUDES the
+      // .line-number column, but .content is narrower by that column's width.
+      // If we set innerWidth = maxSW the scroll range is `maxSW - barWidth`
+      // but the content needs `maxSW - contentWidth` which is larger.
+      // Compensate by adding the width delta.
+      const barW = beforeBar.clientWidth || afterBar.clientWidth
+      const firstContent = beforeContents[0] || afterContents[0]
+      const contentW = firstContent ? firstContent.clientWidth : barW
+      const widthDelta = Math.max(0, barW - contentW)
+      // Add ~2 characters of breathing room based on current font size.
+      const fontSize = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--font-size')
+      ) || 12
+      const extraPadding = Math.ceil(fontSize * 1.2) // ≈ 2 monospace chars
+      const adjustedWidth = maxSW + widthDelta + extraPadding
+
+      beforeInner.style.width = `${adjustedWidth}px`
+      afterInner.style.width = `${adjustedWidth}px`
     })
 
     beforeBar.addEventListener('scroll', () => {
@@ -400,6 +424,147 @@ export function setupScrollSync(): void {
         if (p) p.style.transform = `translateX(-${sl}px)`
       })
     })
+
+    // Forward trackpad/mouse-wheel horizontal deltas to the scroll-sync bars.
+    // The .content cells have overflow:hidden so the browser won't natively
+    // scroll them; we intercept `wheel` events and redirect deltaX into the
+    // appropriate sync bar.
+    // Use a data attribute to avoid adding duplicate handlers on refresh.
+    if (!diffContainer.dataset.hasWheelSync) {
+      diffContainer.dataset.hasWheelSync = '1'
+      diffContainer.addEventListener('wheel', (e: WheelEvent) => {
+        // Only act on horizontal deltas.  Shift+wheel (some mice) and native
+        // two-finger horizontal swipe both produce deltaX != 0.
+        const dx = e.deltaX || (e.shiftKey ? e.deltaY : 0)
+        if (dx === 0) return
+
+        // Hit-test which side the cursor is over
+        const target = e.target as HTMLElement
+        const sideEl = target.closest?.('.before, .after') as HTMLElement | null
+        if (!sideEl) return
+
+        // Look up the current scroll-sync bar dynamically so that refreshes
+        // (which destroy and recreate the bar) keep working.
+        const currentSyncBar = diffContainer.querySelector('.scroll-sync-bar')
+        if (!currentSyncBar) return
+        const barIndex = sideEl.classList.contains('before') ? 0 : 1
+        const bar = currentSyncBar.children[barIndex] as HTMLElement
+        if (!bar) return
+        bar.scrollLeft += dx
+        e.preventDefault()
+      }, { passive: false })
+    }
+
+  })
+
+  // Install a global font-size watcher once.  The app changes
+  // document.documentElement.style to update --font-size; we detect this
+  // via a MutationObserver on the root element's style attribute.
+  installFontSizeWatcher()
+}
+
+/**
+ * Recalculate scroll-sync bar inner widths for all file containers.
+ * If a scroll bar doesn't exist yet but content now overflows (e.g. after
+ * zoom-in), remove existing bars and re-run full setup so new bars are
+ * created where needed.
+ *
+ * Call this on window resize / zoom changes.
+ */
+export function refreshScrollSync(): void {
+  let needsFullSetup = false
+
+  document.querySelectorAll('.folder-compare-view [data-file-path]').forEach(fileContainer => {
+    const diffContainer = fileContainer.querySelector('.diff-container') as HTMLElement
+    if (!diffContainer) return
+
+    const beforeContents = Array.from(
+      fileContainer.querySelectorAll('.before .content')
+    ) as HTMLElement[]
+    const afterContents = Array.from(
+      fileContainer.querySelectorAll('.after .content')
+    ) as HTMLElement[]
+
+    const maxBeforeSW = Math.max(0, ...beforeContents.map(el => el.scrollWidth))
+    const maxAfterSW = Math.max(0, ...afterContents.map(el => el.scrollWidth))
+    const maxSW = Math.max(maxBeforeSW, maxAfterSW)
+
+    const existingBar = diffContainer.querySelector('.scroll-sync-bar') as HTMLElement
+    if (existingBar) {
+      // Update inner widths of existing bars — apply the same line-number
+      // width compensation as setupScrollSync.
+      const barDivs = Array.from(existingBar.children) as HTMLElement[]
+      const barW = barDivs[0]?.clientWidth || 0
+      const firstContent = beforeContents[0] || afterContents[0]
+      const contentW = firstContent ? firstContent.clientWidth : barW
+      const widthDelta = Math.max(0, barW - contentW)
+      // Add ~2 characters of breathing room based on current font size.
+      const fontSize = parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--font-size')
+      ) || 12
+      const extraPadding = Math.ceil(fontSize * 1.2) // ≈ 2 monospace chars
+      const adjustedWidth = maxSW + widthDelta + extraPadding
+
+      barDivs.forEach(bar => {
+        const inner = bar.firstElementChild as HTMLElement
+        if (inner) inner.style.width = `${adjustedWidth}px`
+      })
+    } else {
+      // Check if content now overflows and we need to create a scrollbar
+      const firstBefore = beforeContents[0]
+      const firstAfter = afterContents[0]
+      const beforeOverflows = firstBefore && maxBeforeSW > firstBefore.clientWidth + 2
+      const afterOverflows = firstAfter && maxAfterSW > firstAfter.clientWidth + 2
+      if (beforeOverflows || afterOverflows) {
+        needsFullSetup = true
+      }
+    }
+  })
+
+  if (needsFullSetup) {
+    // Remove all existing bars and re-create — some files may not have had
+    // bars before but need them now.
+    document.querySelectorAll('.folder-compare-view .scroll-sync-bar').forEach(el => el.remove())
+    // Reset any translateX that was applied
+    document.querySelectorAll('.folder-compare-view .content-wrapper').forEach(el => {
+      ;(el as HTMLElement).style.transform = ''
+    })
+    document.querySelectorAll('.folder-compare-view .content .prefix').forEach(el => {
+      ;(el as HTMLElement).style.transform = ''
+    })
+    setupScrollSync()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// installFontSizeWatcher — detect --font-size CSS variable changes
+// ---------------------------------------------------------------------------
+
+let fontSizeWatcherInstalled = false
+let fontSizeRefreshRAF: number | null = null
+
+/**
+ * Install a MutationObserver on `document.documentElement` that watches for
+ * `style` attribute changes (where `applyFontSizeOffset()` writes
+ * `--font-size`).  When the attribute changes we schedule a debounced
+ * `refreshScrollSync()` so the scroll bar inner widths track the new font
+ * size.  The observer is installed at most once and persists for the lifetime
+ * of the page.
+ */
+function installFontSizeWatcher(): void {
+  if (fontSizeWatcherInstalled) return
+  fontSizeWatcherInstalled = true
+
+  const mo = new MutationObserver(() => {
+    if (fontSizeRefreshRAF) cancelAnimationFrame(fontSizeRefreshRAF)
+    fontSizeRefreshRAF = requestAnimationFrame(() => {
+      fontSizeRefreshRAF = null
+      refreshScrollSync()
+    })
+  })
+  mo.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['style'],
   })
 }
 

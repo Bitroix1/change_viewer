@@ -23,8 +23,10 @@ import {
   getHighlightedLinesForComponent,
   injectExpandButtonsIntoHunkInfoRows,
   injectBoundaryExpandButtons,
+  injectRenameHoverOverlays,
+  removeRenameHoverOverlays,
 } from './folder-compare-highlight'
-import { repackFile, shrinkWrappersToFit, setupScrollSync, scrollHorizontallyToElement } from './folder-compare-repack'
+import { repackFile, shrinkWrappersToFit, setupScrollSync, refreshScrollSync, scrollHorizontallyToElement } from './folder-compare-repack'
 import {
   loadDiffComponents,
   loadAllDiffs,
@@ -1030,6 +1032,43 @@ export class FolderCompareView extends React.Component<
             border: none !important;
           }
 
+          /* ── Rename hover overlays ── */
+          .rename-hover-overlay {
+            /* transparent overlay; just captures hover */
+            background: transparent;
+          }
+          .rename-hover-overlay:hover {
+            background: rgba(27, 125, 237, 0.10);
+          }
+          .rename-hover-tooltip {
+            position: fixed;
+            z-index: 10000;
+            width: 220px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background-color: var(--box-background-color, #1e1e1e);
+            border: 1px solid var(--box-border-color, #444);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: var(--font-size, 12px);
+            color: var(--text-color, #ccc);
+            pointer-events: auto;
+          }
+          .rename-hover-tooltip-name {
+            margin-bottom: 6px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-color, #eee);
+          }
+          .rename-hover-tooltip-link {
+            color: #1b7ded;
+            cursor: pointer;
+            font-size: var(--font-size-sm, 11px);
+            text-decoration: underline;
+          }
+          .rename-hover-tooltip-link:hover {
+            color: #4da3ff;
+          }
+
 
         `}</style>
       </div>
@@ -1040,6 +1079,7 @@ export class FolderCompareView extends React.Component<
   private mutationObserver: MutationObserver | null = null
   private isApplyingHighlighting = false
   private highlightingRAF: number | null = null
+  private renameOverlayRAF: number | null = null
   private diffHeightsAdjusted = false
   private shrinkPollingRAF: number | null = null
 
@@ -1100,7 +1140,9 @@ export class FolderCompareView extends React.Component<
     // instances inside each <Diff> never see the event.
     document.addEventListener('find-text', this.onFolderFindText, true)
     window.addEventListener('keydown', this.onFolderKeyDown, true)
+    window.addEventListener('resize', this.onWindowResize)
     document.addEventListener('expand-hunk-context', this.onExpandHunkContext as unknown as EventListener, true)
+    document.addEventListener('select-rename-component', this.onSelectRenameComponent as unknown as EventListener, true)
   }
 
   public componentDidUpdate(prevProps: IFolderCompareViewProps, prevState: IFolderCompareViewState): void {
@@ -1188,6 +1230,8 @@ export class FolderCompareView extends React.Component<
         injectExpandButtonsIntoHunkInfoRows()
         // Inject boundary expand buttons at bottom of each file
         injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
+        // Inject rename hover overlays for the "Show All" view
+        injectRenameHoverOverlays(this.state.diffComponents, this.state.diffNodes)
         if (this.mutationObserver) {
           const container = document.querySelector('.folder-compare-view')
           if (container) {
@@ -1202,7 +1246,10 @@ export class FolderCompareView extends React.Component<
     this.cleanupMutationObserver()
     document.removeEventListener('find-text', this.onFolderFindText, true)
     window.removeEventListener('keydown', this.onFolderKeyDown, true)
+    window.removeEventListener('resize', this.onWindowResize)
     document.removeEventListener('expand-hunk-context', this.onExpandHunkContext as unknown as EventListener, true)
+    document.removeEventListener('select-rename-component', this.onSelectRenameComponent as unknown as EventListener, true)
+    removeRenameHoverOverlays()
     this.clearSearchHighlight()
   }
 
@@ -1212,7 +1259,31 @@ export class FolderCompareView extends React.Component<
     this.mutationObserver = new MutationObserver((mutations) => {
       if (this.isApplyingHighlighting) return
 
-      if (this.state.selectedComponent === 'all') return
+      if (this.state.selectedComponent === 'all') {
+        // In "Show All" mode, re-inject rename hover overlays when new rows
+        // appear (e.g. ReactVirtualized lazily rendering more rows on scroll).
+        const hasNewRows = mutations.some(m =>
+          Array.from(m.addedNodes).some(n => {
+            const el = n as Element
+            return (
+              el.nodeType === Node.ELEMENT_NODE &&
+              typeof el.classList !== 'undefined' &&
+              !el.classList.contains('rename-hover-overlay') &&
+              !el.classList.contains('rename-hover-tooltip') &&
+              (el.classList.contains('row') ||
+               el.querySelector?.('.row') !== null)
+            )
+          })
+        )
+        if (hasNewRows && this.state.diffComponents.length > 0) {
+          if (this.renameOverlayRAF) cancelAnimationFrame(this.renameOverlayRAF)
+          this.renameOverlayRAF = requestAnimationFrame(() => {
+            injectRenameHoverOverlays(this.state.diffComponents, this.state.diffNodes)
+            this.renameOverlayRAF = null
+          })
+        }
+        return
+      }
 
       // Ignore mutations that consist *only* of our own separator
       // insertions/removals (class names starting with 'component-').
@@ -1232,7 +1303,9 @@ export class FolderCompareView extends React.Component<
              el.classList.contains('expand-context-icon') ||
              el.classList.contains('expanded-context-row') ||
              el.classList.contains('expand-boundary-bottom') ||
-             el.classList.contains('folder-search-bar-wrapper')))
+             el.classList.contains('folder-search-bar-wrapper') ||
+             el.classList.contains('rename-hover-overlay') ||
+             el.classList.contains('rename-hover-tooltip')))
             return true
           // Nodes inside the search bar wrapper are ours too
           if ((n as Element).closest?.('.folder-search-bar-wrapper')) return true
@@ -1273,6 +1346,10 @@ export class FolderCompareView extends React.Component<
     if (this.highlightingRAF) {
       cancelAnimationFrame(this.highlightingRAF)
       this.highlightingRAF = null
+    }
+    if (this.renameOverlayRAF) {
+      cancelAnimationFrame(this.renameOverlayRAF)
+      this.renameOverlayRAF = null
     }
     if (this.shrinkPollingRAF) {
       cancelAnimationFrame(this.shrinkPollingRAF)
@@ -1368,7 +1445,11 @@ export class FolderCompareView extends React.Component<
         injectExpandButtonsIntoHunkInfoRows()
         // Re-inject boundary expand buttons at bottom of each file
         injectBoundaryExpandButtons(this.state.beforeFolder, this.state.afterFolder)
+        // Inject rename hover overlays on both sides of renamed identifiers
+        injectRenameHoverOverlays(this.state.diffComponents, this.state.diffNodes)
       } else {
+        // Remove rename hover overlays when switching away from "Show All"
+        removeRenameHoverOverlays()
         for (const file of this.state.fileChanges) {
           const fc = document.querySelector(
             `.folder-compare-view [data-file-path="${file.path}"]`
@@ -2243,6 +2324,44 @@ export class FolderCompareView extends React.Component<
       selectedNodeInfo: null,
       hunkEntries: [],
       selectedRightPanelLine: null,
+    })
+  }
+
+  /**
+   * Handle the custom `select-rename-component` event dispatched by rename
+   * info icon tooltips.  Selects the component in the left panel and ensures
+   * the "Renames" kind group is expanded so the selected radio is visible.
+   */
+  private onSelectRenameComponent = (e: CustomEvent) => {
+    const componentIndex = e.detail?.componentIndex as number | undefined
+    if (componentIndex === undefined) return
+
+    // Ensure "rename" kind group is expanded
+    this.setState(prevState => {
+      const collapsed = [...prevState.collapsedKinds]
+      const idx = collapsed.indexOf('rename')
+      if (idx >= 0) {
+        collapsed.splice(idx, 1)
+      }
+      return {
+        selectedComponent: componentIndex,
+        selectedNodeInfo: null,
+        hunkEntries: [],
+        selectedRightPanelLine: null,
+        collapsedKinds: collapsed,
+      }
+    })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Window resize — refresh scroll-sync bar widths (handles zoom changes)
+  // ---------------------------------------------------------------------------
+  private resizeRAF: number | null = null
+  private onWindowResize = () => {
+    if (this.resizeRAF) cancelAnimationFrame(this.resizeRAF)
+    this.resizeRAF = requestAnimationFrame(() => {
+      this.resizeRAF = null
+      refreshScrollSync()
     })
   }
 

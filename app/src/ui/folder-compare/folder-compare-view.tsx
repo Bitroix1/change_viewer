@@ -309,7 +309,7 @@ export class FolderCompareView extends React.Component<
                                       checked={isSelected}
                                       onChange={this.onComponentChange}
                                     />
-                                    <span style={{ fontSize: 'var(--font-size)' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
+                                    <span style={{ fontSize: 'var(--font-size)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
                                   </label>
                                 </div>
                               )
@@ -2045,7 +2045,7 @@ export class FolderCompareView extends React.Component<
           <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary-color)', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {kindLabel}
           </div>
-          <div style={{ fontSize: 'calc(var(--font-size) + 4px)', fontWeight: 700, color: 'var(--text-color)' }}>
+          <div style={{ fontSize: 'calc(var(--font-size) + 4px)', fontWeight: 700, color: 'var(--text-color)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
             {componentName}
           </div>
         </div>

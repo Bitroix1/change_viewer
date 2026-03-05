@@ -661,6 +661,15 @@ export class FolderCompareView extends React.Component<
             background-color: var(--diff-empty-hunk-handle) !important;
           }
 
+          /* Filtered changed rows (not in the current component) get the
+             darker gray divider, matching unchanged/context lines */
+          .folder-compare-view.component-mode .component-filtered .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .component-filtered.added .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .component-filtered.deleted .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .component-filtered.modified .hunk-handle-place-holder {
+            background-color: var(--diff-border-color) !important;
+          }
+
           /* Hide blue increased-hover-surface, focus-handle, and hunk-handle for filtered rows */
           .folder-compare-view .component-filtered .increased-hover-surface,
           .folder-compare-view .component-filtered .focus-handle,

@@ -1935,12 +1935,11 @@ export class FolderCompareView extends React.Component<
         )}
 
         {(() => {
-          // Determine the unique max reachable_by for the "Likely source" badge
-          const maxReachable = entries.length > 0
-            ? Math.max(...entries.map(e => e.reachable_by))
-            : 0
+          // Likely source: the entry with the unique max reachable_by, or the first
+          // among exactly 2 entries that share the max. 3+ sharing the max → no badge.
+          const maxReachable = entries.length > 0 ? Math.max(...entries.map(e => e.reachable_by)) : 0
           const maxCount = entries.filter(e => e.reachable_by === maxReachable).length
-          const likelySourceKey = maxReachable > 0 && maxCount === 1
+          const likelySourceKey = maxReachable > 0 && maxCount <= 2
             ? entries.find(e => e.reachable_by === maxReachable)!.key
             : null
 
@@ -2209,6 +2208,18 @@ export class FolderCompareView extends React.Component<
       afterFolder,
       diffmagicFolder,
       isLoading: true,
+      isLoadingDiffs: false,
+      fileChanges: [],
+      fileDiffs: new Map(),
+      diffComponents: [],
+      diffNodes: [],
+      selectedComponent: 'all',
+      selectedNodeInfo: null,
+      collapsedKinds: [],
+      collapsedFolders: [],
+      hunkEntries: [],
+      selectedRightPanelLine: null,
+      fileContentsMap: new Map(),
     })
 
     try {

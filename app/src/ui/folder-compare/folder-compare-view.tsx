@@ -138,7 +138,7 @@ export class FolderCompareView extends React.Component<
     const hasRightPanel = this.state.selectedComponent !== 'all' && this.state.selectedComponent !== 'misc'
 
     return (
-      <div className="folder-compare-view" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className={`folder-compare-view${hasRightPanel ? ' component-mode' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <style>{`
           .resize-handle-h {
             width: 4px;
@@ -647,9 +647,18 @@ export class FolderCompareView extends React.Component<
           .folder-compare-view .row.modified .hunk-handle-place-holder {
             background-color: var(--diff-selected-border-color) !important;
           }
-          .folder-compare-view .component-filtered .hunk-handle-place-holder,
-          .folder-compare-view .component-filtered .hunk-handle-place-holder.selected {
-            background-color: var(--diff-gutter-color) !important;
+
+          /* In component mode, force ALL dividers gray — no blue anywhere */
+          .folder-compare-view.component-mode .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .hunk-handle-place-holder.selected,
+          .folder-compare-view.component-mode .row.added .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .row.deleted .hunk-handle-place-holder,
+          .folder-compare-view.component-mode .row.modified .hunk-handle-place-holder {
+            background-color: var(--diff-empty-hunk-handle) !important;
+          }
+          .folder-compare-view.component-mode .hunk-handle,
+          .folder-compare-view.component-mode .hunk-handle.selected {
+            background-color: var(--diff-empty-hunk-handle) !important;
           }
 
           /* Hide blue increased-hover-surface, focus-handle, and hunk-handle for filtered rows */
@@ -897,10 +906,13 @@ export class FolderCompareView extends React.Component<
             margin: 0 !important;
             padding: 0 !important;
           }
-          /* Force hunk-info rows to exactly 20px so they match normal rows */
+          /* Force hunk-info rows to exactly 20px so they match normal rows.
+             z-index above hunk-handle (10) so the @@ header covers dividers. */
           .folder-compare-view .hunk-info.row {
             height: 20px !important;
             line-height: 20px !important;
+            position: relative !important;
+            z-index: 11 !important;
           }
           .folder-compare-view .expand-context-btn {
             display: flex;
@@ -1069,6 +1081,26 @@ export class FolderCompareView extends React.Component<
             color: #4da3ff;
           }
 
+          /* Context lines within a component addition span (green) */
+          .folder-compare-view .component-context-addition {
+            background: var(--diff-add-background-color) !important;
+          }
+          .folder-compare-view .component-context-addition .line-number {
+            background-color: var(--diff-add-background-color) !important;
+          }
+          /* Context lines within a component deletion span (red) */
+          .folder-compare-view .component-context-deletion {
+            background: var(--diff-delete-background-color) !important;
+          }
+          .folder-compare-view .component-context-deletion .line-number {
+            background-color: var(--diff-delete-background-color) !important;
+          }
+          /* Auto-expanded rows for component lines in inter-hunk gaps */
+          .folder-compare-view .component-auto-expanded .component-context-addition .content,
+          .folder-compare-view .component-auto-expanded .component-context-addition .content-wrapper {
+            color: var(--diff-text-color) !important;
+          }
+
 
         `}</style>
       </div>
@@ -1172,8 +1204,28 @@ export class FolderCompareView extends React.Component<
       // shift (right-panel appearing) that triggers ReactVirtualized to
       // re-render rows AFTER the initial repack.  The second pass
       // re-packs those late rows so the diff content is never blank.
-      requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
+        // Cancel any stale MutationObserver rAF so it cannot fire
+        // during the await below and undo our inserted rows.
+        if (this.highlightingRAF) {
+          cancelAnimationFrame(this.highlightingRAF)
+          this.highlightingRAF = null
+        }
+
         this.applyAndRepackAll()
+        // Insert any component lines that fall in inter-hunk gaps.
+        // Keep the observer suspended until repackFile finishes so
+        // the MutationObserver cannot re-trigger applyAndRepackAll
+        // and strip the rows we just inserted.
+        const needsInsert = this.state.selectedComponent !== 'all' && this.state.selectedComponent !== 'misc'
+        if (needsInsert) {
+          this.suspendObserver()
+          try {
+            await this.insertMissingComponentLines()
+          } catch {
+            // best-effort
+          }
+        }
         requestAnimationFrame(() => {
           if (this.state.selectedComponent !== 'all') {
             for (const file of this.state.fileChanges) {
@@ -1184,6 +1236,10 @@ export class FolderCompareView extends React.Component<
                 repackFile(fc)
               }
             }
+          }
+          // Resume the observer only after repackFile has finished
+          if (needsInsert) {
+            this.resumeObserver()
           }
         })
       })
@@ -1470,7 +1526,10 @@ export class FolderCompareView extends React.Component<
     } finally {
       this.isApplyingHighlighting = false
 
-      if (this.mutationObserver) {
+      // Only reconnect the observer if nothing else has it suspended.
+      // This prevents undoing the suspend that insertMissingComponentLines
+      // relies on to keep its inserted rows alive.
+      if (this._observerSuspendCount <= 0 && this.mutationObserver) {
         const container = document.querySelector('.folder-compare-view')
         if (container) {
           this.mutationObserver.observe(container, {
@@ -1749,27 +1808,45 @@ export class FolderCompareView extends React.Component<
       if (!node.position || !node.file) continue
       const parts = node.position.split(':')
       if (parts.length < 2) continue
-      const line = parseInt(parts[0], 10)
-      const colParts = parts[1].split('-')
-      const startCol = parseInt(colParts[0], 10)
+      let startLine = parseInt(parts[0], 10)
+      const startCol = parseInt(parts[1].split('-')[0], 10)
       const side: 'before' | 'after' = node.kind === 'Removal' ? 'before' : 'after'
-      const key = `${node.file}:${line}:${side}`
+
+      // For multi-line MethodDeclaration nodes, skip past annotation / blank
+      // lines so the right panel shows the actual method signature.
+      const isMultiLine = parts.length >= 3
+      if (isMultiLine && node.type && node.type.startsWith('MethodDeclaration')) {
+        const endLine = parseInt(parts[1].split('-')[1], 10)
+        for (let l = startLine; l <= endLine; l++) {
+          const src = this.getLineContentWithFallback(node.file, l, side)
+          if (src === '') {
+            startLine = l
+            break
+          }
+          const trimmed = src.trimStart()
+          if (trimmed.length > 0 && !trimmed.startsWith('@') && !trimmed.startsWith('*') && !trimmed.startsWith('//') && !trimmed.startsWith('/*')) {
+            startLine = l
+            break
+          }
+        }
+      }
+
+      // Right panel shows one entry per node at the start line (signature line).
+      const key = `${node.file}:${startLine}:${side}`
 
       const existing = lineMap.get(key)
       if (!existing) {
         lineMap.set(key, {
           file: node.file,
-          line,
+          line: startLine,
           startCol,
           side,
           reachable_by: node.reachable_by ?? 0
         })
       } else {
-        // Keep earliest startCol
         if (startCol < existing.startCol) {
           existing.startCol = startCol
         }
-        // Keep max reachable_by
         if ((node.reachable_by ?? 0) > existing.reachable_by) {
           existing.reachable_by = node.reachable_by
         }
@@ -1813,9 +1890,10 @@ export class FolderCompareView extends React.Component<
     }
 
     return entries.map(([key, entry]) => {
-      // Get full line content (without diff prefix, since DiffLine.content strips it)
-      const rawContent = getSourceLineContent(
-        entry.file, entry.line, entry.side, this.state.fileDiffs
+      // Get full line content — try diff hunks first, fall back to
+      // fileContentsMap for lines in inter-hunk gaps.
+      const rawContent = this.getLineContentWithFallback(
+        entry.file, entry.line, entry.side
       )
 
       const trimmed = rawContent.trimStart()
@@ -1879,6 +1957,51 @@ export class FolderCompareView extends React.Component<
   }
 
   /**
+   * Count total unique highlighted lines across all files for the selected
+   * component — used for the "Changed Lines (N)" header.
+   */
+  private countTotalChangedLines(): number {
+    if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return 0
+    let count = 0
+    for (const file of this.state.fileChanges) {
+      const highlights = getHighlightedLinesForComponent(
+        this.state.diffComponents, this.state.selectedComponent, file.path, this.state.diffNodes
+      )
+      count += highlights.length
+    }
+    return count
+  }
+
+  /**
+   * Get source line content, falling back to fileContentsMap for lines in
+   * inter-hunk gaps where getSourceLineContent returns empty.
+   */
+  private getLineContentWithFallback(
+    fileName: string,
+    lineNum: number,
+    side: 'before' | 'after'
+  ): string {
+    const fromDiff = getSourceLineContent(fileName, lineNum, side, this.state.fileDiffs)
+    if (fromDiff !== '') return fromDiff
+
+    // Fall back to fileContentsMap for lines in inter-hunk gaps
+    for (const [, contents] of this.state.fileContentsMap) {
+      const filePath = contents.file.path
+      if (
+        filePath === fileName ||
+        filePath.endsWith('/' + fileName) ||
+        filePath.endsWith('\\' + fileName)
+      ) {
+        const lines = side === 'before' ? contents.oldContents : contents.newContents
+        if (lineNum >= 1 && lineNum <= lines.length) {
+          return lines[lineNum - 1]
+        }
+      }
+    }
+    return ''
+  }
+
+  /**
    * Right panel: shows all changed lines in the component, sorted by
    * reachable_by score. Always visible when a component is selected.
    */
@@ -1886,6 +2009,9 @@ export class FolderCompareView extends React.Component<
     if (this.state.selectedComponent === 'all' || this.state.selectedComponent === 'misc') return null
 
     const entries = this.computeRightPanelEntries()
+
+    // Total changed lines: count all unique highlighted lines across all files.
+    const totalChangedLines = this.countTotalChangedLines()
 
     const componentIndex = this.state.selectedComponent as number
     const component = this.state.diffComponents[componentIndex]
@@ -1925,7 +2051,7 @@ export class FolderCompareView extends React.Component<
         </div>
 
         <h3 style={{ margin: '0 0 15px 0', fontSize: 'var(--font-size-md)', fontWeight: 600 }}>
-          Changed Lines ({entries.length})
+          Changed Lines ({totalChangedLines})
         </h3>
 
         {entries.length === 0 && (
@@ -2149,7 +2275,9 @@ export class FolderCompareView extends React.Component<
         }
       }
     } else {
-      // Component view: count only lines highlighted by this component
+      // Component view: count only lines highlighted by this component.
+      // Lines may be in diff hunks (add/delete) or in inter-hunk gaps
+      // (part of a multi-line node span that extends beyond the hunk).
       const highlights = getHighlightedLinesForComponent(
         this.state.diffComponents, this.state.selectedComponent, filePath, this.state.diffNodes
       )
@@ -2159,14 +2287,29 @@ export class FolderCompareView extends React.Component<
         if (h.side === 'before') beforeLines.add(h.line)
         else afterLines.add(h.line)
       }
+      const countedAfter = new Set<number>()
+      const countedBefore = new Set<number>()
       for (const hunk of diff.hunks) {
         for (const line of hunk.lines) {
           if (line.type === DiffLineType.Add) {
-            if (line.newLineNumber !== null && afterLines.has(line.newLineNumber)) additions++
+            if (line.newLineNumber !== null && afterLines.has(line.newLineNumber)) {
+              additions++
+              countedAfter.add(line.newLineNumber)
+            }
           } else if (line.type === DiffLineType.Delete) {
-            if (line.oldLineNumber !== null && beforeLines.has(line.oldLineNumber)) deletions++
+            if (line.oldLineNumber !== null && beforeLines.has(line.oldLineNumber)) {
+              deletions++
+              countedBefore.add(line.oldLineNumber)
+            }
           }
         }
+      }
+      // Count component lines in inter-hunk gaps (not in any hunk)
+      for (const l of afterLines) {
+        if (!countedAfter.has(l)) additions++
+      }
+      for (const l of beforeLines) {
+        if (!countedBefore.has(l)) deletions++
       }
     }
 
@@ -3746,6 +3889,254 @@ export class FolderCompareView extends React.Component<
         if (container) {
           this.mutationObserver.observe(container, { childList: true, subtree: true })
         }
+      }
+    }
+  }
+
+  /**
+   * After component highlighting has been applied, detect lines that the
+   * component spans but that fall in inter-hunk gaps (not present in any
+   * diff hunk, thus no DOM row exists).  Read source files and insert
+   * styled context rows so the full component span is visible.
+   */
+  private async insertMissingComponentLines(): Promise<void> {
+    const sel = this.state.selectedComponent
+    if (sel === 'all' || sel === 'misc') return
+
+    for (const file of this.state.fileChanges) {
+      const filePath = file.path
+      const highlights = getHighlightedLinesForComponent(
+        this.state.diffComponents, sel, filePath, this.state.diffNodes
+      )
+      if (highlights.length === 0) continue
+
+      const fileContainer = document.querySelector(
+        `.folder-compare-view [data-file-path="${filePath}"]`
+      )
+      if (!fileContainer) continue
+      if (fileContainer.classList.contains('component-file-hidden')) continue
+
+      const inner = fileContainer.querySelector(
+        '.ReactVirtualized__Grid__innerScrollContainer'
+      ) as HTMLElement
+      if (!inner) continue
+
+      // Collect needed line numbers per side
+      const neededAfter = new Set<number>()
+      const neededBefore = new Set<number>()
+      for (const h of highlights) {
+        if (h.side === 'after') neededAfter.add(h.line)
+        else neededBefore.add(h.line)
+      }
+      if (neededAfter.size === 0 && neededBefore.size === 0) continue
+
+      // Check which lines are already present in existing DOM rows
+      const presentAfter = new Set<number>()
+      const presentBefore = new Set<number>()
+      const allChildren = Array.from(inner.children) as HTMLElement[]
+      for (const child of allChildren) {
+        if (child.classList.contains('component-hunk-separator')) continue
+        if (child.classList.contains('expand-boundary-bottom')) continue
+        const row = (child.querySelector('.row') as HTMLElement) ?? child
+        const adiv = row.querySelector('.after .line-number')
+        const bdiv = row.querySelector('.before .line-number')
+        if (adiv) {
+          const a = extractLineNumber(adiv)
+          if (a !== null) presentAfter.add(a)
+        }
+        if (bdiv) {
+          const b = extractLineNumber(bdiv)
+          if (b !== null) presentBefore.add(b)
+        }
+      }
+
+      const missingAfter: number[] = []
+      for (const line of neededAfter) {
+        if (!presentAfter.has(line)) missingAfter.push(line)
+      }
+      if (missingAfter.length === 0) continue
+
+      // Read source files
+      const afterFilePath = Path.join(this.state.afterFolder, filePath)
+      const beforeFilePath = Path.join(this.state.beforeFolder, filePath)
+      let afterFileLines: string[] = []
+      let beforeFileLines: string[] = []
+      try { afterFileLines = (await FSPromises.readFile(afterFilePath, 'utf-8')).split('\n') } catch {}
+      try { beforeFileLines = (await FSPromises.readFile(beforeFilePath, 'utf-8')).split('\n') } catch {}
+
+      // Guard: if component selection changed while reading files, bail out
+      if (this.state.selectedComponent !== sel) return
+
+      // Get diff hunk data for before↔after line mapping
+      let diff: ITextDiff | null = null
+      for (const [key, value] of this.state.fileDiffs.entries()) {
+        if (key === filePath || key.endsWith('+' + filePath) ||
+            key.endsWith('/' + filePath) || key.endsWith('\\' + filePath)) {
+          diff = value
+          break
+        }
+      }
+
+      // Helper: compute before-line for a given after-line using hunk offsets
+      const computeBeforeLine = (afterLine: number): number | null => {
+        if (!diff || diff.hunks.length === 0) return afterLine
+        for (let i = 0; i < diff.hunks.length; i++) {
+          const hunk = diff.hunks[i]
+          if (hunk.header.newStartLine > afterLine) {
+            if (i === 0) {
+              const offset = hunk.header.newStartLine - hunk.header.oldStartLine
+              const bl = afterLine - offset
+              return bl < 1 ? afterLine : bl
+            } else {
+              const prevHunk = diff.hunks[i - 1]
+              const prevOldEnd = prevHunk.header.oldStartLine + prevHunk.header.oldLineCount - 1
+              const prevNewEnd = prevHunk.header.newStartLine + prevHunk.header.newLineCount - 1
+              return afterLine - (prevNewEnd - prevOldEnd)
+            }
+          }
+        }
+        const lastHunk = diff.hunks[diff.hunks.length - 1]
+        const lastOldEnd = lastHunk.header.oldStartLine + lastHunk.header.oldLineCount - 1
+        const lastNewEnd = lastHunk.header.newStartLine + lastHunk.header.newLineCount - 1
+        return afterLine - (lastNewEnd - lastOldEnd)
+      }
+
+      // Get row dimensions from existing rows
+      let rowHeight = 20
+      let gutterWidth = ''
+      for (const child of allChildren) {
+        const h = parseInt(child.style.height || '0', 10)
+        if (h > 0 && !child.classList.contains('component-hunk-separator') &&
+            !child.classList.contains('expanded-context-row')) {
+          rowHeight = h
+          if (!gutterWidth) {
+            const ln = child.querySelector('.line-number') as HTMLElement
+            if (ln && ln.style.width) gutterWidth = ln.style.width
+          }
+          if (gutterWidth) break
+        }
+      }
+
+      // Sort missing component lines
+      missingAfter.sort((a, b) => a - b)
+
+      // Find the last present after-line before the first missing line
+      // to determine the gap that needs context lines
+      const firstMissing = missingAfter[0]
+      let lastPresentBeforeGap = 0
+      for (const line of presentAfter) {
+        if (line < firstMissing && line > lastPresentBeforeGap) {
+          lastPresentBeforeGap = line
+        }
+      }
+
+      // Build the full list of lines to insert: gap context + component lines
+      const allLinesToInsert: Array<{ afterLine: number; isComponent: boolean }> = []
+
+      // Fill the gap between last present line and first missing component line
+      // Limit to at most CONTEXT lines before the first component line.
+      const CONTEXT = 3
+      if (lastPresentBeforeGap > 0 && firstMissing - lastPresentBeforeGap > 1) {
+        const contextStart = Math.max(lastPresentBeforeGap + 1, firstMissing - CONTEXT)
+        for (let l = contextStart; l < firstMissing; l++) {
+          if (!presentAfter.has(l)) {
+            allLinesToInsert.push({ afterLine: l, isComponent: false })
+          }
+        }
+      }
+
+      // Add missing component lines
+      for (const line of missingAfter) {
+        allLinesToInsert.push({ afterLine: line, isComponent: true })
+      }
+
+      // Track ranges of inserted lines for syntax highlighting
+      let insertedAfterMin = Infinity
+      let insertedAfterMax = 0
+      let insertedBeforeMin = Infinity
+      let insertedBeforeMax = 0
+
+      for (const { afterLine, isComponent } of allLinesToInsert) {
+        const beforeLine = computeBeforeLine(afterLine)
+
+        const afterContent = afterLine <= afterFileLines.length
+          ? afterFileLines[afterLine - 1] ?? '' : ''
+        const beforeContent = beforeLine !== null && beforeLine > 0 && beforeLine <= beforeFileLines.length
+          ? beforeFileLines[beforeLine - 1] ?? '' : ''
+
+        const wrapper = this.createContextRowElement(
+          beforeLine !== null && beforeLine > 0 ? beforeLine : null,
+          afterLine,
+          beforeContent,
+          afterContent,
+          rowHeight,
+          gutterWidth
+        )
+        wrapper.classList.add('expanded-context-row', 'component-auto-expanded')
+
+        // Style for component view: give the row a green (addition)
+        // background so it's clearly part of the selected component.
+        const row = wrapper.querySelector('.row') as HTMLElement
+        if (row) {
+          const beforeSide = row.querySelector('.before') as HTMLElement
+          const afterSide = row.querySelector('.after') as HTMLElement
+          if (isComponent) {
+            if (afterSide) {
+              afterSide.classList.add('component-context-addition')
+            }
+            if (beforeSide) beforeSide.classList.add('component-filtered-side')
+          }
+        }
+
+        // Track ranges for syntax highlighting
+        if (afterLine < insertedAfterMin) insertedAfterMin = afterLine
+        if (afterLine > insertedAfterMax) insertedAfterMax = afterLine
+        if (beforeLine !== null && beforeLine > 0) {
+          if (beforeLine < insertedBeforeMin) insertedBeforeMin = beforeLine
+          if (beforeLine > insertedBeforeMax) insertedBeforeMax = beforeLine
+        }
+
+        // Find insertion point: before the first non-separator child
+        // whose after-side line number is greater than our target
+        const currentChildren = Array.from(inner.children) as HTMLElement[]
+        let insertBeforeEl: HTMLElement | null = null
+        for (const child of currentChildren) {
+          if (child.classList.contains('component-hunk-separator')) continue
+          if (child.classList.contains('expand-boundary-bottom')) continue
+          const r = (child.querySelector('.row') as HTMLElement) ?? child
+          const adiv = r.querySelector('.after .line-number')
+          if (adiv) {
+            const a = extractLineNumber(adiv)
+            if (a !== null && a > afterLine) {
+              insertBeforeEl = child
+              break
+            }
+          }
+        }
+
+        if (insertBeforeEl) {
+          inner.insertBefore(wrapper, insertBeforeEl)
+        } else {
+          inner.appendChild(wrapper)
+        }
+      }
+
+      // Repack the file and sync scroll positions
+      repackFile(fileContainer)
+      this.syncExpandedRowsScroll(fileContainer)
+
+      // Apply syntax highlighting to all auto-inserted rows
+      if (insertedAfterMax >= insertedAfterMin) {
+        await this.highlightExpandedRows(
+          fileContainer as HTMLElement,
+          filePath,
+          beforeFileLines,
+          afterFileLines,
+          insertedBeforeMin <= insertedBeforeMax ? insertedBeforeMin : 0,
+          insertedBeforeMin <= insertedBeforeMax ? insertedBeforeMax : -1,
+          insertedAfterMin,
+          insertedAfterMax
+        ).catch(() => {})
       }
     }
   }

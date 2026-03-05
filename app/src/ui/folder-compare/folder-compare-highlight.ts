@@ -86,16 +86,28 @@ export function getClaimedLineNumbers(
   filePath: string
 ): Set<number> {
   const claimed = new Set<number>()
+  const addClaimed = (position: string) => {
+    const parts = position.split(':')
+    const startLine = parseInt(parts[0], 10)
+    if (isNaN(startLine)) return
+    if (parts.length >= 3) {
+      // Multi-line: "startLine:startCol-endLine:endCol"
+      const endLine = parseInt(parts[1].split('-')[1], 10)
+      if (!isNaN(endLine)) {
+        for (let l = startLine; l <= endLine; l++) claimed.add(l)
+        return
+      }
+    }
+    claimed.add(startLine)
+  }
   for (const comp of diffComponents) {
     if (!comp.changes) continue
     for (const change of comp.changes) {
       if (change.from && pathMatchesFile(change.from.file, filePath) && change.from.position) {
-        const line = parseInt(change.from.position.split(':')[0], 10)
-        if (!isNaN(line)) claimed.add(line)
+        addClaimed(change.from.position)
       }
       if (change.to && pathMatchesFile(change.to.file, filePath) && change.to.position) {
-        const line = parseInt(change.to.position.split(':')[0], 10)
-        if (!isNaN(line)) claimed.add(line)
+        addClaimed(change.to.position)
       }
     }
   }
@@ -194,8 +206,9 @@ export function extractLineNumber(lineNumberDiv: Element): number | null {
 }
 
 /**
- * Parse a position string like "5:12-13" and add it to the line map.
- * Format: "line:startCol-endCol" (0-based cols, endCol exclusive).
+ * Parse a position string and add it to the line map.
+ * Supports single-line "line:startCol-endCol" (0-based cols, endCol exclusive)
+ * and multi-line "startLine:startCol-endLine:endCol" formats.
  */
 export function addPositionToLineMap(
   lineMap: Map<string, LineHighlight>,
@@ -204,18 +217,41 @@ export function addPositionToLineMap(
 ): void {
   const parts = position.split(':')
   if (parts.length < 2) return
-  const lineNum = parseInt(parts[0], 10)
+  const startLine = parseInt(parts[0], 10)
+
+  if (parts.length >= 3) {
+    // Multi-line format: "startLine:startCol-endLine:endCol"
+    const startCol = parseInt(parts[1].split('-')[0], 10)
+    const endLine = parseInt(parts[1].split('-')[1], 10)
+    const endCol = parseInt(parts[2], 10)
+    if (isNaN(startLine) || isNaN(startCol) || isNaN(endLine) || isNaN(endCol)) return
+    for (let line = startLine; line <= endLine; line++) {
+      const key = `${line}-${side}`
+      const sc = line === startLine ? startCol : 0
+      const ec = line === endLine ? endCol : 999
+      if (ec <= sc) continue
+      const existing = lineMap.get(key)
+      if (existing) {
+        existing.ranges.push({ startCol: sc, endCol: ec })
+      } else {
+        lineMap.set(key, { line, side, ranges: [{ startCol: sc, endCol: ec }] })
+      }
+    }
+    return
+  }
+
+  // Single-line format: "line:startCol-endCol"
   const colParts = parts[1].split('-')
   if (colParts.length < 2) return
   const startCol = parseInt(colParts[0], 10)
   const endCol = parseInt(colParts[1], 10)
   if (endCol <= startCol) return
-  const key = `${lineNum}-${side}`
+  const key = `${startLine}-${side}`
   const existing = lineMap.get(key)
   if (existing) {
     existing.ranges.push({ startCol, endCol })
   } else {
-    lineMap.set(key, { line: lineNum, side, ranges: [{ startCol, endCol }] })
+    lineMap.set(key, { line: startLine, side, ranges: [{ startCol, endCol }] })
   }
 }
 
@@ -249,12 +285,8 @@ export function getHighlightedLinesForComponent(
     }
   }
 
-  // For "cause" nodes (reachable_by > 0) — declarations, imports, etc. that
-  // other nodes reference — expand the highlight to the full node span from
-  // diff_nodes.json.  E.g. FieldDeclaration at 91:1-41 contains the edge
-  // endpoint SimpleName at 91:23-40; the full declaration is the actual
-  // change and should be highlighted entirely.  Reference nodes
-  // (reachable_by === 0) keep only their narrow edge-endpoint highlights.
+  // Expand all diff_nodes node spans to highlight the full multi-line range
+  // (e.g. an entire MethodDeclaration or FieldDeclaration).
   if (diffNodes) {
     const nodeData = diffNodes.find(
       (n: any) => n.component_id === component.component_id
@@ -262,7 +294,6 @@ export function getHighlightedLinesForComponent(
     if (nodeData?.nodes) {
       for (const node of nodeData.nodes) {
         if (
-          node.reachable_by > 0 &&
           node.file && node.position &&
           pathMatchesFile(node.file, filePath)
         ) {
@@ -375,7 +406,7 @@ export function highlightCoversFullLine(
   if (ranges.length === 0 || lineText.length === 0) return false
 
   const firstNonWS = lineText.search(/\S/)
-  if (firstNonWS === -1) return true // all whitespace — trivially covered
+  if (firstNonWS === -1) return false // empty/whitespace-only lines are NOT fully covered
 
   let lastNonWS = lineText.length - 1
   while (lastNonWS >= 0 && /\s/.test(lineText[lastNonWS])) lastNonWS--
@@ -611,6 +642,12 @@ export function applyComponentHighlightingForFile(
   fileContainer.querySelectorAll('.component-filtered-side').forEach(el =>
     el.classList.remove('component-filtered-side')
   )
+  fileContainer.querySelectorAll('.component-context-addition').forEach(el =>
+    el.classList.remove('component-context-addition')
+  )
+  fileContainer.querySelectorAll('.component-context-deletion').forEach(el =>
+    el.classList.remove('component-context-deletion')
+  )
 
   // Restore cm-diff-delete-inner / cm-diff-add-inner classes that were
   // stripped during component highlighting
@@ -818,10 +855,13 @@ export function applyComponentHighlightingForFile(
       htmlRow.classList.contains('added') ||
       htmlRow.classList.contains('deleted')
 
-    if (!isChanged) return
-
     const beforeRangesForLine = beforeLine !== null ? beforeHighlights.get(beforeLine) : undefined
     const afterRangesForLine = afterLine !== null ? afterHighlights.get(afterLine) : undefined
+
+    // Context (unchanged) lines that have no component highlights can be skipped.
+    // But context lines WITHIN a multi-line node span should still be styled so
+    // the opposite side is dimmed, giving visual context for the component.
+    if (!isChanged && !beforeRangesForLine && !afterRangesForLine) return
 
     const beforeSide = htmlRow.querySelector('.before') as HTMLElement
     const afterSide = htmlRow.querySelector('.after') as HTMLElement
@@ -830,10 +870,11 @@ export function applyComponentHighlightingForFile(
       if (beforeRangesForLine && beforeRangesForLine.length > 0) {
         const cw = beforeSide.querySelector('.content-wrapper') as HTMLElement
         const lineText = cw?.textContent || ''
-        if (cw && highlightCoversFullLine(beforeRangesForLine, lineText)) {
+        if (!lineText.trim() || (cw && highlightCoversFullLine(beforeRangesForLine, lineText))) {
           // Full-line change — keep the natural diff background (like "show all")
           beforeSide.classList.remove('component-filtered-side')
           beforeSide.classList.remove('component-char-filtered')
+          if (!isChanged) beforeSide.classList.add('component-context-deletion')
         } else {
           beforeSide.classList.remove('component-filtered-side')
           beforeSide.classList.add('component-char-filtered')
@@ -851,10 +892,11 @@ export function applyComponentHighlightingForFile(
       if (afterRangesForLine && afterRangesForLine.length > 0) {
         const cw = afterSide.querySelector('.content-wrapper') as HTMLElement
         const lineText = cw?.textContent || ''
-        if (cw && highlightCoversFullLine(afterRangesForLine, lineText)) {
+        if (!lineText.trim() || (cw && highlightCoversFullLine(afterRangesForLine, lineText))) {
           // Full-line change — keep the natural diff background (like "show all")
           afterSide.classList.remove('component-filtered-side')
           afterSide.classList.remove('component-char-filtered')
+          if (!isChanged) afterSide.classList.add('component-context-addition')
         } else {
           afterSide.classList.remove('component-filtered-side')
           afterSide.classList.add('component-char-filtered')
@@ -952,8 +994,13 @@ export function injectRenameHoverOverlays(
       const colParts = parts[1].split('-')
       if (colParts.length < 2) return
       const startCol = parseInt(colParts[0], 10)
+      // For multi-line positions the endCol part may be "endLine" not a column;
+      // rename overlays only apply to atom (single-line) nodes so treat as
+      // single-line here.
       const endCol = parseInt(colParts[1], 10)
       if (isNaN(line) || isNaN(startCol) || isNaN(endCol) || endCol <= startCol) return
+      // Skip multi-line positions for rename overlays (only atoms are renamed)
+      if (parts.length >= 3) return
       const key = `${file}:${line}:${startCol}-${endCol}:${side}`
       if (seen.has(key)) return
       seen.add(key)

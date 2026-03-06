@@ -264,6 +264,7 @@ export class FolderCompareView extends React.Component<
                   }
 
                   return Array.from(kindGroups.entries()).map(([kind, items]) => {
+                    items.sort((a, b) => (a.comp.component_name || '').localeCompare(b.comp.component_name || ''))
                     const isCollapsed = this.state.collapsedKinds.includes(kind)
                     const label = kindLabels[kind] || kind.charAt(0).toUpperCase() + kind.slice(1) + 's'
                     return (
@@ -1886,13 +1887,15 @@ export class FolderCompareView extends React.Component<
       return bareFile
     }
 
-    // Pre-compute char-level highlight ranges per file, merging both
-    // diff_components edge endpoints and diff_nodes node spans.
+    // Pre-compute char-level highlight ranges per file using only
+    // diff_components edge endpoints (exclude diff_nodes container spans
+    // which can produce spurious single-char highlights, e.g. a
+    // MethodInvocation node highlighting just the first letter of a line).
     const highlightCache = new Map<string, import('./folder-compare-highlight').LineHighlight[]>()
     const getHighlightsForFile = (file: string) => {
       if (!highlightCache.has(file)) {
         highlightCache.set(file, getHighlightedLinesForComponent(
-          this.state.diffComponents, componentIndex, file, this.state.diffNodes
+          this.state.diffComponents, componentIndex, file
         ))
       }
       return highlightCache.get(file)!

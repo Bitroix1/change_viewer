@@ -1684,9 +1684,17 @@ export class FolderCompareView extends React.Component<
       const row = label.closest('.row') as HTMLElement
       if (row) {
         this.scrollIntoViewIfNeeded(row, 'center')
-        // Brief flash highlight
-        row.style.outline = '2px solid var(--diff-selected-border-color)'
-        setTimeout(() => { row.style.outline = '' }, 1500)
+        // Brief flash highlight on the relevant side only — elevate the
+        // outer wrapper's z-index so the outline isn't covered by adjacent
+        // absolutely-positioned rows.
+        const sideDiv = row.querySelector(`.${side}`) as HTMLElement | null
+        const outerWrapper = row.parentElement as HTMLElement | null
+        if (sideDiv) sideDiv.style.outline = '2px solid var(--diff-selected-border-color)'
+        if (outerWrapper) outerWrapper.style.zIndex = '20'
+        setTimeout(() => {
+          if (sideDiv) sideDiv.style.outline = ''
+          if (outerWrapper) outerWrapper.style.zIndex = ''
+        }, 1000)
 
         // Horizontal scroll: bring highlighted content on this line into view
         const fc = row.closest('[data-file-path]')

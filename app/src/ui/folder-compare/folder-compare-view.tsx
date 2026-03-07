@@ -924,6 +924,12 @@ export class FolderCompareView extends React.Component<
             position: relative !important;
             z-index: 11 !important;
           }
+          /* Separators carry .hunk-info.row but must stay absolutely-positioned
+             so repackFile's top values work correctly.  This selector (4 classes)
+             beats the generic .hunk-info.row rule (3 classes) above. */
+          .folder-compare-view .component-hunk-separator.hunk-info.row {
+            position: absolute !important;
+          }
           .folder-compare-view .expand-context-btn {
             display: flex;
             align-items: center;

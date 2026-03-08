@@ -12,7 +12,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1386429503,
+          "java_id": 658135690,
           "type": "FieldDeclaration (list)",
           "content": "",
           "position": "156:4-40",
@@ -30,10 +30,19 @@
           "kind": "Removal"
         },
         {
-          "java_id": 375951774,
-          "type": "ExpressionStatement (list)",
-          "content": "",
-          "position": "183:8-37",
+          "java_id": 92575452,
+          "type": "SimpleName (atom)",
+          "content": "logManager",
+          "position": "183:13-23",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 354268551,
+          "type": "SimpleName (atom)",
+          "content": "logManager",
+          "position": "183:26-36",
           "file": "MirrorMetadataManager.java",
           "reachable_by": 0,
           "kind": "Removal"
@@ -53,7 +62,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 430050226,
+          "java_id": 1532874332,
           "type": "FieldDeclaration (list)",
           "content": "",
           "position": "157:4-38",
@@ -71,10 +80,19 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1664093259,
-          "type": "ExpressionStatement (list)",
-          "content": "",
-          "position": "184:8-35",
+          "java_id": 256642638,
+          "type": "SimpleName (atom)",
+          "content": "scheduler",
+          "position": "184:25-34",
+          "file": "MirrorMetadataManager.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2052814491,
+          "type": "SimpleName (atom)",
+          "content": "scheduler",
+          "position": "184:13-22",
           "file": "MirrorMetadataManager.java",
           "reachable_by": 0,
           "kind": "Removal"
@@ -112,7 +130,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 670503317,
+          "java_id": 1964864549,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
           "position": "410:15-35",
@@ -121,7 +139,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 798319935,
+          "java_id": 1087916281,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
           "position": "190:85-105",
@@ -130,7 +148,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 1677793418,
+          "java_id": 1939354020,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
           "position": "147:85-105",
@@ -171,7 +189,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1119920494,
+          "java_id": 282166934,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "264:40-47",
@@ -180,19 +198,19 @@
           "kind": "Addition"
         },
         {
-          "java_id": 76379039,
+          "java_id": 697818620,
           "type": "SimpleName (atom)",
           "content": "offsets",
-          "position": "276:15-22",
+          "position": "271:16-23",
           "file": "MirrorCoordinator.java",
           "reachable_by": 0,
           "kind": "Addition"
         },
         {
-          "java_id": 313249054,
+          "java_id": 1155521880,
           "type": "SimpleName (atom)",
           "content": "offsets",
-          "position": "271:16-23",
+          "position": "276:15-22",
           "file": "MirrorCoordinator.java",
           "reachable_by": 0,
           "kind": "Addition"
@@ -221,7 +239,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1997028929,
+          "java_id": 923911964,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "336:64-71",
@@ -230,7 +248,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 612686775,
+          "java_id": 184996973,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "337:98-105",
@@ -262,7 +280,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 744967512,
+          "java_id": 1637186972,
           "type": "SimpleName (atom)",
           "content": "removedOffsets",
           "position": "286:98-112",
@@ -271,7 +289,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 857825275,
+          "java_id": 2116841430,
           "type": "SimpleName (atom)",
           "content": "removedOffsets",
           "position": "288:8-22",
@@ -303,7 +321,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1730399463,
+          "java_id": 833308761,
           "type": "SimpleName (atom)",
           "content": "addedOffsets",
           "position": "285:98-110",
@@ -312,7 +330,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 152426436,
+          "java_id": 946773976,
           "type": "SimpleName (atom)",
           "content": "addedOffsets",
           "position": "293:8-20",
@@ -344,7 +362,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 471275334,
+          "java_id": 871582126,
           "type": "SimpleName (atom)",
           "content": "updateRemoteClusterNodesCache",
           "position": "396:17-46",
@@ -353,7 +371,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 482983323,
+          "java_id": 1545377921,
           "type": "SimpleName (atom)",
           "content": "updateRemoteClusterNodesCache",
           "position": "367:12-41",

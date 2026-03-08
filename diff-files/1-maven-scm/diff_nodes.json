@@ -3,20 +3,866 @@
     {
       "nodes": [
         {
-          "java_id": 829668707,
-          "type": "VariableDeclarationStatement (list)",
+          "java_id": 421637524,
+          "type": "ImportDeclaration (list)",
           "content": "",
-          "position": "385:8-42",
-          "file": "AbstractSvnScmProvider.java",
+          "position": "27:0-38",
+          "file": "AbstractBranchCommand.java",
+          "reachable_by": 3,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1728057672,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractTagCommand.java",
+          "reachable_by": 3,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 265569691,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "LocalTagCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 288919635,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-38",
+          "file": "AbstractEditCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 386201215,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-38",
+          "file": "AbstractUnEditCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 487246735,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "28:0-38",
+          "file": "GitTagCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 574905742,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "32:0-38",
+          "file": "SvnTagCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 965297285,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "33:0-38",
+          "file": "SvnBranchCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1153907750,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractAddCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1774897456,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractRemoveCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1815146436,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "30:0-38",
+          "file": "JGitTagCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1885307815,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractUntagCommand.java",
+          "reachable_by": 2,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 50503805,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "28:0-38",
+          "file": "AbstractChangeLogCommand.java",
           "reachable_by": 1,
           "kind": "Removal"
         },
         {
-          "java_id": 362497553,
-          "type": "CastExpression (list)",
-          "content": "{",
-          "position": "387:15-16",
-          "file": "AbstractSvnScmProvider.java",
+          "java_id": 51376124,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-38",
+          "file": "AbstractRemoteInfoCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 119282849,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "GitRemoveCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 192442996,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "GitBranchCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 269307928,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "26:0-38",
+          "file": "JGitAddCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 583015088,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractExportCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 639105046,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractListCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 746240636,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "30:0-38",
+          "file": "GitInfoCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 858423246,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractDiffCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 969811954,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-38",
+          "file": "AbstractLoginCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 971404566,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "31:0-38",
+          "file": "AbstractUpdateCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 973799003,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "26:0-38",
+          "file": "JGitRemoveCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 979960142,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "31:0-38",
+          "file": "GitAddCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1052615102,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "SvnRemoveCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1164241227,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractMkdirCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1427338333,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "JGitUntagCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1454670179,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "31:0-38",
+          "file": "GitCheckOutCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1471800355,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "24:0-38",
+          "file": "AbstractStatusCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1491128748,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "26:0-38",
+          "file": "GitUntagCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1502984812,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "SvnAddCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1653433120,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "33:0-38",
+          "file": "JGitBranchCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1659309731,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractCheckOutCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1706407405,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "27:0-38",
+          "file": "GitBlameCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1718695429,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "29:0-38",
+          "file": "LocalAddCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1820661793,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "32:0-38",
+          "file": "GitChangeLogCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1866139629,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "26:0-38",
+          "file": "SvnUntagCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1977618945,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractCheckInCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2013691076,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "33:0-38",
+          "file": "SvnChangeLogCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2089589253,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "25:0-38",
+          "file": "AbstractBlameCommand.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 70386506,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "55:11-20",
+          "file": "AbstractTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 71016405,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "34:23-32",
+          "file": "AbstractAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 79503692,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "59:11-20",
+          "file": "SvnChangeLogCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 103394942,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "41:23-32",
+          "file": "AbstractUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 119674169,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "47:14-23",
+          "file": "LocalTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 195801026,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "38:14-23",
+          "file": "AbstractAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 199000084,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "50:23-32",
+          "file": "AbstractTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 247575268,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "47:11-20",
+          "file": "AbstractUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 289711450,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "37:14-23",
+          "file": "AbstractLoginCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 316752188,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "63:14-23",
+          "file": "JGitUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 382329720,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "54:11-20",
+          "file": "GitChangeLogCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 403032668,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "44:14-23",
+          "file": "GitBlameCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 421191743,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "73:11-20",
+          "file": "AbstractCheckOutCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 463494712,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "33:11-20",
+          "file": "AbstractUnEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 576702114,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "79:11-20",
+          "file": "JGitTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 584501954,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "50:11-20",
+          "file": "AbstractListCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 614635686,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "37:11-20",
+          "file": "AbstractStatusCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 670951536,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "45:14-23",
+          "file": "AbstractTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 754346482,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "50:14-23",
+          "file": "GitInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 814565761,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "46:14-23",
+          "file": "GitRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 820204621,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "71:11-20",
+          "file": "JGitTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 880771113,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "68:11-20",
+          "file": "GitCheckOutCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 935722070,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "39:14-23",
+          "file": "AbstractRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 949581868,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "37:14-23",
+          "file": "AbstractBlameCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 965069984,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "44:14-23",
+          "file": "SvnAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 973692608,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "35:23-32",
+          "file": "AbstractRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1006624255,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "46:11-20",
+          "file": "AbstractDiffCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1060721603,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "52:11-20",
+          "file": "SvnUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1075996552,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "49:14-23",
+          "file": "AbstractMkdirCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1090057640,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "49:11-20",
+          "file": "AbstractUpdateCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1172644143,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "57:11-20",
+          "file": "SvnTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1233973724,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "43:14-23",
+          "file": "JGitAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1249366693,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "41:14-23",
+          "file": "JGitRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1281580764,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "42:14-23",
+          "file": "LocalAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1345294961,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "56:11-20",
+          "file": "SvnBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1360477242,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "45:14-23",
+          "file": "SvnRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1443900956,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "38:23-32",
+          "file": "AbstractEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1521204009,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "33:11-20",
+          "file": "AbstractEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1561502550,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "61:11-20",
+          "file": "AbstractBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1567403095,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "79:14-23",
+          "file": "JGitBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1579584742,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "38:23-32",
+          "file": "AbstractUnEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1613996020,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "131:11-20",
+          "file": "SvnBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1631119258,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "37:23-32",
+          "file": "AbstractBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1637432600,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "39:14-23",
+          "file": "LocalTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1660891176,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "54:11-20",
+          "file": "GitTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1771421544,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "51:14-23",
+          "file": "AbstractBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1794426702,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "67:11-20",
+          "file": "SvnTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1811106066,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "60:11-20",
+          "file": "GitTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1826086004,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "51:11-20",
+          "file": "GitBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1868578441,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "43:11-20",
+          "file": "AbstractCheckInCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1877984746,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "51:14-23",
+          "file": "GitAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1924802798,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "38:14-23",
+          "file": "AbstractRemoteInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1939291767,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "46:11-20",
+          "file": "GitUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 1985938863,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "70:11-20",
+          "file": "AbstractChangeLogCommand.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 2047744862,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "40:14-23",
+          "file": "AbstractExportCommand.java",
           "reachable_by": 0,
           "kind": "Removal"
         }
@@ -26,19 +872,19 @@
     {
       "nodes": [
         {
-          "java_id": 378817532,
+          "java_id": 1038591584,
           "type": "VariableDeclarationStatement (list)",
           "content": "",
-          "position": "394:8-42",
+          "position": "385:8-42",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 1,
           "kind": "Removal"
         },
         {
-          "java_id": 659954898,
-          "type": "CastExpression (list)",
-          "content": "{",
-          "position": "396:15-16",
+          "java_id": 1834939886,
+          "type": "SimpleName (atom)",
+          "content": "cmd",
+          "position": "387:46-49",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 0,
           "kind": "Removal"
@@ -49,19 +895,19 @@
     {
       "nodes": [
         {
-          "java_id": 265783610,
+          "java_id": 883954723,
           "type": "VariableDeclarationStatement (list)",
           "content": "",
-          "position": "404:8-43",
+          "position": "394:8-42",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 1,
           "kind": "Removal"
         },
         {
-          "java_id": 1552603831,
-          "type": "CastExpression (list)",
-          "content": "{",
-          "position": "406:15-16",
+          "java_id": 59531691,
+          "type": "SimpleName (atom)",
+          "content": "cmd",
+          "position": "396:46-49",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 0,
           "kind": "Removal"
@@ -72,19 +918,19 @@
     {
       "nodes": [
         {
-          "java_id": 477699092,
+          "java_id": 1969102319,
           "type": "VariableDeclarationStatement (list)",
           "content": "",
-          "position": "416:8-43",
+          "position": "404:8-43",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 1,
           "kind": "Removal"
         },
         {
-          "java_id": 2012598269,
-          "type": "CastExpression (list)",
-          "content": "{",
-          "position": "418:15-16",
+          "java_id": 61195378,
+          "type": "SimpleName (atom)",
+          "content": "cmd",
+          "position": "406:47-50",
           "file": "AbstractSvnScmProvider.java",
           "reachable_by": 0,
           "kind": "Removal"
@@ -95,7 +941,30 @@
     {
       "nodes": [
         {
-          "java_id": 117419875,
+          "java_id": 1161068889,
+          "type": "VariableDeclarationStatement (list)",
+          "content": "",
+          "position": "416:8-43",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 1,
+          "kind": "Removal"
+        },
+        {
+          "java_id": 580214514,
+          "type": "SimpleName (atom)",
+          "content": "cmd",
+          "position": "418:47-50",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Removal"
+        }
+      ],
+      "component_id": 5
+    },
+    {
+      "nodes": [
+        {
+          "java_id": 1592955814,
           "type": "TypeParameter (list)",
           "content": "",
           "position": "30:28-47",
@@ -104,381 +973,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 273138972,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "179:25-40",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 318579276,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "194:22-35",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 343484316,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "277:19-33",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 386432497,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "155:25-40",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 509424749,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "123:25-42",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 528044602,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "186:25-38",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 549459981,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "126:25-37",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 632194946,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "91:25-37",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 667640475,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "235:34-46",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 783353950,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "157:34-46",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 816357995,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "181:34-50",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 839229363,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "135:25-39",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 839508958,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "287:19-38",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 849051351,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "107:25-43",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 849540019,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "131:25-38",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 850955274,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "211:34-49",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 861784959,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "228:25-44",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 861922221,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "99:25-40",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 897408128,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "265:34-47",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 917306623,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "227:34-49",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 930830379,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "195:34-51",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 947166618,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "203:34-47",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 957979970,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "269:19-32",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1066128561,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "260:23-24",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1149849559,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "147:25-40",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1171446748,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "171:25-39",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1211259665,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "139:25-40",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1211333787,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "163:25-37",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1259975387,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "173:34-52",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1332918747,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "165:34-49",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1410857068,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "282:34-48",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1447669508,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "292:34-53",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1499213695,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "99:25-42",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1510816873,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "251:34-49",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1541571852,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "90:25-41",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1561341228,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "243:34-48",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1676948814,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "220:25-39",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1825970129,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "117:25-40",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1869185053,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "115:25-41",
-          "file": "JGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 2023738392,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "108:25-44",
-          "file": "JGitTestScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 2076206490,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "219:34-49",
-          "file": "AbstractGitScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        }
-      ],
-      "component_id": 5
-    },
-    {
-      "nodes": [
-        {
-          "java_id": 23755370,
+          "java_id": 1743402511,
           "type": "TypeParameter (list)",
           "content": "",
           "position": "35:38-57",
@@ -487,214 +982,34 @@
           "kind": "Addition"
         },
         {
-          "java_id": 3391153,
+          "java_id": 472299998,
+          "type": "TypeParameter (list)",
+          "content": "",
+          "position": "29:28-47",
+          "file": "SvnCommand.java",
+          "reachable_by": 17,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 829634617,
+          "type": "TypeParameter (list)",
+          "content": "",
+          "position": "32:25-44",
+          "file": "Command.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 35028145,
           "type": "SimpleType (list)",
           "content": "",
-          "position": "32:65-77",
-          "file": "AbstractAddCommand.java",
+          "position": "107:25-43",
+          "file": "JGitScmProvider.java",
           "reachable_by": 0,
           "kind": "Addition"
         },
         {
-          "java_id": 68788847,
-          "type": "SimpleName (atom)",
-          "content": "T",
-          "position": "42:17-18",
-          "file": "AbstractCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 176877731,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "37:71-89",
-          "file": "AbstractChangeLogCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 290672305,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "31:67-81",
-          "file": "AbstractLoginCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 296702509,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "44:52-65",
-          "file": "GitInfoCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 374817457,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "35:68-83",
-          "file": "AbstractBranchCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 491202857,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "32:67-81",
-          "file": "AbstractMkdirCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 625020031,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "33:66-79",
-          "file": "AbstractListCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 689905739,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "35:69-85",
-          "file": "AbstractCheckInCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 695185976,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "52:53-66",
-          "file": "JGitInfoCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 721234952,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "31:72-91",
-          "file": "AbstractRemoteInfoCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 722973854,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "30:68-83",
-          "file": "AbstractUnEditCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 779315020,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "33:68-83",
-          "file": "AbstractRemoveCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 921549721,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "43:68-83",
-          "file": "AbstractUpdateCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 925686013,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "39:66-79",
-          "file": "AbstractDiffCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1306447637,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "35:51-64",
-          "file": "HgInfoCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1363497260,
-          "type": "SimpleName (atom)",
-          "content": "T",
-          "position": "38:23-24",
-          "file": "AbstractCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1460146719,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "35:70-79",
-          "file": "AbstractFileInfoCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1461111257,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "31:68-83",
-          "file": "AbstractStatusCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1581433656,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "32:67-81",
-          "file": "AbstractBlameCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1800581716,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "30:66-79",
-          "file": "AbstractEditCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1830960306,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "30:67-81",
-          "file": "AbstractUntagCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1936728619,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "34:65-77",
-          "file": "AbstractTagCommand.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 2096585547,
+          "java_id": 57656859,
           "type": "SimpleType (list)",
           "content": "",
           "position": "33:68-83",
@@ -703,11 +1018,749 @@
           "kind": "Addition"
         },
         {
-          "java_id": 2139275181,
+          "java_id": 92794487,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "31:72-91",
+          "file": "AbstractRemoteInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 101946866,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "228:25-44",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 171102277,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "250:34-46",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 176432337,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "44:52-65",
+          "file": "GitInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 213625156,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "320:34-49",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 239439496,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "108:25-44",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 286454849,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "265:34-47",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 292575104,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "99:25-40",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 336451790,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "361:34-49",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 338199634,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "292:34-53",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 340393914,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "147:25-40",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 347631378,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "350:34-48",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 386002713,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "32:67-81",
+          "file": "AbstractMkdirCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 393021729,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "251:34-49",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 401992365,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "34:65-77",
+          "file": "AbstractTagCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 418909736,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "30:68-83",
+          "file": "AbstractUnEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 429293742,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "260:34-49",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 458223499,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "31:68-83",
+          "file": "AbstractStatusCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 462085336,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "377:34-47",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 497282932,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "330:34-49",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 503148780,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "32:67-81",
+          "file": "AbstractBlameCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 536174280,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "181:34-50",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 553044778,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "387:34-47",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 587133478,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "372:23-24",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 600000886,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "194:22-35",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 606434255,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "33:66-79",
+          "file": "AbstractListCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 613934803,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "163:25-37",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 614916659,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "270:34-52",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 624408149,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "211:34-49",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 626854991,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "135:25-39",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 627624993,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "35:68-83",
+          "file": "AbstractBranchCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 641821475,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "220:25-39",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 670631142,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "39:66-79",
+          "file": "AbstractDiffCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 712314170,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "37:71-89",
+          "file": "AbstractChangeLogCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 723865134,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "173:34-52",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 733858703,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "412:34-48",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 752365837,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "282:34-48",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 777631320,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "269:19-32",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 788444645,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "31:67-81",
+          "file": "AbstractLoginCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 793684089,
+          "type": "SimpleName (atom)",
+          "content": "T",
+          "position": "43:4-5",
+          "file": "Command.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 813779953,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "157:34-46",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 909560034,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "300:34-47",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1057978959,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "290:34-51",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1058629233,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "235:34-46",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1063385584,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "219:34-49",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1073771401,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "402:34-48",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1158509760,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "52:53-66",
+          "file": "JGitInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1210220434,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "310:34-49",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1212117183,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "35:51-64",
+          "file": "HgInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1268424133,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "287:19-38",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1309777159,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "117:25-40",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1313496869,
+          "type": "TypeParameter (list)",
+          "content": "",
+          "position": "29:30-49",
+          "file": "LocalCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1333202814,
+          "type": "SimpleName (atom)",
+          "content": "T",
+          "position": "42:17-18",
+          "file": "AbstractCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1342220328,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "99:25-42",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1373319618,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "186:25-38",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1406422650,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "115:25-41",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1407591465,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "32:65-77",
+          "file": "AbstractAddCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1431566327,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "227:34-49",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1458562963,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "165:34-49",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1508849118,
           "type": "SimpleType (list)",
           "content": "",
           "position": "35:70-87",
           "file": "AbstractCheckOutCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1512946355,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "35:70-79",
+          "file": "AbstractFileInfoCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1524934009,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "126:25-37",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1545219310,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "179:25-40",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1558647998,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "340:34-46",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1560289328,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "123:25-42",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1564540281,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "139:25-40",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1606705685,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "30:66-79",
+          "file": "AbstractEditCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1619894369,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "35:69-85",
+          "file": "AbstractCheckInCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1736053438,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "195:34-51",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1753059814,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "277:19-33",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1771071969,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "90:25-41",
+          "file": "JGitTestScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1852064845,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "33:68-83",
+          "file": "AbstractRemoveCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1859547112,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "131:25-38",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1860014261,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "91:25-37",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1877546182,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "171:25-39",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1883006233,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "43:68-83",
+          "file": "AbstractUpdateCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1890196950,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "243:34-48",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1928759740,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "155:25-40",
+          "file": "JGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1950278752,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "280:34-50",
+          "file": "AbstractSvnScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 2061186696,
+          "type": "SimpleName (atom)",
+          "content": "T",
+          "position": "38:23-24",
+          "file": "AbstractCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 2100974250,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "30:67-81",
+          "file": "AbstractUntagCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 2125448034,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "203:34-47",
+          "file": "AbstractGitScmProvider.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 2142436835,
+          "type": "SimpleType (list)",
+          "content": "",
+          "position": "260:23-24",
+          "file": "AbstractGitScmProvider.java",
           "reachable_by": 0,
           "kind": "Addition"
         }
@@ -717,206 +1770,61 @@
     {
       "nodes": [
         {
-          "java_id": 387482453,
-          "type": "TypeParameter (list)",
+          "java_id": 410507805,
+          "type": "ImportDeclaration (list)",
           "content": "",
-          "position": "29:28-47",
-          "file": "SvnCommand.java",
-          "reachable_by": 17,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 31861617,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "330:34-49",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 64929873,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "402:34-48",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 245472280,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "372:23-24",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 258425622,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "387:34-47",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 283931794,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "260:34-49",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 373811974,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "320:34-49",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 873284069,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "310:34-49",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 985478457,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "300:34-47",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1395950669,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "290:34-51",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1506153644,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "350:34-48",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1566336610,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "270:34-52",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1599777166,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "412:34-48",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1604082824,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "377:34-47",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1862047455,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "361:34-49",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 1899840791,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "280:34-50",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 2009423046,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "250:34-46",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        },
-        {
-          "java_id": 2044304418,
-          "type": "SimpleType (list)",
-          "content": "",
-          "position": "340:34-46",
-          "file": "AbstractSvnScmProvider.java",
-          "reachable_by": 0,
-          "kind": "Addition"
-        }
-      ],
-      "component_id": 7
-    },
-    {
-      "nodes": [
-        {
-          "java_id": 716238420,
-          "type": "TypeParameter (list)",
-          "content": "",
-          "position": "32:25-44",
-          "file": "Command.java",
+          "position": "21:0-38",
+          "file": "GitCommand.java",
           "reachable_by": 1,
           "kind": "Addition"
         },
         {
-          "java_id": 831537626,
+          "java_id": 577187515,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "21:0-38",
+          "file": "SvnCommand.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1158574188,
+          "type": "ImportDeclaration (list)",
+          "content": "",
+          "position": "21:0-38",
+          "file": "LocalCommand.java",
+          "reachable_by": 1,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 711789342,
           "type": "SimpleName (atom)",
-          "content": "T",
-          "position": "43:4-5",
-          "file": "Command.java",
+          "content": "ScmResult",
+          "position": "29:38-47",
+          "file": "SvnCommand.java",
           "reachable_by": 0,
           "kind": "Addition"
-        }
-      ],
-      "component_id": 8
-    },
-    {
-      "nodes": [
+        },
         {
-          "java_id": 2111690068,
-          "type": "TypeParameter (list)",
-          "content": "",
-          "position": "29:30-49",
+          "java_id": 1340966303,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "30:38-47",
+          "file": "GitCommand.java",
+          "reachable_by": 0,
+          "kind": "Addition"
+        },
+        {
+          "java_id": 1357854256,
+          "type": "SimpleName (atom)",
+          "content": "ScmResult",
+          "position": "29:40-49",
           "file": "LocalCommand.java",
           "reachable_by": 0,
           "kind": "Addition"
         }
       ],
-      "component_id": 9
+      "component_id": 7
     }
   ]
 }

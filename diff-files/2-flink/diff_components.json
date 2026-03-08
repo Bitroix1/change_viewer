@@ -7,14 +7,14 @@
       "changes": [
         {
           "from": {
-            "java_id": 1043822951,
+            "java_id": 1768142988,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "91:23-40",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 723161117,
+            "java_id": 110687402,
             "type": "FieldDeclaration (list)",
             "content": "",
             "position": "91:1-41",
@@ -26,14 +26,71 @@
         },
         {
           "from": {
-            "java_id": 1246810186,
+            "java_id": 275448142,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "91:15-22",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 110687402,
+            "type": "FieldDeclaration (list)",
+            "content": "",
+            "position": "91:1-41",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@3444",
+          "edge_label_full": "TypeToDecl:Type:boolean@3444 -> TypeToDecl:Declaration:FieldDeclaration@3373",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 796969849,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "97:11-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1209462308,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "97:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3621",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3621 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 733693146,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "97:3-10",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1209462308,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "97:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@3613",
+          "edge_label_full": "TypeToDecl:Type:boolean@3613 -> TypeToDecl:Declaration:SingleVariableDeclaration@3613",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 473163048,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "99:7-24",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1043822951,
+            "java_id": 1768142988,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "91:23-40",
@@ -45,14 +102,14 @@
         },
         {
           "from": {
-            "java_id": 1246810186,
+            "java_id": 473163048,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "99:7-24",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1302459274,
+            "java_id": 1322341191,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "91:23-40",
@@ -64,14 +121,147 @@
         },
         {
           "from": {
-            "java_id": 1305194069,
+            "java_id": 1576416089,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "99:27-44",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1209462308,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "97:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3713",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3713 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1576416089,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "99:27-44",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 796969849,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "97:11-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3713",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3713 -> NameRes:SimpleName:ignoreParseErrors@3621",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 733693146,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "97:3-10",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 275448142,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "91:15-22",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "FieldAssignment:RightVarType:boolean@3613",
+          "edge_label_full": "FieldAssignment:RightVarType:boolean@3613 -> FieldAssignment:LeftFieldType:boolean@3444",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1651923692,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "109:3-20",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1209462308,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "97:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4128",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4128 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1651923692,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "109:3-20",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 796969849,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "97:11-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4128",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4128 -> NameRes:SimpleName:ignoreParseErrors@3621",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1377988183,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "116:11-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 302007694,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "116:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4319",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4319 -> NameRes::BaseNode:SingleVariableDeclaration@4311",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1192529727,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "116:3-10",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 302007694,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "116:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@4311",
+          "edge_label_full": "TypeToDecl:Type:boolean@4311 -> TypeToDecl:Declaration:SingleVariableDeclaration@4311",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1828438007,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "119:7-24",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1043822951,
+            "java_id": 1768142988,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "91:23-40",
@@ -83,14 +273,14 @@
         },
         {
           "from": {
-            "java_id": 1305194069,
+            "java_id": 1828438007,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "119:7-24",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1302459274,
+            "java_id": 1322341191,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "91:23-40",
@@ -102,14 +292,71 @@
         },
         {
           "from": {
-            "java_id": 2024314762,
+            "java_id": 819680566,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "119:27-44",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 302007694,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "116:3-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4455",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4455 -> NameRes::BaseNode:SingleVariableDeclaration@4311",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 819680566,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "119:27-44",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1377988183,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "116:11-28",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4455",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4455 -> NameRes:SimpleName:ignoreParseErrors@4319",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1192529727,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "116:3-10",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 275448142,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "91:15-22",
+            "file": "DebeziumAvroDeserializationSchema.java"
+          },
+          "edge_label": "FieldAssignment:RightVarType:boolean@4311",
+          "edge_label_full": "FieldAssignment:RightVarType:boolean@4311 -> FieldAssignment:LeftFieldType:boolean@3444",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1454942961,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "194:18-35",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1043822951,
+            "java_id": 1768142988,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "91:23-40",
@@ -121,14 +368,14 @@
         },
         {
           "from": {
-            "java_id": 2024314762,
+            "java_id": 1454942961,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "194:18-35",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1302459274,
+            "java_id": 1322341191,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "91:23-40",
@@ -140,14 +387,14 @@
         },
         {
           "from": {
-            "java_id": 288887829,
+            "java_id": 331216192,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "199:58-75",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1043822951,
+            "java_id": 1768142988,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "91:23-40",
@@ -159,14 +406,14 @@
         },
         {
           "from": {
-            "java_id": 288887829,
+            "java_id": 331216192,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "199:58-75",
             "file": "DebeziumAvroDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1302459274,
+            "java_id": 1322341191,
             "type": "SimpleName (atom)",
             "content": "ignoreParseErrors",
             "position": "91:23-40",
@@ -185,14 +432,14 @@
       "changes": [
         {
           "from": {
-            "java_id": 1094167216,
+            "java_id": 1071522313,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "62:23-39",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1817288263,
+            "java_id": 2001912039,
             "type": "FieldDeclaration (list)",
             "content": "",
             "position": "62:1-40",
@@ -204,14 +451,90 @@
         },
         {
           "from": {
-            "java_id": 1222908765,
+            "java_id": 1971855969,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "62:15-22",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 2001912039,
+            "type": "FieldDeclaration (list)",
+            "content": "",
+            "position": "62:1-40",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Type:Boolean@2409",
+          "edge_label_full": "TypeToDecl:Type:Boolean@2409 -> TypeToDecl:Declaration:FieldDeclaration@2395",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2001912039,
+            "type": "FieldDeclaration (list)",
+            "content": "",
+            "position": "62:1-40",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 990413155,
+            "type": "SimpleName (atom)",
+            "content": "Boolean",
+            "position": "62:15-22",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Declaration:FieldDeclaration@2395",
+          "edge_label_full": "TypeToDecl:Declaration:FieldDeclaration@2395 -> DeclToTypeName:SimpleName:Boolean@2409",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 890085657,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseError",
+            "position": "107:11-27",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1778993228,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "107:3-27",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseError@4404",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4404 -> NameRes::BaseNode:SingleVariableDeclaration@4396",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1669392873,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "107:3-10",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1778993228,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "107:3-27",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@4396",
+          "edge_label_full": "TypeToDecl:Type:boolean@4396 -> TypeToDecl:Declaration:SingleVariableDeclaration@4396",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 767794003,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "111:7-23",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1094167216,
+            "java_id": 1071522313,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "62:23-39",
@@ -223,14 +546,14 @@
         },
         {
           "from": {
-            "java_id": 1222908765,
+            "java_id": 767794003,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "111:7-23",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 227005513,
+            "java_id": 629092599,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "62:23-39",
@@ -242,14 +565,71 @@
         },
         {
           "from": {
-            "java_id": 1883144272,
+            "java_id": 1157856790,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseError",
+            "position": "111:26-42",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1778993228,
+            "type": "SingleVariableDeclaration (list)",
+            "content": "",
+            "position": "107:3-27",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseError@4558",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4558 -> NameRes::BaseNode:SingleVariableDeclaration@4396",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1157856790,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseError",
+            "position": "111:26-42",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 890085657,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseError",
+            "position": "107:11-27",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseError@4558",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4558 -> NameRes:SimpleName:ignoreParseError@4404",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1669392873,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "107:3-10",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 1971855969,
+            "type": "SimpleType (list)",
+            "content": "",
+            "position": "62:15-22",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "FieldAssignment:RightVarType:boolean@4396",
+          "edge_label_full": "FieldAssignment:RightVarType:boolean@4396 -> FieldAssignment:LeftFieldType:Boolean@2409",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1684368286,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "125:7-23",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1094167216,
+            "java_id": 1071522313,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "62:23-39",
@@ -261,14 +641,14 @@
         },
         {
           "from": {
-            "java_id": 1883144272,
+            "java_id": 1684368286,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "125:7-23",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 227005513,
+            "java_id": 629092599,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "62:23-39",
@@ -280,14 +660,14 @@
         },
         {
           "from": {
-            "java_id": 1361241279,
+            "java_id": 977952572,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "154:19-35",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1094167216,
+            "java_id": 1071522313,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "62:23-39",
@@ -299,14 +679,14 @@
         },
         {
           "from": {
-            "java_id": 1361241279,
+            "java_id": 977952572,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "154:19-35",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 227005513,
+            "java_id": 629092599,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "62:23-39",
@@ -318,14 +698,14 @@
         },
         {
           "from": {
-            "java_id": 1192787792,
+            "java_id": 1518022811,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "159:46-62",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 1094167216,
+            "java_id": 1071522313,
             "type": "VariableDeclarationFragment (list)",
             "content": "",
             "position": "62:23-39",
@@ -337,14 +717,14 @@
         },
         {
           "from": {
-            "java_id": 1192787792,
+            "java_id": 1518022811,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "159:46-62",
             "file": "AvroRowDataDeserializationSchema.java"
           },
           "to": {
-            "java_id": 227005513,
+            "java_id": 629092599,
             "type": "SimpleName (atom)",
             "content": "ignoreParseError",
             "position": "62:23-39",
@@ -358,441 +738,19 @@
     },
     {
       "component_id": 3,
-      "component_name": "Parameter ignoreParseErrors added in DebeziumAvroDeserializationSchema",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 2116025968,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "97:11-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1929649021,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "97:3-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3621",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3621 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1352254875,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "99:27-44",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1929649021,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "97:3-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3713",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3713 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1352254875,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "99:27-44",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 2116025968,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "97:11-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3713",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3713 -> NameRes:SimpleName:ignoreParseErrors@3621",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1843324431,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "109:3-20",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1929649021,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "97:3-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4128",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4128 -> NameRes::BaseNode:SingleVariableDeclaration@3613",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1843324431,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "109:3-20",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 2116025968,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "97:11-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4128",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4128 -> NameRes:SimpleName:ignoreParseErrors@3621",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 4,
-      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1940844413,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "70:10-68",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 234344916,
-            "type": "VariableDeclarationStatement (list)",
-            "content": "",
-            "position": "70:2-69",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@3278",
-          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@3278 -> FragmentToStmt:Statement:VariableDeclarationStatement@3270",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1733520096,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "86:6-23",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 1940844413,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "70:10-68",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4015",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4015 -> NameRes::BaseNode:VariableDeclarationFragment@3278",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1733520096,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "86:6-23",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 224878495,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "70:10-27",
-            "file": "RegistryAvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4015",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4015 -> NameRes:SimpleName:ignoreParseErrors@3278",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 5,
-      "component_name": "Parameter ignoreParseErrors added in DebeziumAvroDeserializationSchema",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1699637904,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "116:11-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 21063905,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "116:3-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4319",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4319 -> NameRes::BaseNode:SingleVariableDeclaration@4311",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 4888672,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "119:27-44",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 21063905,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "116:3-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4455",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4455 -> NameRes::BaseNode:SingleVariableDeclaration@4311",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 4888672,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "119:27-44",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1699637904,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "116:11-28",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4455",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4455 -> NameRes:SimpleName:ignoreParseErrors@4319",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 6,
-      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1912769093,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "63:10-68",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 269016862,
-            "type": "VariableDeclarationStatement (list)",
-            "content": "",
-            "position": "63:2-69",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@2955",
-          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@2955 -> FragmentToStmt:Statement:VariableDeclarationStatement@2947",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 157849544,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "77:5-22",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 1912769093,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "63:10-68",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3528",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3528 -> NameRes::BaseNode:VariableDeclarationFragment@2955",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 157849544,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "77:5-22",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 1952874090,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "63:10-27",
-            "file": "DebeziumAvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3528",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3528 -> NameRes:SimpleName:ignoreParseErrors@2955",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 7,
-      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1855589354,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "60:16-74",
-            "file": "AvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 116512665,
-            "type": "VariableDeclarationStatement (list)",
-            "content": "",
-            "position": "60:2-75",
-            "file": "AvroFormatFactory.java"
-          },
-          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@2611",
-          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@2611 -> FragmentToStmt:Statement:VariableDeclarationStatement@2597",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 165687172,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "74:5-22",
-            "file": "AvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 1855589354,
-            "type": "VariableDeclarationFragment (list)",
-            "content": "",
-            "position": "60:16-74",
-            "file": "AvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3291",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3291 -> NameRes::BaseNode:VariableDeclarationFragment@2611",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 165687172,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "74:5-22",
-            "file": "AvroFormatFactory.java"
-          },
-          "to": {
-            "java_id": 687608114,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseErrors",
-            "position": "60:16-33",
-            "file": "AvroFormatFactory.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3291",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3291 -> NameRes:SimpleName:ignoreParseErrors@2611",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 8,
-      "component_name": "Parameter ignoreParseError added in AvroRowDataDeserializationSchema",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1337346642,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseError",
-            "position": "107:11-27",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1890881203,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "107:3-27",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseError@4404",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4404 -> NameRes::BaseNode:SingleVariableDeclaration@4396",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1374212198,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseError",
-            "position": "111:26-42",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1890881203,
-            "type": "SingleVariableDeclaration (list)",
-            "content": "",
-            "position": "107:3-27",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseError@4558",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4558 -> NameRes::BaseNode:SingleVariableDeclaration@4396",
-          "kind": "Addition"
-        },
-        {
-          "from": {
-            "java_id": 1374212198,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseError",
-            "position": "111:26-42",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 1337346642,
-            "type": "SimpleName (atom)",
-            "content": "ignoreParseError",
-            "position": "107:11-27",
-            "file": "AvroRowDataDeserializationSchema.java"
-          },
-          "edge_label": "NameRes:SimpleName:ignoreParseError@4558",
-          "edge_label_full": "NameRes:SimpleName:ignoreParseError@4558 -> NameRes:SimpleName:ignoreParseError@4404",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 9,
       "component_name": "Import org.apache.flink.table.factories.FactoryUtil.IGNORE_PARSE_ERRORS added",
       "component_kind": "add",
       "changes": [
         {
           "from": {
-            "java_id": 1745331030,
+            "java_id": 1407675409,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "70:48-67",
             "file": "RegistryAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 1174641185,
+            "java_id": 709091500,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "51:0-79",
@@ -804,14 +762,14 @@
         },
         {
           "from": {
-            "java_id": 2083004088,
+            "java_id": 1051890381,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "147:14-33",
             "file": "RegistryAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 1174641185,
+            "java_id": 709091500,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "51:0-79",
@@ -820,69 +778,17 @@
           "edge_label": "NameRes:SimpleName:IGNORE_PARSE_ERRORS@5788",
           "edge_label_full": "NameRes:SimpleName:IGNORE_PARSE_ERRORS@5788 -> ImportDeclaration:org.apache.flink.table.factories.FactoryUtil.IGNORE_PARSE_ERRORS@2553",
           "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 10,
-      "component_name": " ignoreParseErrors added in DebeziumAvroDeserializationSchema",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 1557752641,
-            "type": "PrimitiveType (atom)",
-            "content": "boolean",
-            "position": "97:3-10",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 847372226,
-            "type": "PrimitiveType (atom)",
-            "content": "boolean",
-            "position": "91:15-22",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "FieldAssignment:RightVarType:boolean@3613",
-          "edge_label_full": "FieldAssignment:RightVarType:boolean@3613 -> FieldAssignment:LeftFieldType:boolean@3444",
-          "kind": "Addition"
         },
         {
           "from": {
-            "java_id": 1889468930,
-            "type": "PrimitiveType (atom)",
-            "content": "boolean",
-            "position": "116:3-10",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "to": {
-            "java_id": 847372226,
-            "type": "PrimitiveType (atom)",
-            "content": "boolean",
-            "position": "91:15-22",
-            "file": "DebeziumAvroDeserializationSchema.java"
-          },
-          "edge_label": "FieldAssignment:RightVarType:boolean@4311",
-          "edge_label_full": "FieldAssignment:RightVarType:boolean@4311 -> FieldAssignment:LeftFieldType:boolean@3444",
-          "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 11,
-      "component_name": "Import org.apache.flink.table.factories.FactoryUtil.IGNORE_PARSE_ERRORS added",
-      "component_kind": "add",
-      "changes": [
-        {
-          "from": {
-            "java_id": 12706127,
+            "java_id": 1769827821,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "63:48-67",
             "file": "DebeziumAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 64614565,
+            "java_id": 1103079913,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "47:0-79",
@@ -894,14 +800,14 @@
         },
         {
           "from": {
-            "java_id": 2039840529,
+            "java_id": 204339470,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "147:14-33",
             "file": "DebeziumAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 64614565,
+            "java_id": 1103079913,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "47:0-79",
@@ -910,24 +816,17 @@
           "edge_label": "NameRes:SimpleName:IGNORE_PARSE_ERRORS@5501",
           "edge_label_full": "NameRes:SimpleName:IGNORE_PARSE_ERRORS@5501 -> ImportDeclaration:org.apache.flink.table.factories.FactoryUtil.IGNORE_PARSE_ERRORS@2273",
           "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 12,
-      "component_name": "Import org.apache.flink.table.factories.FactoryUtil.IGNORE_PARSE_ERRORS added",
-      "component_kind": "add",
-      "changes": [
+        },
         {
           "from": {
-            "java_id": 650608468,
+            "java_id": 730298964,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "60:54-73",
             "file": "AvroFormatFactory.java"
           },
           "to": {
-            "java_id": 1092591822,
+            "java_id": 2091160281,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "43:0-79",
@@ -939,14 +838,14 @@
         },
         {
           "from": {
-            "java_id": 677007331,
+            "java_id": 2059316201,
             "type": "SimpleName (atom)",
             "content": "IGNORE_PARSE_ERRORS",
             "position": "118:31-50",
             "file": "AvroFormatFactory.java"
           },
           "to": {
-            "java_id": 1092591822,
+            "java_id": 2091160281,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "43:0-79",
@@ -959,20 +858,20 @@
       ]
     },
     {
-      "component_id": 13,
+      "component_id": 4,
       "component_name": "Import org.apache.flink.formats.avro.typeutils.AvroSchemaConverter added",
       "component_kind": "add",
       "changes": [
         {
           "from": {
-            "java_id": 421135185,
+            "java_id": 116994272,
             "type": "SimpleName (atom)",
             "content": "AvroSchemaConverter",
             "position": "71:42-61",
             "file": "AvroFormatFactory.java"
           },
           "to": {
-            "java_id": 942714988,
+            "java_id": 48042118,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "26:0-67",
@@ -985,98 +884,103 @@
       ]
     },
     {
-      "component_id": 14,
-      "component_name": "Method AvroRowDataDeserializationSchema added in AvroRowDataDeserializationSchema",
+      "component_id": 5,
+      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
       "component_kind": "add",
       "changes": [
         {
           "from": {
-            "java_id": 2019482012,
-            "type": "SimpleName (atom)",
-            "content": "AvroRowDataDeserializationSchema",
-            "position": "87:8-40",
-            "file": "AvroRowDataDeserializationSchema.java"
+            "java_id": 1045336031,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "70:10-68",
+            "file": "RegistryAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 2053425932,
-            "type": "MethodDeclaration (list)",
+            "java_id": 614159535,
+            "type": "VariableDeclarationStatement (list)",
             "content": "",
-            "position": "87:1-2",
-            "file": "AvroRowDataDeserializationSchema.java"
+            "position": "70:2-69",
+            "file": "RegistryAvroFormatFactory.java"
           },
-          "edge_label": "NameRes:SimpleName:AvroRowDataDeserializationSchema@3434",
-          "edge_label_full": "NameRes:SimpleName:AvroRowDataDeserializationSchema@3434 -> NameRes::BaseNode:MethodDeclaration@3004",
+          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@3278",
+          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@3278 -> FragmentToStmt:Statement:VariableDeclarationStatement@3270",
           "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 15,
-      "component_name": " ignoreParseError added in AvroRowDataDeserializationSchema",
-      "component_kind": "add",
-      "changes": [
+        },
         {
           "from": {
-            "java_id": 2069971440,
+            "java_id": 1789376127,
             "type": "PrimitiveType (atom)",
             "content": "boolean",
-            "position": "107:3-10",
-            "file": "AvroRowDataDeserializationSchema.java"
+            "position": "70:2-9",
+            "file": "RegistryAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 656844049,
-            "type": "SimpleType (list)",
+            "java_id": 614159535,
+            "type": "VariableDeclarationStatement (list)",
             "content": "",
-            "position": "62:15-22",
-            "file": "AvroRowDataDeserializationSchema.java"
+            "position": "70:2-69",
+            "file": "RegistryAvroFormatFactory.java"
           },
-          "edge_label": "FieldAssignment:RightVarType:boolean@4396",
-          "edge_label_full": "FieldAssignment:RightVarType:boolean@4396 -> FieldAssignment:LeftFieldType:Boolean@2409",
+          "edge_label": "TypeToDecl:Type:boolean@3270",
+          "edge_label_full": "TypeToDecl:Type:boolean@3270 -> TypeToDecl:Declaration:VariableDeclarationStatement@3270",
           "kind": "Addition"
-        }
-      ]
-    },
-    {
-      "component_id": 16,
-      "component_name": "Method testIgnoreParseErrors added in AvroRowDataDeSerializationSchemaTest",
-      "component_kind": "add",
-      "changes": [
+        },
         {
           "from": {
-            "java_id": 533951552,
+            "java_id": 1637411253,
             "type": "SimpleName (atom)",
-            "content": "testIgnoreParseErrors",
-            "position": "212:13-34",
-            "file": "AvroRowDataDeSerializationSchemaTest.java"
+            "content": "ignoreParseErrors",
+            "position": "86:6-23",
+            "file": "RegistryAvroFormatFactory.java"
           },
           "to": {
-            "java_id": 1356763258,
-            "type": "MethodDeclaration (list)",
+            "java_id": 1045336031,
+            "type": "VariableDeclarationFragment (list)",
             "content": "",
-            "position": "211:1-2",
-            "file": "AvroRowDataDeSerializationSchemaTest.java"
+            "position": "70:10-68",
+            "file": "RegistryAvroFormatFactory.java"
           },
-          "edge_label": "NameRes:SimpleName:testIgnoreParseErrors@8446",
-          "edge_label_full": "NameRes:SimpleName:testIgnoreParseErrors@8446 -> NameRes::BaseNode:MethodDeclaration@8427",
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4015",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4015 -> NameRes::BaseNode:VariableDeclarationFragment@3278",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1637411253,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "86:6-23",
+            "file": "RegistryAvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 1780313842,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "70:10-27",
+            "file": "RegistryAvroFormatFactory.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@4015",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@4015 -> NameRes:SimpleName:ignoreParseErrors@3278",
           "kind": "Addition"
         }
       ]
     },
     {
-      "component_id": 17,
+      "component_id": 6,
       "component_name": "Import org.apache.flink.table.data.GenericRowData added",
       "component_kind": "add",
       "changes": [
         {
           "from": {
-            "java_id": 1991615833,
+            "java_id": 877959545,
             "type": "SimpleName (atom)",
             "content": "GenericRowData",
             "position": "217:18-32",
             "file": "AvroRowDataDeSerializationSchemaTest.java"
           },
           "to": {
-            "java_id": 1086811994,
+            "java_id": 1002572164,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "24:0-50",
@@ -1089,20 +993,186 @@
       ]
     },
     {
-      "component_id": 18,
+      "component_id": 7,
+      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1593749783,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "63:10-68",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 1648938923,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "63:2-69",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@2955",
+          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@2955 -> FragmentToStmt:Statement:VariableDeclarationStatement@2947",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 1301542747,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "63:2-9",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 1648938923,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "63:2-69",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@2947",
+          "edge_label_full": "TypeToDecl:Type:boolean@2947 -> TypeToDecl:Declaration:VariableDeclarationStatement@2947",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 994581493,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "77:5-22",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 1593749783,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "63:10-68",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3528",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3528 -> NameRes::BaseNode:VariableDeclarationFragment@2955",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 994581493,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "77:5-22",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 369838089,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "63:10-27",
+            "file": "DebeziumAvroFormatFactory.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3528",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3528 -> NameRes:SimpleName:ignoreParseErrors@2955",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 8,
+      "component_name": "Variable ignoreParseErrors added in createDecodingFormat",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1267168782,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "60:16-74",
+            "file": "AvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 353321401,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "60:2-75",
+            "file": "AvroFormatFactory.java"
+          },
+          "edge_label": "FragmentToStmt:Fragment:ignoreParseErrors@2611",
+          "edge_label_full": "FragmentToStmt:Fragment:ignoreParseErrors@2611 -> FragmentToStmt:Statement:VariableDeclarationStatement@2597",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 758201484,
+            "type": "PrimitiveType (atom)",
+            "content": "boolean",
+            "position": "60:8-15",
+            "file": "AvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 353321401,
+            "type": "VariableDeclarationStatement (list)",
+            "content": "",
+            "position": "60:2-75",
+            "file": "AvroFormatFactory.java"
+          },
+          "edge_label": "TypeToDecl:Type:boolean@2603",
+          "edge_label_full": "TypeToDecl:Type:boolean@2603 -> TypeToDecl:Declaration:VariableDeclarationStatement@2597",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2100048989,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "74:5-22",
+            "file": "AvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 1267168782,
+            "type": "VariableDeclarationFragment (list)",
+            "content": "",
+            "position": "60:16-74",
+            "file": "AvroFormatFactory.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3291",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3291 -> NameRes::BaseNode:VariableDeclarationFragment@2611",
+          "kind": "Addition"
+        },
+        {
+          "from": {
+            "java_id": 2100048989,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "74:5-22",
+            "file": "AvroFormatFactory.java"
+          },
+          "to": {
+            "java_id": 199320792,
+            "type": "SimpleName (atom)",
+            "content": "ignoreParseErrors",
+            "position": "60:16-33",
+            "file": "AvroFormatFactory.java"
+          },
+          "edge_label": "NameRes:SimpleName:ignoreParseErrors@3291",
+          "edge_label_full": "NameRes:SimpleName:ignoreParseErrors@3291 -> NameRes:SimpleName:ignoreParseErrors@2611",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 9,
       "component_name": "Import org.junit.Assert.assertThat added",
       "component_kind": "add",
       "changes": [
         {
           "from": {
-            "java_id": 890054387,
+            "java_id": 1472057002,
             "type": "SimpleName (atom)",
             "content": "assertThat",
             "position": "230:2-12",
             "file": "AvroRowDataDeSerializationSchemaTest.java"
           },
           "to": {
-            "java_id": 853343978,
+            "java_id": 824348035,
             "type": "ImportDeclaration (list)",
             "content": "",
             "position": "72:0-42",
@@ -1110,6 +1180,58 @@
           },
           "edge_label": "NameRes:SimpleName:assertThat@9417",
           "edge_label_full": "NameRes:SimpleName:assertThat@9417 -> ImportDeclaration:org.junit.Assert.assertThat@3108",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 10,
+      "component_name": "Method AvroRowDataDeserializationSchema added in AvroRowDataDeserializationSchema",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 581359452,
+            "type": "SimpleName (atom)",
+            "content": "AvroRowDataDeserializationSchema",
+            "position": "87:8-40",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "to": {
+            "java_id": 778925754,
+            "type": "MethodDeclaration (list)",
+            "content": "",
+            "position": "87:1-92:2",
+            "file": "AvroRowDataDeserializationSchema.java"
+          },
+          "edge_label": "NameRes:SimpleName:AvroRowDataDeserializationSchema@3434",
+          "edge_label_full": "NameRes:SimpleName:AvroRowDataDeserializationSchema@3434 -> NameRes::BaseNode:MethodDeclaration@3004",
+          "kind": "Addition"
+        }
+      ]
+    },
+    {
+      "component_id": 11,
+      "component_name": "Method testIgnoreParseErrors added in AvroRowDataDeSerializationSchemaTest",
+      "component_kind": "add",
+      "changes": [
+        {
+          "from": {
+            "java_id": 1135026238,
+            "type": "SimpleName (atom)",
+            "content": "testIgnoreParseErrors",
+            "position": "212:13-34",
+            "file": "AvroRowDataDeSerializationSchemaTest.java"
+          },
+          "to": {
+            "java_id": 819027530,
+            "type": "MethodDeclaration (list)",
+            "content": "",
+            "position": "211:1-231:2",
+            "file": "AvroRowDataDeSerializationSchemaTest.java"
+          },
+          "edge_label": "NameRes:SimpleName:testIgnoreParseErrors@8446",
+          "edge_label_full": "NameRes:SimpleName:testIgnoreParseErrors@8446 -> NameRes::BaseNode:MethodDeclaration@8427",
           "kind": "Addition"
         }
       ]

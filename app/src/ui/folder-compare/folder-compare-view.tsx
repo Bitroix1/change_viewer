@@ -136,9 +136,10 @@ export class FolderCompareView extends React.Component<
 
     const hasLeftPanel = this.state.diffComponents.length > 0
     const hasRightPanel = this.state.selectedComponent !== 'all' && this.state.selectedComponent !== 'misc'
+    const isComponentMode = hasRightPanel || this.state.selectedComponent === 'misc'
 
     return (
-      <div className={`folder-compare-view${hasRightPanel ? ' component-mode' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className={`folder-compare-view${isComponentMode ? ' component-mode' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <style>{`
           .resize-handle-h {
             width: 4px;

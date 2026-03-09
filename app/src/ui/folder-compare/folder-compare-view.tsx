@@ -35,6 +35,27 @@ import {
   getSourceLineContent,
 } from './folder-compare-data'
 
+/** Connecting/keyword tokens in component names — rendered in the base font. */
+const COMPONENT_NAME_CONNECTORS = new Set([
+  'method', 'variable', 'parameter', 'field', 'type', 'import',
+  'added', 'removed', 'renamed', 'from', 'to', 'in', 'of',
+])
+
+/** Render a component name with identifiers highlighted. */
+function renderComponentName(name: string): React.ReactNode {
+  const words = name.split(' ')
+  const elements: React.ReactNode[] = []
+  words.forEach((word, i) => {
+    if (i > 0) elements.push(' ')
+    if (COMPONENT_NAME_CONNECTORS.has(word.toLowerCase())) {
+      elements.push(<span key={i}>{word}</span>)
+    } else {
+      elements.push(<span key={i} className="comp-name-ident">{word}</span>)
+    }
+  })
+  return <>{elements}</>
+}
+
 interface FileTreeNode {
   name: string
   fullPath: string
@@ -219,6 +240,13 @@ export class FolderCompareView extends React.Component<
                 .sidebar-file-entry * {
                   cursor: pointer !important;
                 }
+                .comp-name-ident {
+                  color: var(--text-color);
+                  background-color: rgba(127, 127, 127, 0.15);
+                  border-radius: 3px;
+                  padding: 0 3px;
+                  font-weight: 600;
+                }
               `}</style>
               {/* Scrollable top section: component list */}
               <div style={{ flex: `0 0 ${this.state.leftTopFraction * 100}%`, display: 'flex', flexDirection: 'column', padding: '15px', minHeight: `${MIN_LEFT_TOP_HEIGHT}px`, overflow: 'hidden' }}>
@@ -282,6 +310,9 @@ export class FolderCompareView extends React.Component<
                             fontSize: 'var(--font-size)',
                             fontWeight: 600,
                             userSelect: 'none',
+                            position: 'sticky',
+                            top: 0,
+                            zIndex: 10,
                           }}
                           onClick={() => this.toggleKindCollapse(kind)}
                         >
@@ -311,7 +342,7 @@ export class FolderCompareView extends React.Component<
                                       checked={isSelected}
                                       onChange={this.onComponentChange}
                                     />
-                                    <span style={{ fontSize: 'var(--font-size)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{comp.component_name || `Component ${comp.component_id}`}</span>
+                                    <span style={{ fontSize: 'var(--font-size)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{comp.component_name ? renderComponentName(comp.component_name) : `Component ${comp.component_id}`}</span>
                                   </label>
                                 </div>
                               )

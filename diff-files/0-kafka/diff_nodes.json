@@ -12,7 +12,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 658135690,
+          "java_id": 2044211046,
           "type": "FieldDeclaration (list)",
           "content": "",
           "position": "156:4-40",
@@ -62,7 +62,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1532874332,
+          "java_id": 268258490,
           "type": "FieldDeclaration (list)",
           "content": "",
           "position": "157:4-38",
@@ -130,7 +130,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1964864549,
+          "java_id": 1169933615,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
           "position": "410:15-35",
@@ -139,19 +139,19 @@
           "kind": "Addition"
         },
         {
-          "java_id": 1087916281,
+          "java_id": 1634338531,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
-          "position": "190:85-105",
+          "position": "147:85-105",
           "file": "MirrorCoordinator.java",
           "reachable_by": 0,
           "kind": "Addition"
         },
         {
-          "java_id": 1939354020,
+          "java_id": 1871048194,
           "type": "SimpleName (atom)",
           "content": "partitionIndexForKey",
-          "position": "147:85-105",
+          "position": "190:85-105",
           "file": "MirrorCoordinator.java",
           "reachable_by": 0,
           "kind": "Addition"
@@ -189,7 +189,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 282166934,
+          "java_id": 1483522397,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "264:40-47",
@@ -198,7 +198,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 697818620,
+          "java_id": 542475071,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "271:16-23",
@@ -207,7 +207,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 1155521880,
+          "java_id": 1391249801,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "276:15-22",
@@ -239,7 +239,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 923911964,
+          "java_id": 622497998,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "336:64-71",
@@ -248,7 +248,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 184996973,
+          "java_id": 681514473,
           "type": "SimpleName (atom)",
           "content": "offsets",
           "position": "337:98-105",
@@ -280,7 +280,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 1637186972,
+          "java_id": 765321860,
           "type": "SimpleName (atom)",
           "content": "removedOffsets",
           "position": "286:98-112",
@@ -289,7 +289,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 2116841430,
+          "java_id": 1270816977,
           "type": "SimpleName (atom)",
           "content": "removedOffsets",
           "position": "288:8-22",
@@ -321,7 +321,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 833308761,
+          "java_id": 1617646499,
           "type": "SimpleName (atom)",
           "content": "addedOffsets",
           "position": "285:98-110",
@@ -330,7 +330,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 946773976,
+          "java_id": 1759046479,
           "type": "SimpleName (atom)",
           "content": "addedOffsets",
           "position": "293:8-20",
@@ -362,7 +362,7 @@
           "kind": "Removal"
         },
         {
-          "java_id": 871582126,
+          "java_id": 383753182,
           "type": "SimpleName (atom)",
           "content": "updateRemoteClusterNodesCache",
           "position": "396:17-46",
@@ -371,7 +371,7 @@
           "kind": "Addition"
         },
         {
-          "java_id": 1545377921,
+          "java_id": 267769073,
           "type": "SimpleName (atom)",
           "content": "updateRemoteClusterNodesCache",
           "position": "367:12-41",

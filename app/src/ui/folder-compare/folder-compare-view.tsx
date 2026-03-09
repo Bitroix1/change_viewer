@@ -430,8 +430,6 @@ export class FolderCompareView extends React.Component<
                 <div key={file.id} data-file-path={file.path} style={{ 
                   border: '1px solid var(--box-border-color)',
                   borderRadius: '6px',
-                  marginTop: index === 0 ? 0 : '20px',
-                  marginBottom: index === this.state.fileChanges.length - 1 ? '0' : '0',
                   backgroundColor: 'var(--box-background-color)'
                 }}>
                   <div style={{ 
@@ -831,6 +829,12 @@ export class FolderCompareView extends React.Component<
              a scroll container, so sticky positioning still works. */
           .folder-compare-view [data-file-path] {
             overflow: clip;
+          }
+          /* Space between visible file containers — the first visible
+             (non-hidden) file gets no top margin so all components start
+             at the same position regardless of which files are hidden. */
+          .folder-compare-content > div > [data-file-path]:not(.component-file-hidden) ~ [data-file-path]:not(.component-file-hidden) {
+            margin-top: 20px;
           }
           /* Master scrollbar per side at bottom of each file diff */
           .folder-compare-view .scroll-sync-bar {

@@ -2,7 +2,7 @@
   "diff_components": [
     {
       "component_id": 1,
-      "component_name": "Field ignoreParseErrors added in DebeziumAvroDeserializationSchema in DebeziumAvroDeserializationSchema",
+      "component_name": "Field ignoreParseErrors added in DebeziumAvroDeserializationSchema",
       "component_kind": "add",
       "changes": [
         {
@@ -757,7 +757,7 @@
     },
     {
       "component_id": 3,
-      "component_name": "Field ignoreParseError added in AvroRowDataDeserializationSchema in AvroRowDataDeserializationSchema",
+      "component_name": "Field ignoreParseError added in AvroRowDataDeserializationSchema",
       "component_kind": "add",
       "changes": [
         {
@@ -1547,7 +1547,7 @@
     },
     {
       "component_id": 10,
-      "component_name": "Method AvroRowDataDeserializationSchema added in AvroRowDataDeserializationSchema in AvroRowDataDeserializationSchema",
+      "component_name": "Method AvroRowDataDeserializationSchema added in AvroRowDataDeserializationSchema",
       "component_kind": "add",
       "changes": [
         {
@@ -1573,7 +1573,7 @@
     },
     {
       "component_id": 11,
-      "component_name": "Method testIgnoreParseErrors added in AvroRowDataDeSerializationSchemaTest in AvroRowDataDeSerializationSchemaTest",
+      "component_name": "Method testIgnoreParseErrors added in AvroRowDataDeSerializationSchemaTest",
       "component_kind": "add",
       "changes": [
         {

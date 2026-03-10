@@ -624,7 +624,7 @@
     },
     {
       "component_id": 3,
-      "component_name": "Method renamed from partitionFor to partitionIndexForKey in MirrorCoordinator in MirrorCoordinator",
+      "component_name": "Method renamed from partitionFor to partitionIndexForKey in MirrorCoordinator",
       "component_kind": "rename",
       "changes": [
         {
@@ -925,7 +925,7 @@
     },
     {
       "component_id": 8,
-      "component_name": "Method renamed from updateRemoteClusterNodes to updateRemoteClusterNodesCache in MirrorMetadataManager in MirrorMetadataManager",
+      "component_name": "Method renamed from updateRemoteClusterNodes to updateRemoteClusterNodesCache in MirrorMetadataManager",
       "component_kind": "rename",
       "changes": [
         {

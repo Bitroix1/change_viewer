@@ -1927,47 +1927,22 @@ function getModifiedRows(
     }
   }
 
-  // Bottom-align: pair deleted/added lines from the bottom so that excess
-  // deletions appear first and excess additions appear first, keeping the
-  // semantically related modified lines aligned visually.  For example,
-  // when a Javadoc comment is removed above a method both the comment
-  // deletions and the renamed method line are in the same hunk — pairing
-  // from the bottom ensures the method lines stay aligned.
+  // Top-align: pair deleted/added lines from the top so that the first
+  // deletion is matched with the first addition.  Excess (unmatched) lines
+  // appear at the bottom of the block.
   const numPairs = showSideBySideDiff
     ? Math.min(addedLines.length, deletedLines.length)
     : 0
-  const deletedOffset = deletedLines.length - numPairs
-  const addedOffset = addedLines.length - numPairs
 
-  // 1) Excess deleted lines (top of the block)
-  for (let i = 0; i < deletedOffset; i++) {
-    const line = forceUnwrap('Unexpected null line', deletedLines[i])
-    output.push({
-      type: DiffRowType.Deleted,
-      data: getDataFromLine(line, 'oldLineNumber', undefined),
-      hunkStartLine,
-    })
-  }
-
-  // 2) Excess added lines (top of the block)
-  for (let i = 0; i < addedOffset; i++) {
-    const line = forceUnwrap('Unexpected null line', addedLines[i])
-    output.push({
-      type: DiffRowType.Added,
-      data: getDataFromLine(line, 'newLineNumber', undefined),
-      hunkStartLine,
-    })
-  }
-
-  // 3) Modified pairs (bottom-aligned)
+  // 1) Modified pairs (top-aligned)
   for (let i = 0; i < numPairs; i++) {
     const deletedLine = forceUnwrap(
       'Unexpected null line',
-      deletedLines[deletedOffset + i]
+      deletedLines[i]
     )
     const addedLine = forceUnwrap(
       'Unexpected null line',
-      addedLines[addedOffset + i]
+      addedLines[i]
     )
 
     output.push({
@@ -1982,6 +1957,26 @@ function getModifiedRows(
         'newLineNumber',
         diffTokensAfter.shift()
       ),
+      hunkStartLine,
+    })
+  }
+
+  // 2) Excess deleted lines (bottom of the block)
+  for (let i = numPairs; i < deletedLines.length; i++) {
+    const line = forceUnwrap('Unexpected null line', deletedLines[i])
+    output.push({
+      type: DiffRowType.Deleted,
+      data: getDataFromLine(line, 'oldLineNumber', undefined),
+      hunkStartLine,
+    })
+  }
+
+  // 3) Excess added lines (bottom of the block)
+  for (let i = numPairs; i < addedLines.length; i++) {
+    const line = forceUnwrap('Unexpected null line', addedLines[i])
+    output.push({
+      type: DiffRowType.Added,
+      data: getDataFromLine(line, 'newLineNumber', undefined),
       hunkStartLine,
     })
   }

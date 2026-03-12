@@ -1927,22 +1927,83 @@ function getModifiedRows(
     }
   }
 
-  // Top-align: pair deleted/added lines from the top so that the first
-  // deletion is matched with the first addition.  Excess (unmatched) lines
-  // appear at the bottom of the block.
+  // Choose between top-align and bottom-align based on which pairing
+  // produces more similar matched lines (higher text similarity score).
   const numPairs = showSideBySideDiff
     ? Math.min(addedLines.length, deletedLines.length)
     : 0
 
-  // 1) Modified pairs (top-aligned)
+  // Score a pairing by summing text similarity of each matched pair.
+  // Higher is better — identical lines score 1.0 each.
+  const scorePairing = (delOffset: number, addOffset: number): number => {
+    let score = 0
+    for (let i = 0; i < numPairs; i++) {
+      const delText = deletedLines[delOffset + i].line.content
+      const addText = addedLines[addOffset + i].line.content
+      if (delText === addText) {
+        score += 1
+      } else {
+        const maxLen = Math.max(delText.length, addText.length)
+        if (maxLen === 0) {
+          score += 1
+        } else {
+          // Count matching characters from the start and end
+          let prefix = 0
+          const minLen = Math.min(delText.length, addText.length)
+          while (prefix < minLen && delText[prefix] === addText[prefix]) prefix++
+          let suffix = 0
+          while (
+            suffix < minLen - prefix &&
+            delText[delText.length - 1 - suffix] === addText[addText.length - 1 - suffix]
+          ) suffix++
+          score += (prefix + suffix) / maxLen
+        }
+      }
+    }
+    return score
+  }
+
+  // Top-align: pairs start at index 0; excess at the bottom.
+  // Bottom-align: excess at the top; pairs start after excess.
+  const deletedExcess = deletedLines.length - numPairs
+  const addedExcess = addedLines.length - numPairs
+
+  const topScore = numPairs > 0 ? scorePairing(0, 0) : 0
+  const bottomScore = numPairs > 0 ? scorePairing(deletedExcess, addedExcess) : 0
+  const useTopAlign = topScore >= bottomScore
+
+  const delPairStart = useTopAlign ? 0 : deletedExcess
+  const addPairStart = useTopAlign ? 0 : addedExcess
+
+  if (!useTopAlign) {
+    // Bottom-align: excess lines come first
+    for (let i = 0; i < deletedExcess; i++) {
+      const line = forceUnwrap('Unexpected null line', deletedLines[i])
+      output.push({
+        type: DiffRowType.Deleted,
+        data: getDataFromLine(line, 'oldLineNumber', undefined),
+        hunkStartLine,
+      })
+    }
+    for (let i = 0; i < addedExcess; i++) {
+      const line = forceUnwrap('Unexpected null line', addedLines[i])
+      output.push({
+        type: DiffRowType.Added,
+        data: getDataFromLine(line, 'newLineNumber', undefined),
+        hunkStartLine,
+      })
+    }
+  }
+
+  // Matched pairs
   for (let i = 0; i < numPairs; i++) {
     const deletedLine = forceUnwrap(
       'Unexpected null line',
-      deletedLines[i]
+      deletedLines[delPairStart + i]
     )
     const addedLine = forceUnwrap(
       'Unexpected null line',
-      addedLines[i]
+      addedLines[addPairStart + i]
     )
 
     output.push({
@@ -1961,24 +2022,24 @@ function getModifiedRows(
     })
   }
 
-  // 2) Excess deleted lines (bottom of the block)
-  for (let i = numPairs; i < deletedLines.length; i++) {
-    const line = forceUnwrap('Unexpected null line', deletedLines[i])
-    output.push({
-      type: DiffRowType.Deleted,
-      data: getDataFromLine(line, 'oldLineNumber', undefined),
-      hunkStartLine,
-    })
-  }
-
-  // 3) Excess added lines (bottom of the block)
-  for (let i = numPairs; i < addedLines.length; i++) {
-    const line = forceUnwrap('Unexpected null line', addedLines[i])
-    output.push({
-      type: DiffRowType.Added,
-      data: getDataFromLine(line, 'newLineNumber', undefined),
-      hunkStartLine,
-    })
+  if (useTopAlign) {
+    // Top-align: excess lines come after pairs
+    for (let i = numPairs; i < deletedLines.length; i++) {
+      const line = forceUnwrap('Unexpected null line', deletedLines[i])
+      output.push({
+        type: DiffRowType.Deleted,
+        data: getDataFromLine(line, 'oldLineNumber', undefined),
+        hunkStartLine,
+      })
+    }
+    for (let i = numPairs; i < addedLines.length; i++) {
+      const line = forceUnwrap('Unexpected null line', addedLines[i])
+      output.push({
+        type: DiffRowType.Added,
+        data: getDataFromLine(line, 'newLineNumber', undefined),
+        hunkStartLine,
+      })
+    }
   }
 
   // When not showing side-by-side, just output remaining lines as-is

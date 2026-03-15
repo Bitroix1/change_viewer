@@ -79,9 +79,13 @@ export class AppWindow {
       windowOptions.frame = false
     } else if (__LINUX__) {
       windowOptions.icon = path.join(__dirname, 'static', 'icon-logo.png')
+      windowOptions.autoHideMenuBar = true
     }
 
     this.window = new BrowserWindow(windowOptions)
+    if (__LINUX__) {
+      this.window.setMenuBarVisibility(false)
+    }
     addTrustedIPCSender(this.window.webContents)
 
     installNotificationCallback(this.window)

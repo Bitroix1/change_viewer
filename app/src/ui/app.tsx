@@ -136,10 +136,6 @@ export class App extends React.Component<IAppProps, IAppState> {
   private renderTitlebar() {
     const inFullScreen = this.state.windowState === 'full-screen'
 
-    if (__LINUX__) {
-      return null
-    }
-
     if (inFullScreen && !__WIN32__) {
       return null
     }

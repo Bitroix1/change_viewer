@@ -402,18 +402,18 @@ $overlay-background-color: rgba(0, 0, 0, 0.4);
   --diff-selected-gutter-color: #{$blue-600};
   --diff-selected-text-color: var(--background-color);
 
-  --diff-add-background-color: #{darken($green-000, 2%)};
+  --diff-add-background-color: #acf2bd;
   --diff-add-border-color: #{$green-300};
   --diff-add-gutter-color: #{$green-300};
   --diff-add-gutter-background-color: #{darken($green-100, 3%)};
-  --diff-add-inner-background-color: #acf2bd;
+  --diff-add-inner-background-color: #40ff70;
 
   --diff-add-text-color: var(--diff-text-color);
-  --diff-delete-background-color: #{$red-000};
+  --diff-delete-background-color: #fdb8c0;
   --diff-delete-border-color: #{$red-200};
   --diff-delete-gutter-color: #{$red-200};
   --diff-delete-gutter-background-color: #{$red-100};
-  --diff-delete-inner-background-color: #fdb8c0;
+  --diff-delete-inner-background-color: #fc919e;
   --diff-delete-text-color: var(--diff-text-color);
 
   --diff-hunk-background-color: #{$blue-000};

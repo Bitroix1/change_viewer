@@ -292,8 +292,31 @@ export class FolderCompareView extends React.Component<
                     other: 'Other',
                   }
 
-                  return Array.from(kindGroups.entries()).map(([kind, items]) => {
-                    items.sort((a, b) => (a.comp.component_name || '').localeCompare(b.comp.component_name || ''))
+                  const orderedKinds = Array.from(kindGroups.entries())
+                    .map(([kind, items]) => ({
+                      kind,
+                      items,
+                      largestBatchSize: items.reduce(
+                        (largest, item) => Math.max(largest, item.comp.changes?.length || 0),
+                        0
+                      ),
+                    }))
+                    .sort((a, b) => {
+                      const sizeDelta = b.largestBatchSize - a.largestBatchSize
+                      if (sizeDelta !== 0) {
+                        return sizeDelta
+                      }
+                      return (kindLabels[a.kind] || a.kind).localeCompare(kindLabels[b.kind] || b.kind)
+                    })
+
+                  return orderedKinds.map(({ kind, items }) => {
+                    items.sort((a, b) => {
+                      const sizeDelta = (b.comp.changes?.length || 0) - (a.comp.changes?.length || 0)
+                      if (sizeDelta !== 0) {
+                        return sizeDelta
+                      }
+                      return (a.comp.component_name || '').localeCompare(b.comp.component_name || '')
+                    })
                     const isCollapsed = this.state.collapsedKinds.includes(kind)
                     const label = kindLabels[kind] || kind.charAt(0).toUpperCase() + kind.slice(1) + 's'
                     return (
@@ -359,24 +382,24 @@ export class FolderCompareView extends React.Component<
                   paddingTop: '14px',
                   backgroundColor: 'var(--box-alt-background-color)',
                 }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  backgroundColor: this.state.selectedComponent === 'misc' ? 'var(--box-border-color)' : 'var(--background-color)'
-                }}>
-                  <input
-                    type="radio"
-                    name="component-view"
-                    value="misc"
-                    checked={this.state.selectedComponent === 'misc'}
-                    onChange={this.onComponentChange}
-                  />
-                  <span style={{ fontSize: 'var(--font-size)' }}>Miscellaneous</span>
-                </label>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      backgroundColor: this.state.selectedComponent === 'misc' ? 'var(--box-border-color)' : 'var(--background-color)'
+                    }}>
+                      <input
+                        type="radio"
+                        name="component-view"
+                        value="misc"
+                        checked={this.state.selectedComponent === 'misc'}
+                        onChange={this.onComponentChange}
+                      />
+                      <span style={{ fontSize: 'var(--font-size)' }}>Miscellaneous</span>
+                    </label>
                 </div>
                 </div>
               </div>
